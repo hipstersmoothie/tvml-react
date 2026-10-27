@@ -2,7 +2,7 @@ import TVMLKit
 import UIKit
 
 // Row model parsed out of a <simplifiedListRow> element.
-public struct SimplifiedListRowModel {
+struct SimplifiedListRowModel {
   let title: String
   let subtitle: String?
   let accessory: String?
@@ -19,19 +19,19 @@ public struct SimplifiedListRowModel {
 // the table fills those bounds. The factory calls `update(with:)` on creation
 // and again whenever TVMLKit re-runs the interface creator for the element, so
 // the view is safe to reuse across updates.
-public final class SimplifiedListView: UIView {
+final class SimplifiedListView: UIView {
   private var rows: [SimplifiedListRowModel] = []
   private let tableView = UITableView(frame: .zero, style: .plain)
   private let summaryLabel = UILabel()
   private static let cellReuseID = "SimplifiedListCell"
   private static let summaryHeight: CGFloat = 100
 
-  public override init(frame: CGRect) {
+  override init(frame: CGRect) {
     super.init(frame: frame)
     setUp()
   }
 
-  public required init?(coder: NSCoder) {
+  required init?(coder: NSCoder) {
     super.init(coder: coder)
     setUp()
   }
@@ -62,7 +62,7 @@ public final class SimplifiedListView: UIView {
     ])
   }
 
-  public func update(with element: TVViewElement) {
+  func update(with element: TVViewElement) {
     let summary = element.attributes?["summary"]
     summaryLabel.text = summary
     tableView.tableHeaderView = (summary?.isEmpty == false) ? summaryLabel : nil
@@ -83,7 +83,7 @@ public final class SimplifiedListView: UIView {
 
   // A tableHeaderView needs an explicit frame; size it to the table width once
   // the table has been laid out.
-  public override func layoutSubviews() {
+  override func layoutSubviews() {
     super.layoutSubviews()
     guard let header = tableView.tableHeaderView else { return }
     let width = tableView.bounds.width
@@ -95,11 +95,11 @@ public final class SimplifiedListView: UIView {
 }
 
 extension SimplifiedListView: UITableViewDataSource, UITableViewDelegate {
-  public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+  func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     rows.count
   }
 
-  public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath)
+  func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath)
     -> UITableViewCell
   {
     let cell =

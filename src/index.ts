@@ -20,7 +20,6 @@ export type {
   TVMLIntrinsicElements,
 } from "./elements.js";
 export type { TVMLEventHandler, TVMLEventProp } from "./events.js";
-export { nativeComponent } from "./native-component.js";
 export { createRoot, launch } from "./root.js";
 export type { LaunchOptions, RootOptions, TVMLRoot } from "./root.js";
 export { serializeStyle } from "./style.js";

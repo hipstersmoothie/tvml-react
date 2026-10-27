@@ -11,7 +11,7 @@ Known gaps and missing features, roughly in priority order within each section.
       CI on a tvOS simulator.
 - [ ] **tvOS 26 sweep of every template and element.** Only `<shelf>`/`<row>`
       were confirmed to hit the `UIScreen.focusedView` crash that
-      `TVMLKitCompatibility` patches. Render each template (`catalogTemplate`,
+      `TVMLReact.install()` works around. Render each template (`catalogTemplate`,
       `productTemplate`, `showcaseTemplate`, `grid`, `carousel`, ...) and note what
       works, what crashes and what needs a workaround.
 - [ ] **Real hardware.** The extracted package and example have only run in the
@@ -84,7 +84,7 @@ Known gaps and missing features, roughly in priority order within each section.
       styles.
 - [ ] **`FocusBridgeWindow` is geometry-based.** It splits header and body by a
       fixed Y. Look for a way to find the header views directly.
-- [ ] **`TVMLKitCompatibility` swizzles a private path.** It replaces
+- [ ] **The tvOS 26 workaround swizzles UIKit.** It replaces
       `-[UIScreen focusedView]` globally. Remove it once Apple fixes TVMLKit, and
       keep checking new tvOS releases for other crashes.
 

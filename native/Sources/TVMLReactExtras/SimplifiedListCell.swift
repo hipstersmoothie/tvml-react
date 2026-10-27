@@ -2,7 +2,7 @@ import UIKit
 
 // A single focusable row in the SimplifiedList table: artwork, a two-line
 // title/subtitle column, and a right-aligned accessory label.
-public final class SimplifiedListCell: UITableViewCell {
+final class SimplifiedListCell: UITableViewCell {
   private static let imageCache = NSCache<NSURL, UIImage>()
   private static let artSize: CGFloat = 100
   // Horizontal inset so content isn't flush with the cell edge — and, when
@@ -15,12 +15,12 @@ public final class SimplifiedListCell: UITableViewCell {
   private let accessoryLabelView = UILabel()
   private var imageTask: URLSessionDataTask?
 
-  public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+  override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
     setUp()
   }
 
-  public required init?(coder: NSCoder) {
+  required init?(coder: NSCoder) {
     super.init(coder: coder)
     setUp()
   }
@@ -78,7 +78,7 @@ public final class SimplifiedListCell: UITableViewCell {
     ])
   }
 
-  public func configure(with row: SimplifiedListRowModel) {
+  func configure(with row: SimplifiedListRowModel) {
     titleLabel.text = row.title
     subtitleLabel.text = row.subtitle
     subtitleLabel.isHidden = (row.subtitle?.isEmpty ?? true)
@@ -115,7 +115,7 @@ public final class SimplifiedListCell: UITableViewCell {
     task.resume()
   }
 
-  public override func prepareForReuse() {
+  override func prepareForReuse() {
     super.prepareForReuse()
     imageTask?.cancel()
     imageTask = nil
@@ -125,7 +125,7 @@ public final class SimplifiedListCell: UITableViewCell {
 
   // The focused cell gets the system's white focus background, so invert the
   // text to dark to stay legible (white-on-white is otherwise invisible).
-  public override func didUpdateFocus(
+  override func didUpdateFocus(
     in context: UIFocusUpdateContext,
     with coordinator: UIFocusAnimationCoordinator
   ) {

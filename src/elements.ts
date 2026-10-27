@@ -1,9 +1,8 @@
 // JSX typings for TVML elements. Every TVML tag gets its own entry so typos and
 // attributes that don't belong are caught at compile time.
 //
-// Only TVMLKit's built-in elements are lowercase tags. Wrap elements you
-// register natively with `nativeComponent()` instead, so they're imported
-// components rather than extra intrinsics.
+// Only TVMLKit's built-in elements are lowercase tags. Natively registered
+// elements are exposed as ordinary function components instead.
 
 import type { ReactNode, Ref } from "react";
 

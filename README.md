@@ -47,8 +47,9 @@ The [example app](examples/hello) running in the tvOS 26 simulator.
   `URLSearchParams`.
 - **CLI.** `tvml-react build` and `tvml-react dev` bundle your app for TVJS using esbuild,
   serve it on your LAN, and ship a bootstrap `Application.js`.
-- **Swift extras (optional).** A fix that stops TVMLKit crashing on tvOS 26, a
-  focus bridge for header navs, and a scrollable native list element.
+- **Swift package.** One call to launch the app. It also fixes a TVMLKit crash
+  on tvOS 26, registers custom native elements for you, and ships a focus
+  bridge for header navs and a scrollable native list.
 
 ## Getting started
 
@@ -102,15 +103,24 @@ Both put two files in the output folder:
 
 ### 4. Load it from a tvOS app
 
-Point a `TVApplicationController` at `Application.js`:
+Add the `TVMLReactExtras` Swift package (**File → Add Package Dependencies…**,
+`https://github.com/hipstersmoothie/tvml-react`) and launch from your app
+delegate:
 
 ```swift
-let base = "http://192.168.1.42:9001/" // your Mac's LAN IP, or localhost in the simulator
-let context = TVApplicationControllerContext()
-context.javaScriptApplicationURL = URL(string: base + "Application.js")!
-context.launchOptions["BASEURL"] = base
-appController = TVApplicationController(context: context, window: window, delegate: self)
+import TVMLReactExtras
+
+let window = UIWindow(frame: UIScreen.main.bounds)
+self.window = window
+appController = TVMLReact.launch(
+  serverURL: URL(string: "http://192.168.1.42:9001/")!, // your Mac's LAN IP, or localhost in the simulator
+  window: window,
+  delegate: self
+)
 ```
+
+`TVMLReact.launch` installs tvml-react's native pieces, then points a
+`TVApplicationController` at `Application.js`.
 
 [`examples/hello/tvos`](examples/hello/tvos) is a complete Xcode project you can copy.
 Allow HTTP to your dev server with `NSAppTransportSecurity` → `NSAllowsLocalNetworking`.
@@ -183,35 +193,52 @@ Handlers receive the `TVMLEvent`.
 
 ### Custom elements
 
-Lowercase tags are reserved for TVMLKit's built-in elements. For an element you
-register natively (`TVElementFactory` + `TVInterfaceCreating`), wrap the tag in
-a component with `nativeComponent` and import it where you need it:
+Lowercase tags are reserved for TVMLKit's built-in elements. Anything custom is
+an ordinary function component you import.
 
-```ts
-import { nativeComponent } from "tvml-react";
+For an element backed by your own UIKit view, register the view in Swift and
+write a component that renders the tag. `TVMLReact` takes care of
+`TVElementFactory`, `TVInterfaceFactory` and sharing the single interface
+creator TVMLKit allows:
 
-export const Gauge = nativeComponent<{ value: number }>("gauge", "Gauge");
+```swift
+// Before TVMLReact.launch
+TVMLReact.register("gauge") { element, existingView in
+  let view = existingView as? GaugeView ?? GaugeView()
+  view.value = Double(element.attributes?["value"] ?? "") ?? 0
+  return view
+}
 ```
 
 ```tsx
-<Gauge value={0.4} style={{ width: 400 }} />
+import { createElement } from "react";
+import type { TVMLAttributes } from "tvml-react";
+
+export function Gauge(props: TVMLAttributes & { value: number }) {
+  return createElement("gauge", props);
+}
+
+<Gauge value={0.4} style={{ width: 400, height: 40 }} />
 ```
 
-Props become attributes on the `<gauge>` element, just like built-in tags, and
-the shared props (`style`, `onSelect`, `ref`, ...) work too.
+Props become attributes on the element, and the shared props (`style`,
+`onSelect`, `ref`, ...) work as they do on built-in tags.
 
-## Swift extras
+## Swift package
 
-`TVMLReactExtras` is a Swift package (sources in `native/`). In Xcode choose
-**File → Add Package Dependencies…** and enter
-`https://github.com/hipstersmoothie/tvml-react`. Each piece is optional.
+`TVMLReactExtras` (sources in `native/`) is the native half of tvml-react.
 
-### `TVMLKitCompatibility.install()`
+- **`TVMLReact.launch(serverURL:window:delegate:)`** installs everything below
+  and starts the app.
+- **`TVMLReact.install()`** does the installing without launching, if you'd
+  rather create the `TVApplicationController` yourself.
+- **`TVMLReact.register(_:childElements:makeView:)`** registers custom elements
+  (see [Custom elements](#custom-elements)).
 
-Call this before creating the `TVApplicationController`. In apps built with the
-tvOS 26 SDK, TVMLKit's own `<shelf>`, `<grid>`, `<row>` and other collection
-elements crash with *"Accessing the focus system through UIScreen is no longer
-supported"*. This call redirects that lookup through `UIFocusSystem`.
+`install()` also works around a TVMLKit bug. In apps built with the tvOS 26 SDK,
+TVMLKit's own `<shelf>`, `<grid>`, `<row>` and other collection elements crash
+with *"Accessing the focus system through UIScreen is no longer supported"*. The
+workaround answers that lookup through `UIFocusSystem` instead.
 
 ### `FocusBridgeWindow`
 
@@ -226,10 +253,7 @@ directions.
 `divTemplate` doesn't scroll. `SimplifiedList` is a custom view element backed
 by a `UITableView`: drop it into a `divTemplate` and it scrolls and handles
 focus natively. A `segmentBar` header above it stays standard TVML.
-
-```swift
-SimplifiedListElement.register() // before creating the TVApplicationController
-```
+`TVMLReact.install()` registers it.
 
 ```tsx
 import { SimplifiedList, SimplifiedListRow } from "tvml-react/simplified-list";

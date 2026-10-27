@@ -2,12 +2,12 @@ import ObjectiveC
 import UIKit
 
 // Workarounds for TVMLKit bugs on newer tvOS releases.
-public enum TVMLKitCompatibility {
+enum TVMLKitCompatibility {
   private static var installed = false
 
   /// Installs every workaround. Call once, before creating the
   /// TVApplicationController.
-  public static func install() {
+  static func install() {
     guard !installed else { return }
     installed = true
     patchScreenFocusedView()
