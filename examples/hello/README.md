@@ -1,16 +1,16 @@
 # hello
 
-A small tvml-react app: an album shelf with `onSelect`/`onHighlight`, a detail
-alert with local state, and the native `<simplifiedList>` from TVMLReactExtras.
+A small tour of tvml-react:
+- **Albums:** a shelf of albums that push a detail screen with playback.
+- **Search:** filters the albums as you type.
+- **Native list:** the `SimplifiedList` component, with the screen kept awake.
+- **Platform:** live values from every platform hook.
 
 ```sh
-pnpm install          # from the repo root
-pnpm build            # build tvml-react itself (from the repo root)
+pnpm install && pnpm build   # from the repo root
 cd examples/hello
-pnpm dev              # serves http://0.0.0.0:9001/
-open tvos/HelloTVML.xcodeproj
+pnpm dev                     # serves http://0.0.0.0:9100/
+xcrun simctl launch booted dev.tvml-react.examples -TVMLServerURL http://localhost:9100/
 ```
 
-Run the `HelloTVML` scheme on an Apple TV simulator. For a real Apple TV, set
-`TVMLServerURL` in `tvos/project.yml` (or the generated `Info.plist`) to your
-Mac's LAN address and set a development team.
+The tvOS app is the shared [shell](../shell).

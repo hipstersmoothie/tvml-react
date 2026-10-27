@@ -1,0 +1,37 @@
+# Shared tvOS shell for every example. Regenerate TVMLExamples.xcodeproj with `xcodegen` after editing.
+name: TVMLExamples
+options:
+  bundleIdPrefix: dev.tvml-react
+  deploymentTarget:
+    tvOS: "17.0"
+packages:
+  TVMLReactExtras:
+    path: ../..
+targets:
+  TVMLExamples:
+    type: application
+    platform: tvOS
+    sources:
+      - TVMLExamples
+    dependencies:
+      - package: TVMLReactExtras
+      - sdk: TVMLKit.framework
+    info:
+      path: TVMLExamples/Info.plist
+      properties:
+        CFBundleDisplayName: tvml-react
+        UILaunchStoryboardName: LaunchScreen
+        UIUserInterfaceStyle: Dark
+        UIRequiredDeviceCapabilities: [arm64]
+        # Default server: the folder serving Application.js and app.js. Override per
+        # launch with `-TVMLServerURL http://host:port/` (e.g. simctl launch args).
+        # The simulator can use localhost; a real Apple TV needs your Mac's LAN IP.
+        TVMLServerURL: http://localhost:9001/
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.tvml-react.examples
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "3"

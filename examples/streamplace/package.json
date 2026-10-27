@@ -1,0 +1,19 @@
+{
+  "name": "tvml-react-example-streamplace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tvml-react dev src/main.tsx --port 9101",
+    "build": "tvml-react build src/main.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "tvml-react": "link:../.."
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "esbuild": "^0.28.0",
+    "typescript": "^6.0.2"
+  }
+}

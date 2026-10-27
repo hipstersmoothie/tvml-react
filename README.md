@@ -126,7 +126,8 @@ appController = TVMLReact.launch(
 `TVMLReact.launch` installs tvml-react's native pieces, then points a
 `TVApplicationController` at `Application.js`.
 
-[`examples/hello/tvos`](examples/hello/tvos) is a complete Xcode project you can copy.
+[`examples/shell`](examples/shell) is a complete Xcode project you can copy; it
+runs every example in this repo.
 Allow HTTP to your dev server with `NSAppTransportSecurity` → `NSAllowsLocalNetworking`.
 JavaScript changes only need an app relaunch, not an Xcode rebuild.
 
@@ -370,10 +371,10 @@ pnpm test        # vitest, against an in-memory fake TVJS DOM
 pnpm typecheck   # includes compile-time checks for the JSX types
 pnpm build
 
-cd examples/hello && pnpm dev   # then run examples/hello/tvos in Xcode
+cd examples/hello && pnpm dev   # serves on :9100; run examples/shell in Xcode
 ```
 
-The example's Xcode project is generated from `examples/hello/tvos/project.yml`
+The shell's Xcode project is generated from `examples/shell/project.yml`
 with [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ## License

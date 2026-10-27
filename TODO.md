@@ -14,7 +14,7 @@ Known gaps and missing features, roughly in priority order within each section.
 
 - [ ] **Remote interactions in an automated test.** `onSelect`, `onPlay` and
       `onHoldSelect` are only covered by unit tests against the fake DOM. Add an
-      XCUITest target to `examples/hello/tvos` that drives `XCUIRemote` (select,
+      XCUITest target to `examples/shell` that drives `XCUIRemote` (select,
       swipe between segments, long press) and asserts the screen changed. Run it in
       CI on a tvOS simulator.
 - [ ] **tvOS 26 sweep of every template and element.** Only `<shelf>`/`<row>`

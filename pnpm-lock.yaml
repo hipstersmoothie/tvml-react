@@ -34,7 +34,140 @@ importers:
         specifier: ^4.1.5
         version: 4.1.12(@types/node@22.20.5)(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.2))
 
+  examples/dashboard:
+    dependencies:
+      react:
+        specifier: ^19.2.0
+        version: 19.3.1
+      tvml-react:
+        specifier: link:../..
+        version: link:../..
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.3.0
+      esbuild:
+        specifier: ^0.28.0
+        version: 0.28.2
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
+  examples/gallery:
+    dependencies:
+      react:
+        specifier: ^19.2.0
+        version: 19.3.1
+      tvml-react:
+        specifier: link:../..
+        version: link:../..
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.3.0
+      esbuild:
+        specifier: ^0.28.0
+        version: 0.28.2
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
+  examples/hacker-news:
+    dependencies:
+      react:
+        specifier: ^19.2.0
+        version: 19.3.1
+      tvml-react:
+        specifier: link:../..
+        version: link:../..
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.3.0
+      esbuild:
+        specifier: ^0.28.0
+        version: 0.28.2
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
   examples/hello:
+    dependencies:
+      react:
+        specifier: ^19.2.0
+        version: 19.3.1
+      tvml-react:
+        specifier: link:../..
+        version: link:../..
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.3.0
+      esbuild:
+        specifier: ^0.28.0
+        version: 0.28.2
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
+  examples/podcasts:
+    dependencies:
+      react:
+        specifier: ^19.2.0
+        version: 19.3.1
+      tvml-react:
+        specifier: link:../..
+        version: link:../..
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.3.0
+      esbuild:
+        specifier: ^0.28.0
+        version: 0.28.2
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
+  examples/settings:
+    dependencies:
+      react:
+        specifier: ^19.2.0
+        version: 19.3.1
+      tvml-react:
+        specifier: link:../..
+        version: link:../..
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.3.0
+      esbuild:
+        specifier: ^0.28.0
+        version: 0.28.2
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
+  examples/streamplace:
+    dependencies:
+      react:
+        specifier: ^19.2.0
+        version: 19.3.1
+      tvml-react:
+        specifier: link:../..
+        version: link:../..
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.3.0
+      esbuild:
+        specifier: ^0.28.0
+        version: 0.28.2
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
+  examples/tv-shows:
     dependencies:
       react:
         specifier: ^19.2.0

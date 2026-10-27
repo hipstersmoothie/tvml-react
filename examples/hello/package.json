@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tvml-react dev src/main.tsx",
+    "dev": "tvml-react dev src/main.tsx --port 9100",
     "build": "tvml-react build src/main.tsx",
     "typecheck": "tsc --noEmit"
   },
