@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { networkInterfaces } from "node:os";
 import { parseArgs } from "node:util";
 
