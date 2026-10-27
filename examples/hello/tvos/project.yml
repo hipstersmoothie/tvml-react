@@ -6,7 +6,7 @@ options:
     tvOS: "17.0"
 packages:
   TVMLReactExtras:
-    path: ../../../native
+    path: ../../..
 targets:
   HelloTVML:
     type: application

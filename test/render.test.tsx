@@ -2,6 +2,7 @@ import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createRoot, launch, type TVMLRoot } from "../src/index.js";
+import { SimplifiedList, SimplifiedListRow } from "../src/simplified-list.js";
 import { FakeDocument, FakeElement, installTVJSGlobals } from "./fake-dom.js";
 
 const roots: Array<TVMLRoot> = [];
@@ -136,6 +137,26 @@ describe("rendering", () => {
     root.unmount();
     expect(doc.toXML()).toBe("");
     expect(doc.listenerCount()).toBe(0);
+  });
+});
+
+describe("native components", () => {
+  it("render their native tag with props as attributes", () => {
+    const { doc, root } = setup();
+
+    root.render(
+      <divTemplate>
+        <SimplifiedList summary="History" style={{ height: 800 }}>
+          <SimplifiedListRow title="Song" accessory="now" />
+        </SimplifiedList>
+      </divTemplate>,
+    );
+
+    expect(doc.toXML()).toBe(
+      '<divTemplate><simplifiedList summary="History" style="height: 800;">' +
+        '<simplifiedListRow title="Song" accessory="now"/>' +
+        "</simplifiedList></divTemplate>",
+    );
   });
 });
 

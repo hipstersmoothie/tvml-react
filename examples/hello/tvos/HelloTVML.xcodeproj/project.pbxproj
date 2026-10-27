@@ -14,9 +14,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		2D9A10E379468BEBDF77B367 /* native */ = {isa = PBXFileReference; lastKnownFileType = folder; name = native; path = ../../../native; sourceTree = SOURCE_ROOT; };
 		6C13DEE3A4323055C592E4AA /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		96F5D76B7A015BAB24011F83 /* HelloTVML.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HelloTVML.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C65233EA8C0AA3A9371EC7E9 /* tvml-react */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "tvml-react"; path = ../../..; sourceTree = SOURCE_ROOT; };
 		CFBE4C3DEEBB9DCC98952D6E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F19F5DB6073F8E32115BA16F /* TVMLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVMLKit.framework; path = System/Library/Frameworks/TVMLKit.framework; sourceTree = SDKROOT; };
 		F7E2426584D1F00E95D04AFC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -48,7 +48,7 @@
 		71DFAE1D6CF148141A13C336 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				2D9A10E379468BEBDF77B367 /* native */,
+				C65233EA8C0AA3A9371EC7E9 /* tvml-react */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -123,7 +123,7 @@
 			mainGroup = 371C2CDDAC63E4CDCD8260D8;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				DF5FBFC57279B2F626018CFC /* XCLocalSwiftPackageReference "../../../native" */,
+				F28603A6083C523EC78738E7 /* XCLocalSwiftPackageReference "../../.." */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CF1187B3BD6D255C8DED584D /* Products */;
@@ -335,9 +335,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		DF5FBFC57279B2F626018CFC /* XCLocalSwiftPackageReference "../../../native" */ = {
+		F28603A6083C523EC78738E7 /* XCLocalSwiftPackageReference "../../.." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../../native;
+			relativePath = ../../..;
 		};
 /* End XCLocalSwiftPackageReference section */
 

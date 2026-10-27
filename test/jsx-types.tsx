@@ -1,6 +1,6 @@
 // Compile-time checks for the TVML JSX typings (run via `pnpm typecheck`).
 
-import type {} from "../src/simplified-list.js";
+import { SimplifiedList, SimplifiedListRow } from "../src/simplified-list.js";
 
 export const valid = (
   <stackTemplate theme="dark">
@@ -17,9 +17,9 @@ export const valid = (
         </section>
       </shelf>
     </collectionList>
-    <simplifiedList summary="History">
-      <simplifiedListRow title="Song" accessory="now" />
-    </simplifiedList>
+    <SimplifiedList summary="History" style={{ width: 1920, height: 800 }}>
+      <SimplifiedListRow key="1" title="Song" accessory="now" />
+    </SimplifiedList>
   </stackTemplate>
 );
 
@@ -31,3 +31,9 @@ export const wrongAttribute = <lockup theme="dark" />;
 
 // @ts-expect-error -- not a valid theme
 export const wrongTheme = <alertTemplate theme="blue" />;
+
+// @ts-expect-error -- native elements are components, not intrinsic tags
+export const nativeAsIntrinsic = <simplifiedList />;
+
+// @ts-expect-error -- unknown prop on a native component
+export const wrongNativeProp = <SimplifiedListRow artist="x" />;

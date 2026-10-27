@@ -8,6 +8,6 @@ let package = Package(
     .library(name: "TVMLReactExtras", targets: ["TVMLReactExtras"])
   ],
   targets: [
-    .target(name: "TVMLReactExtras")
+    .target(name: "TVMLReactExtras", path: "native/Sources/TVMLReactExtras")
   ]
 )

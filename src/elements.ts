@@ -1,18 +1,9 @@
 // JSX typings for TVML elements. Every TVML tag gets its own entry so typos and
 // attributes that don't belong are caught at compile time.
 //
-// Custom elements (e.g. ones registered natively with TVElementFactory) are
-// added by merging into the runtime's JSX namespace:
-//
-//   import type { TVMLAttributes } from "tvml-react";
-//
-//   declare module "tvml-react/jsx-runtime" {
-//     namespace JSX {
-//       interface IntrinsicElements {
-//         myWidget: TVMLAttributes & { value?: string };
-//       }
-//     }
-//   }
+// Only TVMLKit's built-in elements are lowercase tags. Wrap elements you
+// register natively with `nativeComponent()` instead, so they're imported
+// components rather than extra intrinsics.
 
 import type { ReactNode, Ref } from "react";
 

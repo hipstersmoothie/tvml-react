@@ -1,4 +1,4 @@
-import type {} from "tvml-react/simplified-list";
+import { SimplifiedList, SimplifiedListRow } from "tvml-react/simplified-list";
 
 import { useEffect, useState } from "react";
 
@@ -103,17 +103,17 @@ function Albums({
   );
 }
 
-// Uses the <simplifiedList> view from the TVMLReactExtras Swift package.
+// Uses the native list view from the TVMLReactExtras Swift package.
 function NativeList() {
   const now = useClock();
 
   return (
-    <simplifiedList
+    <SimplifiedList
       summary={`It's ${now}`}
       style={{ width: 1920, height: 880, tvPosition: "bottom" }}
     >
       {ALBUMS.map((album, index) => (
-        <simplifiedListRow
+        <SimplifiedListRow
           key={album.id}
           title={`${String(index + 1).padStart(2, "0")} · ${album.title}`}
           subtitle={album.artist}
@@ -121,7 +121,7 @@ function NativeList() {
           image={artwork(album)}
         />
       ))}
-    </simplifiedList>
+    </SimplifiedList>
   );
 }
 

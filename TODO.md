@@ -76,10 +76,10 @@ Known gaps and missing features, roughly in priority order within each section.
 
 ## Native extras
 
-- [ ] **`<simplifiedList>` rows can't be selected.** Rows are native table cells
+- [ ] **`SimplifiedList` rows can't be selected.** Rows are native table cells
       and don't dispatch TVML events back to JS. Fire `select` / `highlight` on
       the row elements (or expose a callback) so `onSelect` works.
-- [ ] **`<simplifiedList>` styling is hard-coded.** Row height, fonts, colours
+- [ ] **`SimplifiedList` styling is hard-coded.** Row height, fonts, colours
       and artwork size are fixed in Swift. Read them from TVML attributes or
       styles.
 - [ ] **`FocusBridgeWindow` is geometry-based.** It splits header and body by a
@@ -87,9 +87,6 @@ Known gaps and missing features, roughly in priority order within each section.
 - [ ] **`TVMLKitCompatibility` swizzles a private path.** It replaces
       `-[UIScreen focusedView]` globally. Remove it once Apple fixes TVMLKit, and
       keep checking new tvOS releases for other crashes.
-- [ ] **Distribution.** The Swift package lives in `native/` of this repo. SPM
-      expects `Package.swift` at the repo root to depend on it by URL; either
-      move it, add a root `Package.swift`, or split it into its own repo.
 
 ## Developer experience
 

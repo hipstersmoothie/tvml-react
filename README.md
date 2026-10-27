@@ -36,8 +36,10 @@ The [example app](examples/hello) running in the tvOS 26 simulator.
 
 - **Renderer.** A `react-reconciler` host config that writes straight into the TVJS DOM.
   It handles concurrent rendering, hooks, refs, and swapping templates in place.
-- **Typed TVML JSX.** Every template and element has its own type, so `<div>`
-  or `<lockup theme="dark">` won't compile. Styles are written as objects (`{ tvAlign: "center" }`).
+- **Typed TVML JSX.** TVMLKit's built-in elements are lowercase tags, each with
+  its own type, so `<div>` or `<lockup theme="dark">` won't compile. Styles are
+  written as objects (`{ tvAlign: "center" }`). Natively registered elements are
+  imported components instead.
 - **Events.** `onSelect`, `onHighlight`, `onPlay`, and `onHoldSelect`, delegated
   from the document.
 - **JavaScriptCore polyfills.** These cover what React's scheduler and everyday
@@ -181,25 +183,28 @@ Handlers receive the `TVMLEvent`.
 
 ### Custom elements
 
-Extend the JSX namespace to type elements you've registered natively:
+Lowercase tags are reserved for TVMLKit's built-in elements. For an element you
+register natively (`TVElementFactory` + `TVInterfaceCreating`), wrap the tag in
+a component with `nativeComponent` and import it where you need it:
 
 ```ts
-import type { TVMLAttributes } from "tvml-react";
+import { nativeComponent } from "tvml-react";
 
-declare module "tvml-react/jsx-runtime" {
-  namespace JSX {
-    interface IntrinsicElements {
-      myWidget: TVMLAttributes & { value?: string };
-    }
-  }
-}
+export const Gauge = nativeComponent<{ value: number }>("gauge", "Gauge");
 ```
+
+```tsx
+<Gauge value={0.4} style={{ width: 400 }} />
+```
+
+Props become attributes on the `<gauge>` element, just like built-in tags, and
+the shared props (`style`, `onSelect`, `ref`, ...) work too.
 
 ## Swift extras
 
-`native/` is a Swift package, `TVMLReactExtras`. Add it to your app with
-**File → Add Package Dependencies… → Add Local…**, or by pointing to this repo's
-URL. Each piece is optional.
+`TVMLReactExtras` is a Swift package (sources in `native/`). In Xcode choose
+**File → Add Package Dependencies…** and enter
+`https://github.com/hipstersmoothie/tvml-react`. Each piece is optional.
 
 ### `TVMLKitCompatibility.install()`
 
@@ -216,9 +221,9 @@ a control with nothing directly above it can't get back up to a header
 window. It adds a `UIFocusGuide` that connects the header and the body in both
 directions.
 
-### `<simplifiedList>`
+### `SimplifiedList`
 
-`divTemplate` doesn't scroll. `<simplifiedList>` is a custom view element backed
+`divTemplate` doesn't scroll. `SimplifiedList` is a custom view element backed
 by a `UITableView`: drop it into a `divTemplate` and it scrolls and handles
 focus natively. A `segmentBar` header above it stays standard TVML.
 
@@ -227,13 +232,13 @@ SimplifiedListElement.register() // before creating the TVApplicationController
 ```
 
 ```tsx
-import type {} from "tvml-react/simplified-list"; // JSX types only
+import { SimplifiedList, SimplifiedListRow } from "tvml-react/simplified-list";
 
-<simplifiedList summary="Recently played" style={{ width: 1920, height: 880 }}>
+<SimplifiedList summary="Recently played" style={{ width: 1920, height: 880 }}>
   {tracks.map((t) => (
-    <simplifiedListRow key={t.id} title={t.title} subtitle={t.artist} accessory={t.time} image={t.art} />
+    <SimplifiedListRow key={t.id} title={t.title} subtitle={t.artist} accessory={t.time} image={t.art} />
   ))}
-</simplifiedList>
+</SimplifiedList>
 ```
 
 ## Build tooling without the CLI

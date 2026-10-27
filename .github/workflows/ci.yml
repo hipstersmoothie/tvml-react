@@ -28,5 +28,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build TVMLReactExtras for tvOS
-        working-directory: native
         run: xcodebuild -scheme TVMLReactExtras -destination 'generic/platform=tvOS Simulator' build

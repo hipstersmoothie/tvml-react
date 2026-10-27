@@ -1,18 +1,15 @@
-// JSX types for the native `<simplifiedList>` view element shipped in the
-// TVMLReactExtras Swift package (see native/). It has no runtime code; pull the
-// tags into JSX with `import type {} from "tvml-react/simplified-list"`.
-//
-// The element only renders if the tvOS app registers it natively; plain
-// TVMLKit ignores unknown tags.
+// Components for the native `<simplifiedList>` view element shipped in the
+// TVMLReactExtras Swift package (see native/). They only render if the tvOS
+// app calls `SimplifiedListElement.register()`; plain TVMLKit ignores the tags.
 
-import type { TVMLAttributes } from "./elements.js";
+import { nativeComponent } from "./native-component.js";
 
-export interface SimplifiedListAttributes extends TVMLAttributes {
+export interface SimplifiedListProps {
   /** Non-focusable header text shown above the rows. */
   summary?: string;
 }
 
-export interface SimplifiedListRowAttributes extends TVMLAttributes {
+export interface SimplifiedListRowProps {
   title?: string;
   subtitle?: string;
   /** Right-aligned trailing label. */
@@ -21,12 +18,17 @@ export interface SimplifiedListRowAttributes extends TVMLAttributes {
   image?: string;
 }
 
-declare module "./jsx-runtime.js" {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace JSX {
-    interface IntrinsicElements {
-      simplifiedList: SimplifiedListAttributes;
-      simplifiedListRow: SimplifiedListRowAttributes;
-    }
-  }
-}
+/**
+ * A natively scrolling list (a UITableView) for use inside a `divTemplate`.
+ * Size it with `style={{ width, height }}`.
+ */
+export const SimplifiedList = nativeComponent<SimplifiedListProps>(
+  "simplifiedList",
+  "SimplifiedList",
+);
+
+/** A row of a {@link SimplifiedList}. */
+export const SimplifiedListRow = nativeComponent<SimplifiedListRowProps>(
+  "simplifiedListRow",
+  "SimplifiedListRow",
+);
