@@ -1,0 +1,36 @@
+# Regenerate HelloTVML.xcodeproj with `xcodegen` after editing.
+name: HelloTVML
+options:
+  bundleIdPrefix: dev.tvml-react
+  deploymentTarget:
+    tvOS: "17.0"
+packages:
+  TVMLReactExtras:
+    path: ../../../native
+targets:
+  HelloTVML:
+    type: application
+    platform: tvOS
+    sources:
+      - HelloTVML
+    dependencies:
+      - package: TVMLReactExtras
+      - sdk: TVMLKit.framework
+    info:
+      path: HelloTVML/Info.plist
+      properties:
+        CFBundleDisplayName: Hello TVML
+        UILaunchStoryboardName: LaunchScreen
+        UIUserInterfaceStyle: Dark
+        UIRequiredDeviceCapabilities: [arm64]
+        # Folder that serves Application.js and app.js, with a trailing slash.
+        # The simulator can use localhost; a real Apple TV needs your Mac's LAN IP.
+        TVMLServerURL: http://localhost:9001/
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.tvml-react.hello
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "3"

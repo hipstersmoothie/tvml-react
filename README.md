@@ -1,0 +1,283 @@
+# tvml-react
+
+A React renderer for Apple TV's [TVMLKit](https://developer.apple.com/documentation/tvmlkit).
+Write tvOS screens as React components and the renderer turns them into native
+TVML templates, with focus, the remote, and the system look all handled by tvOS.
+
+```tsx
+import { launch, type StartOptions } from "tvml-react";
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <alertTemplate theme="dark">
+      <title>{`Pressed ${count} times`}</title>
+      <button onSelect={() => setCount((c) => c + 1)}>
+        <text>Press me</text>
+      </button>
+    </alertTemplate>
+  );
+}
+
+export function start(_options: StartOptions) {
+  launch(<Counter />);
+}
+```
+
+<p>
+  <img src="docs/albums.jpg" width="49%" alt="A shelf of album lockups under a segmentBar nav" />
+  <img src="docs/native-list.jpg" width="49%" alt="The native simplifiedList element" />
+</p>
+
+The [example app](examples/hello) running in the tvOS 26 simulator.
+
+## What's in the box
+
+- **Renderer.** A `react-reconciler` host config that writes straight into the TVJS DOM.
+  It handles concurrent rendering, hooks, refs, and swapping templates in place.
+- **Typed TVML JSX.** Every template and element has its own type, so `<div>`
+  or `<lockup theme="dark">` won't compile. Styles are written as objects (`{ tvAlign: "center" }`).
+- **Events.** `onSelect`, `onHighlight`, `onPlay`, and `onHoldSelect`, delegated
+  from the document.
+- **JavaScriptCore polyfills.** These cover what React's scheduler and everyday
+  code expect but TVJS lacks: `queueMicrotask`, `performance.now`, `URL`, and
+  `URLSearchParams`.
+- **CLI.** `tvml-react build` and `tvml-react dev` bundle your app for TVJS using esbuild,
+  serve it on your LAN, and ship a bootstrap `Application.js`.
+- **Swift extras (optional).** A fix that stops TVMLKit crashing on tvOS 26, a
+  focus bridge for header navs, and a scrollable native list element.
+
+## Getting started
+
+```sh
+npm install tvml-react react
+npm install -D esbuild typescript @types/react
+```
+
+### 1. Point JSX at tvml-react
+
+```jsonc
+// tsconfig.json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "tvml-react",
+    "lib": ["ES2022", "DOM"], // DOM for setTimeout/XMLHttpRequest, which TVJS provides
+    "moduleResolution": "bundler",
+    "strict": true
+  }
+}
+```
+
+### 2. Export `start` from your entry
+
+```tsx
+// src/main.tsx
+import { launch, type StartOptions } from "tvml-react";
+import { App } from "./App";
+
+export function start({ baseUrl }: StartOptions) {
+  launch(<App apiBase={baseUrl} />);
+}
+```
+
+`launch` renders into a new document and presents it. If the first render
+throws, it shows an alert with the error instead of a blank screen.
+
+### 3. Build or serve it
+
+```sh
+npx tvml-react dev src/main.tsx     # watch + serve on http://0.0.0.0:9001/
+npx tvml-react build src/main.tsx   # write dist/app.js + dist/Application.js
+```
+
+Both put two files in the output folder:
+
+- `app.js`: your bundle.
+- `Application.js`: a small bootstrap that shows a spinner, loads `app.js`, and
+  calls your `start()`.
+
+### 4. Load it from a tvOS app
+
+Point a `TVApplicationController` at `Application.js`:
+
+```swift
+let base = "http://192.168.1.42:9001/" // your Mac's LAN IP, or localhost in the simulator
+let context = TVApplicationControllerContext()
+context.javaScriptApplicationURL = URL(string: base + "Application.js")!
+context.launchOptions["BASEURL"] = base
+appController = TVApplicationController(context: context, window: window, delegate: self)
+```
+
+[`examples/hello/tvos`](examples/hello/tvos) is a complete Xcode project you can copy.
+Allow HTTP to your dev server with `NSAppTransportSecurity` → `NSAllowsLocalNetworking`.
+JavaScript changes only need an app relaunch, not an Xcode rebuild.
+
+## API
+
+### `launch(element, options?)`
+
+Creates a root, renders `element`, and presents the document, replacing the
+current top of the navigation stack. It returns the `TVMLRoot`, or `undefined`
+if the first render failed.
+
+| Option        | Description                                                          |
+| ------------- | -------------------------------------------------------------------- |
+| `onError`     | Called with every error React reports. Defaults to `console.error`. |
+| `errorTitle`  | Title of the alert shown if the first render fails.                 |
+
+### `createRoot(document?, options?)`
+
+Lower-level control. If you don't pass a document, it creates an empty `<document>`.
+
+```ts
+const root = createRoot();
+root.render(<App />); // flushed synchronously
+presentDocument(root.document);
+// later
+root.unmount();
+```
+
+Your components render the document's children: one template element and an
+optional `<head>`. Returning a different template element swaps the whole
+screen in place (for example, `loadingTemplate` → `stackTemplate`).
+
+The first render is flushed synchronously, which matters. TVMLKit shows an
+empty document as a blank screen and ignores later mutations. Once a non-empty
+document has been presented, mutations do show up, and state updates render
+through React's scheduler as usual.
+
+To use a modal or push another screen, give it its own root and call
+`navigationDocument.presentModal(root.document)` or
+`pushDocument(root.document)`. The helpers `getNavigationDocument`,
+`presentDocument`, `parseDocument`, `createDocument`, and `presentMessage`
+cover the common cases.
+
+### Events
+
+| Prop           | TVML event   | Fires when                                                           |
+| -------------- | ------------ | -------------------------------------------------------------------- |
+| `onSelect`     | `select`     | A focusable element is clicked.                                      |
+| `onHighlight`  | `highlight`  | Focus moves onto the element. `segmentBarItem` only fires this one.  |
+| `onPlay`       | `play`       | Play/pause is pressed while the element has focus.                   |
+| `onHoldSelect` | `holdselect` | A long press.                                                        |
+
+Each root adds one listener per event type to its document. When an event
+fires, it walks up from the target to the nearest element that has a handler.
+Handlers receive the `TVMLEvent`.
+
+### Attributes and styles
+
+- `style` takes a string or an object. Object keys are converted to kebab case
+  and numbers are written without units:
+  `{ tvTextMaxLines: 2, fontSize: 40 }` → `tv-text-max-lines: 2; font-size: 40;`.
+- `className` becomes `class`. `true` becomes `"true"`. `false`, `null`, and
+  `undefined` remove the attribute.
+- An attribute is only written when its serialized value changes. This prevents
+  TVMLKit from re-decoding images and replaying focus animations on every
+  render.
+- `ref` gives you the underlying `TVMLElement`.
+
+### Custom elements
+
+Extend the JSX namespace to type elements you've registered natively:
+
+```ts
+import type { TVMLAttributes } from "tvml-react";
+
+declare module "tvml-react/jsx-runtime" {
+  namespace JSX {
+    interface IntrinsicElements {
+      myWidget: TVMLAttributes & { value?: string };
+    }
+  }
+}
+```
+
+## Swift extras
+
+`native/` is a Swift package, `TVMLReactExtras`. Add it to your app with
+**File → Add Package Dependencies… → Add Local…**, or by pointing to this repo's
+URL. Each piece is optional.
+
+### `TVMLKitCompatibility.install()`
+
+Call this before creating the `TVApplicationController`. In apps built with the
+tvOS 26 SDK, TVMLKit's own `<shelf>`, `<grid>`, `<row>` and other collection
+elements crash with *"Accessing the focus system through UIScreen is no longer
+supported"*. This call redirects that lookup through `UIFocusSystem`.
+
+### `FocusBridgeWindow`
+
+TVML focus is purely geometric, and TVJS has no API for moving it. As a result,
+a control with nothing directly above it can't get back up to a header
+`segmentBar`. Use `FocusBridgeWindow(frame:headerHeight:)` as the controller's
+window. It adds a `UIFocusGuide` that connects the header and the body in both
+directions.
+
+### `<simplifiedList>`
+
+`divTemplate` doesn't scroll. `<simplifiedList>` is a custom view element backed
+by a `UITableView`: drop it into a `divTemplate` and it scrolls and handles
+focus natively. A `segmentBar` header above it stays standard TVML.
+
+```swift
+SimplifiedListElement.register() // before creating the TVApplicationController
+```
+
+```tsx
+import type {} from "tvml-react/simplified-list"; // JSX types only
+
+<simplifiedList summary="Recently played" style={{ width: 1920, height: 880 }}>
+  {tracks.map((t) => (
+    <simplifiedListRow key={t.id} title={t.title} subtitle={t.artist} accessory={t.time} image={t.art} />
+  ))}
+</simplifiedList>
+```
+
+## Build tooling without the CLI
+
+`tvml-react/build` exports the esbuild preset, so you can add to it yourself:
+
+```js
+import { build, serve, tvmlBuildOptions } from "tvml-react/build";
+
+await build({ entry: "src/main.tsx", outdir: "public/tv" });
+// or: esbuild.build(tvmlBuildOptions({ entry, outdir, esbuild: { /* overrides */ } }))
+```
+
+With a different bundler, you need to:
+
+- Emit one classic script, not ESM.
+- Target roughly Safari 15.
+- Import `tvml-react/polyfills` before anything else.
+- Publish your exports as `globalThis.TVMLReactApp`, or write your own
+  `Application.js`.
+
+## Notes
+
+- **Debugging.** Open Safari → Develop → *your Apple TV or simulator* to get a
+  Web Inspector for the TVJS context.
+- **Template quirks.** `stackTemplate` and `divTemplate` lay things out
+  differently on a real device than in the simulator, so check on hardware.
+- **TVMLKit's future.** Apple hasn't put much into TVMLKit for years. This
+  renderer works with it as it is and works around what it has to.
+
+## Development
+
+```sh
+pnpm install
+pnpm test        # vitest, against an in-memory fake TVJS DOM
+pnpm typecheck   # includes compile-time checks for the JSX types
+pnpm build
+
+cd examples/hello && pnpm dev   # then run examples/hello/tvos in Xcode
+```
+
+The example's Xcode project is generated from `examples/hello/tvos/project.yml`
+with [XcodeGen](https://github.com/yonaskolb/XcodeGen).
+
+## License
+
+MIT

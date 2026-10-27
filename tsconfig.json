@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023", "DOM"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "tvml-react",
+    "types": ["node"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "paths": {
+      "tvml-react": ["./src/index.ts"],
+      "tvml-react/*": ["./src/*.ts"]
+    }
+  },
+  "include": ["src", "test"]
+}
