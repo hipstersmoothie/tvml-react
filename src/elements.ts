@@ -57,6 +57,8 @@ export interface ShelfAttributes extends TVMLAttributes {
 }
 
 export interface TextFieldAttributes extends TVMLAttributes {
+  /** Called with the current text as the user types. */
+  onTextChange?: (text: string) => void;
   keyboardType?:
     | "default"
     | "emailAddress"
@@ -164,6 +166,7 @@ export interface TVMLIntrinsicElements {
   text: TVMLAttributes;
   textBadge: TVMLAttributes;
   textField: TextFieldAttributes;
+  searchField: Omit<TextFieldAttributes, "secure">;
   title: TVMLAttributes;
   video: MediaAttributes;
 }

@@ -16,6 +16,7 @@ export interface TVMLElement {
   insertBefore(child: TVMLElement, before: TVMLElement | null): TVMLElement;
   removeChild(child: TVMLElement): TVMLElement;
   getElementsByTagName?(tag: string): Array<TVMLElement>;
+  getFeature?(name: string): unknown;
   addEventListener(type: string, listener: (event: TVMLEvent) => void): void;
   removeEventListener(type: string, listener: (event: TVMLEvent) => void): void;
 }

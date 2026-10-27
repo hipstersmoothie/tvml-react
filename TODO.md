@@ -4,6 +4,14 @@ Known gaps and missing features, roughly in priority order within each section.
 
 ## Verification
 
+- [ ] **Hooks the simulator can't change.** `useColorScheme` and
+      `useNetworkStatus` updates haven't been seen live, because the tvOS
+      simulator can't switch appearance and the host network can't be toggled.
+      They use the same bridge path as accessibility changes, which were
+      verified. Check on hardware.
+- [ ] **Typing.** `onTextChange` was verified by setting the keyboard's text
+      from JS; real typing on the on-screen keyboard is untested.
+
 - [ ] **Remote interactions in an automated test.** `onSelect`, `onPlay` and
       `onHoldSelect` are only covered by unit tests against the fake DOM. Add an
       XCUITest target to `examples/hello/tvos` that drives `XCUIRemote` (select,
@@ -28,21 +36,27 @@ Known gaps and missing features, roughly in priority order within each section.
 - [ ] **Live reload.** `tvml-react dev` rebuilds but the app has to be relaunched.
       Have the bootstrap poll the dev server (or listen to esbuild's change
       stream) and call `App.reload()`.
-- [ ] **Navigation helpers.** Pushing a screen or presenting a modal means
-      creating a root and calling `navigationDocument` yourself, and nothing
-      unmounts the root when the user backs out with Menu. Add
-      `push(<Screen />)` / `presentModal(<Screen />)` that clean up on the
-      document's `unload` event, and maybe a `useNavigation()` hook.
-- [ ] **Keyboard / search.** `searchTemplate` and `textField` need the TVJS
-      `Keyboard` feature (`getFeature("Keyboard")`, `onTextChange`). Add a
-      `useKeyboard(ref)` hook and an `onTextChange` prop.
-- [ ] **Media playback.** Wrap TVJS `Player` / `Playlist` / `MediaItem` in a hook
-      or component.
-- [ ] **Other TVJS APIs.** Typed wrappers for `Device`, `Settings`,
-      `localStorage`, `App.onResume` / `onSuspend` lifecycle hooks.
-- [ ] **Load and change events.** Only `select`, `highlight`, `play` and
-      `holdselect` are delegated. Consider `load`, `change` and `unload`, and
-      whether any of them need per-element listeners instead of delegation.
+- [ ] **More from the TVJS API.** The tvOS 26 probe also found:
+  - `Player.overlayDocument` / `interactiveOverlayDocument`: custom overlays
+    on the fullscreen player, which could be rendered with React.
+  - The keyboard's `suggestions`: search suggestions.
+  - `userDefaults`: storage shared with a Top Shelf extension.
+  - `App.noteTopShelfDataChanged` / `topShelfImageSizeForShape`: Top Shelf content.
+  - `Slideshow`: a fullscreen photo slideshow.
+  - `MenuBarDocument` on `menuBarTemplate`: tab bars.
+  - `formatDate` / `formatDuration` / `formatNumber`: `Intl` works too.
+- [ ] **Remote input.** A `useRemote()` hook over the Game Controller
+      framework (the Siri Remote appears as a micro gamepad) for swipes and
+      buttons TVML doesn't surface. Check how it interacts with TVML's focus
+      handling.
+- [ ] **Deep links.** Forward `application(_:open:options:)` from Swift into a
+      `useOpenURL()` hook.
+- [ ] **Now Playing.** Publish what's playing to Control Center through
+      `MPNowPlayingInfoCenter` (`useNowPlaying()`).
+- [ ] **Current user.** Per-profile data on multi-user Apple TVs.
+- [ ] **More element events.** Only `select`, `highlight`, `play` and
+      `holdselect` are delegated (document lifecycle events have
+      `useScreenEvent`). Consider `change` and per-element `load`.
 - [ ] **Suspense.** `maySuspendCommit` is hard-coded to `false`. Image
       preloading or suspending on data would need real support for it in the
       host config.

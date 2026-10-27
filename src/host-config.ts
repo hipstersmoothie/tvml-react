@@ -6,6 +6,7 @@ import {
 
 import type { TVMLElement } from "./dom.js";
 import { clearEventHandlers, isEventProp, setEventHandler } from "./events.js";
+import { attachKeyboard, setTextChangeHandler } from "./keyboard.js";
 import { serializeStyle, type TVMLStyle } from "./style.js";
 
 type Props = Record<string, unknown>;
@@ -28,6 +29,11 @@ function applyProp(element: TVMLElement, key: string, value: unknown): void {
 
   if (isEventProp(key)) {
     setEventHandler(element, key, value);
+    return;
+  }
+
+  if (key === "onTextChange") {
+    setTextChangeHandler(element, value);
     return;
   }
 
@@ -153,7 +159,13 @@ export const hostConfig = {
     clearEventHandlers(node);
   },
 
-  finalizeInitialChildren: () => false,
+  // The keyboard feature is only reachable once the element is in a document,
+  // so text inputs hook it up in commitMount.
+  finalizeInitialChildren: (_instance: Instance, _type: string, props: Props) =>
+    typeof props.onTextChange === "function",
+  commitMount(instance: Instance) {
+    attachKeyboard(instance);
+  },
   shouldSetTextContent: () => false,
   getRootHostContext: (): HostContext => ({}),
   getChildHostContext: (parentContext: HostContext) => parentContext,

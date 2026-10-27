@@ -54,8 +54,16 @@ public enum TVMLReact {
     }
   }
 
+  // TVApplicationController keeps its delegate weakly.
+  private static var delegateProxy: ControllerDelegateProxy?
+
   /// Install everything and start the app from `<serverURL>/Application.js`,
   /// the bootstrap `tvml-react build`/`dev` writes next to your bundle.
+  ///
+  /// Also installs the native bridge behind tvml-react's platform hooks
+  /// (`useColorScheme`, `useAccessibility`, `useNetworkStatus`, `useDisplay`,
+  /// `useKeepAwake`). `delegate` still receives every delegate callback.
+  @MainActor
   public static func launch(
     serverURL: URL,
     window: UIWindow,
@@ -70,7 +78,13 @@ public enum TVMLReact {
     context.javaScriptApplicationURL = base.appendingPathComponent("Application.js")
     context.launchOptions["BASEURL"] = base.absoluteString
 
-    let controller = TVApplicationController(context: context, window: window, delegate: delegate)
+    let bridge = NativeBridge(window: window)
+    let proxy = ControllerDelegateProxy(bridge: bridge, forward: delegate)
+    delegateProxy = proxy
+
+    let controller = TVApplicationController(context: context, window: window, delegate: proxy)
+    bridge.controller = controller
+    bridge.startObserving()
     window.makeKeyAndVisible()
     return controller
   }

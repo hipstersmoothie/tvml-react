@@ -42,6 +42,10 @@ The [example app](examples/hello) running in the tvOS 26 simulator.
   imported components instead.
 - **Events.** `onSelect`, `onHighlight`, `onPlay`, and `onHoldSelect`, delegated
   from the document.
+- **Navigation and platform hooks.** `useNavigation` for pushed screens and
+  modals. Hooks for app state, device, settings, storage, the media player and
+  search input. Through the native bridge: appearance, accessibility, network,
+  display, and keeping the screen awake.
 - **JavaScriptCore polyfills.** These cover what React's scheduler and everyday
   code expect but TVJS lacks: `queueMicrotask`, `performance.now`, `URL`, and
   `URLSearchParams`.
@@ -138,6 +142,7 @@ if the first render failed.
 | ------------- | -------------------------------------------------------------------- |
 | `onError`     | Called with every error React reports. Defaults to `console.error`. |
 | `errorTitle`  | Title of the alert shown if the first render fails.                 |
+| `wrapper`     | A component wrapping the app and every pushed screen; put context providers here. |
 
 ### `createRoot(document?, options?)`
 
@@ -160,11 +165,75 @@ empty document as a blank screen and ignores later mutations. Once a non-empty
 document has been presented, mutations do show up, and state updates render
 through React's scheduler as usual.
 
-To use a modal or push another screen, give it its own root and call
-`navigationDocument.presentModal(root.document)` or
-`pushDocument(root.document)`. The helpers `getNavigationDocument`,
-`presentDocument`, `parseDocument`, `createDocument`, and `presentMessage`
-cover the common cases.
+For more screens, use [`useNavigation`](#navigation) rather than more roots.
+The lower-level helpers `getNavigationDocument`, `presentDocument`,
+`parseDocument`, `createDocument` and `presentMessage` are exported too.
+
+### Navigation
+
+```tsx
+const navigation = useNavigation();
+
+<lockup onSelect={() => navigation.push(<AlbumDetail album={album} />)} />
+```
+
+`push`, `presentModal`, `replace`, `pop`, `popToRoot` and `dismissModal`. Each
+pushed screen gets its own TVML document but renders from the app's one React
+tree (through a portal), so state and context are shared. A screen unmounts
+when TVMLKit unloads its document, including when the user presses Menu.
+Providers that pushed screens need to see go in `launch`'s `wrapper` option.
+
+## Hooks
+
+Hooks for what the Apple TV itself knows. The first group uses APIs TVJS
+already provides. The second group reads from a small native bridge that
+`TVMLReact.launch` installs, so it needs no Swift from you. Without the bridge
+those hooks return defaults.
+
+| Hook | Returns |
+| --- | --- |
+| `useNavigation()` | `push`, `presentModal`, `replace`, `pop`, `popToRoot`, `dismissModal` |
+| `useScreenEvent(type, fn)` | Runs `fn` on this screen's `load`, `appear`, `disappear` or `unload` |
+| `useIsScreenVisible()` | Whether this screen is the one on the TV |
+| `useAppState()` / `useAppEvent("suspend" \| "resume", fn)` | `"active"` or `"background"`, from `App.onSuspend`/`onResume` |
+| `useDevice()` | Model, product type, tvOS version, app id and version, vendor id |
+| `usePlatformSettings()` | Language, storefront country and parental restrictions |
+| `useTraitCollection()` | Screen size, scale and layout direction |
+| `useLocalStorage(key, initial)` | JSON state in TVJS `localStorage`, synced between components |
+| `usePlayer()` | `play(items)`, `pause`, `resume`, `stop`, `seek`, plus `state`, `currentTime`, `duration`, `currentItem` |
+| `onTextChange` on `<searchField>`/`<textField>` | The typed text, as the user types |
+| **Native bridge** | |
+| `useColorScheme()` | `"light"` or `"dark"` |
+| `useAccessibility()` | Reduce Motion, VoiceOver, Bold Text, Reduce Transparency, Closed Captions, Increase Contrast |
+| `useNetworkStatus()` | `online`, `expensive`, `constrained`. Without the bridge it polls `Device.isNetworkReachable` |
+| `useDisplay()` | Size, scale, max refresh rate, HDR support |
+| `useKeepAwake(enabled?)` | Stops the screensaver while mounted |
+
+Also exported: `openURL` and `canOpenURL` (to open other apps), `reloadApp()`,
+and `getKeyboard(element)` for setting a field's text yourself.
+
+```tsx
+function Search() {
+  const [query, setQuery] = useState("");
+  return (
+    <searchTemplate>
+      <searchField onTextChange={setQuery} />
+      <collectionList>{/* results for query */}</collectionList>
+    </searchTemplate>
+  );
+}
+
+function NowPlaying() {
+  useKeepAwake();
+  const { reduceMotion } = useAccessibility();
+  const player = usePlayer();
+  return (
+    <buttonLockup onSelect={() => player.play({ url: STREAM, title: "Live" })}>
+      <title>{player.state === "playing" ? "Playing" : "Play"}</title>
+    </buttonLockup>
+  );
+}
+```
 
 ### Events
 

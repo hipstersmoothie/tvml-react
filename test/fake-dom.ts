@@ -78,6 +78,11 @@ export class FakeElement implements TVMLElement {
   addEventListener(): void {}
   removeEventListener(): void {}
 
+  features: Record<string, unknown> = {};
+  getFeature(name: string): unknown {
+    return this.features[name];
+  }
+
   toXML(): string {
     if (this.tagName === undefined) {
       return this.nodeValue ?? "";
@@ -148,7 +153,7 @@ export class FakeDocument implements TVMLDocument {
   }
 
   /** Dispatch an event the way TVMLKit does: at the document. */
-  dispatch(type: string, target: FakeElement): void {
+  dispatch(type: string, target: FakeElement = this.documentElement): void {
     for (const listener of this.listeners.get(type) ?? []) {
       listener({ type, target });
     }
@@ -160,11 +165,21 @@ export class FakeDocument implements TVMLDocument {
   }
 }
 
+// Fires the lifecycle events TVMLKit does (verified on tvOS 26): load + appear
+// on present, disappear on the covered document, disappear + unload on pop.
+const fire = (doc: TVMLDocument | undefined, ...types: Array<string>) => {
+  for (const type of types) (doc as FakeDocument | undefined)?.dispatch?.(type);
+};
+
 export class FakeNavigationDocument implements TVMLNavigationDocument {
   documents: Array<TVMLDocument> = [];
+  modal: TVMLDocument | undefined;
 
   pushDocument(doc: TVMLDocument): void {
+    const covered = this.documents.at(-1);
     this.documents.push(doc);
+    fire(doc, "load", "appear");
+    fire(covered, "disappear");
   }
   replaceDocument(doc: TVMLDocument, existing: TVMLDocument): void {
     this.documents[this.documents.indexOf(existing)] = doc;
@@ -175,10 +190,19 @@ export class FakeNavigationDocument implements TVMLNavigationDocument {
   removeDocument(doc: TVMLDocument): void {
     this.documents = this.documents.filter((d) => d !== doc);
   }
-  presentModal(): void {}
-  dismissModal(): void {}
+  presentModal(doc: TVMLDocument): void {
+    this.modal = doc;
+    fire(doc, "load", "appear");
+  }
+  dismissModal(): void {
+    const modal = this.modal;
+    this.modal = undefined;
+    fire(modal, "disappear", "unload");
+  }
   popDocument(): void {
-    this.documents.pop();
+    const popped = this.documents.pop();
+    fire(this.documents.at(-1), "appear");
+    fire(popped, "disappear", "unload");
   }
   popToRootDocument(): void {
     this.documents = this.documents.slice(0, 1);
