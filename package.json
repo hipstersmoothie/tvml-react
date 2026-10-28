@@ -1,6 +1,6 @@
 {
   "name": "tvml-react",
-  "version": "0.1.0-pre.2",
+  "version": "0.1.0-pre.3",
   "description": "A React renderer for Apple TV's TVML / TVMLKit",
   "keywords": [
     "react",
