@@ -1,0 +1,46 @@
+---
+title: Screen
+section: reference
+kind: component
+module: tvml-react/layout
+group: Layout
+order: 1
+abstract: A full-screen divTemplate for rows and cells, with a default text color and an optional background image.
+declaration: "function Screen(props: ScreenProps): JSX.Element"
+---
+
+import Example from "../../../components/Example.astro";
+import Note from "../../../components/Note.astro";
+import Prop from "../../../components/Prop.astro";
+
+## Overview
+
+`Screen` renders the `divTemplate` your rows go in. Text in a `divTemplate` is black unless you
+color it, whatever the theme or system appearance, so `Screen` gives every `Cell` a default
+color: white, or black with `theme="light"`.
+
+<Example name="screen-background" props={{ photo: "https://example.com/photo.jpg" }} />
+
+<Note kind="Important">
+A `divTemplate`'s background is read once, when the screen is presented. To change the
+photo, present a new screen with `useNavigation().replace()`.
+</Note>
+
+## Properties
+
+<Prop name="theme" type={`"light" | "dark"`}>The template's theme. Also picks the default text color.</Prop>
+<Prop name="color" type="string">Default text color for cells. Defaults to white, or black with the light theme.</Prop>
+<Prop name="background" type="string">A full-screen background image URL.</Prop>
+<Prop name="children" type="ReactNode">Rows, and any other `divTemplate` content.</Prop>
+
+## Sizes
+
+`tvml-react/layout` also exports the numbers to plan widths with:
+
+| Constant | Value | |
+| --- | --- | --- |
+| `SCREEN_WIDTH` | 1920 | The screen, in points. |
+| `SCREEN_HEIGHT` | 1080 | |
+| `SAFE_X` | 90 | Apple's TV-safe inset at the sides. |
+| `SAFE_Y` | 60 | At the top and bottom. |
+| `CONTENT_WIDTH` | 1740 | The width rows align within. |

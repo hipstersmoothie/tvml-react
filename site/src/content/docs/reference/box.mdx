@@ -1,0 +1,41 @@
+---
+title: Box
+section: reference
+kind: component
+module: tvml-react/layout
+group: Layout
+order: 8
+abstract: A fixed-size area whose children are placed by position, and can overlap.
+declaration: "function Box(props: BoxProps): JSX.Element"
+---
+
+import Example from "../../../components/Example.astro";
+import Note from "../../../components/Note.astro";
+import Prop from "../../../components/Prop.astro";
+
+## Overview
+
+Children of a box take a `position`: `top-left`, `top`, `top-right`, `left`, `center`,
+`right`, `bottom-left`, `bottom` or `bottom-right`. They can overlap, so a caption and a badge
+can sit over an image that fills the box.
+
+<Example
+  name="box-overlay"
+  props={{ still: "https://example.com/still.jpg" }}
+  capture="/screens/stacks-and-boxes.jpg"
+  caption="The kitchen-sink Stacks and boxes screen, which includes this example"
+/>
+
+<Note>
+`Box` renders an `<organizer>`. A position sets both `tv-position` and the matching
+`tv-align`; with `tv-position` alone, children at the top, center and bottom sit at the left
+of their region.
+</Note>
+
+## Properties
+
+<Prop name="width" type="number">Width in points.</Prop>
+<Prop name="height" type="number">Height in points.</Prop>
+<Prop name="offset" type="number">Extra space before the box in a row.</Prop>
+<Prop name="position" type="Position">Where the box goes inside another `Box`.</Prop>
+<Prop name="children" type="ReactNode">`Cell`s, `Image`s and `Stack`s, each with a `position` (default center).</Prop>

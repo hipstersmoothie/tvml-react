@@ -1,0 +1,39 @@
+---
+// A callout: "Important" for things that break or surprise, "Note" otherwise.
+interface Props {
+  kind?: "Note" | "Important" | "Tip";
+}
+const { kind = "Note" } = Astro.props;
+---
+
+<aside class:list={["note", kind.toLowerCase()]}>
+  <b>{kind}</b>
+  <div><slot /></div>
+</aside>
+
+<style>
+  .note {
+    margin: 22px 0;
+    padding: 14px 18px;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: var(--glass);
+  }
+  .note.important {
+    border-color: rgba(255, 159, 10, 0.45);
+    background: rgba(255, 159, 10, 0.08);
+  }
+  .note.tip {
+    border-color: rgba(48, 209, 88, 0.4);
+    background: rgba(48, 209, 88, 0.07);
+  }
+  .note b {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .note div :global(p) {
+    margin: 0;
+  }
+</style>

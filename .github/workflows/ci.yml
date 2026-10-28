@@ -24,6 +24,8 @@ jobs:
           for example in hello kitchen-sink; do
             (cd examples/$example && pnpm typecheck && pnpm build)
           done
+      - name: Docs site
+        run: pnpm --filter tvml-react-site build
       - name: Starter (create-tvml-react)
         run: |
           node create/index.js "$RUNNER_TEMP/smoke-app"

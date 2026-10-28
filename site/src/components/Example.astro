@@ -1,0 +1,109 @@
+---
+// An example from src/examples, run through tvml-react at build time: the
+// React source and the TVML it renders, under a simulator capture if there
+// is one.
+import { Code } from "astro:components";
+
+import { runExample } from "../lib/render-tvml";
+
+const sources = import.meta.glob("../examples/*.tsx", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
+
+interface Props {
+  /** File name in src/examples, without .tsx. */
+  name: string;
+  /** Image in public/, e.g. /screens/layout.jpg. */
+  capture?: string;
+  caption?: string;
+  /** Props for the example's default export. */
+  props?: Record<string, unknown>;
+}
+
+const { name, capture, caption = "Captured on the tvOS 26.5 simulator", props = {} } = Astro.props;
+const source = sources[`../examples/${name}.tsx`];
+if (!source) throw new Error(`No example named ${name} in src/examples`);
+const tvml = await runExample(source, props);
+const id = `example-${name}`;
+---
+
+<figure class="example">
+  {
+    capture && (
+      <div class="tv">
+        <img src={capture} alt={caption} loading="lazy" />
+      </div>
+    )
+  }
+  {capture && <figcaption>{caption}</figcaption>}
+  <div class="tabs">
+    <input type="radio" name={id} id={`${id}-react`} checked />
+    <label for={`${id}-react`}>React</label>
+    <input type="radio" name={id} id={`${id}-tvml`} />
+    <label for={`${id}-tvml`}>Rendered TVML</label>
+    <div class="panel react"><Code code={source.trim()} lang="tsx" theme="github-dark-default" /></div>
+    <div class="panel tvml"><Code code={tvml} lang="xml" theme="github-dark-default" /></div>
+  </div>
+</figure>
+
+<style>
+  .example {
+    margin: 28px 0;
+    padding: 16px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+  }
+  .tv {
+    padding: 8px;
+    background: #000;
+    border-radius: 16px;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  }
+  .tv img {
+    display: block;
+    width: 100%;
+    border-radius: 8px;
+  }
+  figcaption {
+    margin: 10px 0 14px;
+    font-size: 13px;
+    color: var(--tertiary);
+    text-align: center;
+  }
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tabs input {
+    display: none;
+  }
+  .tabs label {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--secondary);
+    cursor: pointer;
+  }
+  .tabs input:checked + label {
+    background: var(--focus);
+    color: #000;
+    font-weight: 600;
+  }
+  .panel {
+    display: none;
+    width: 100%;
+    margin-top: 10px;
+  }
+  .panel :global(pre) {
+    margin: 0 !important;
+    max-height: 480px;
+  }
+  .tabs input:nth-of-type(1):checked ~ .react,
+  .tabs input:nth-of-type(2):checked ~ .tvml {
+    display: block;
+  }
+</style>

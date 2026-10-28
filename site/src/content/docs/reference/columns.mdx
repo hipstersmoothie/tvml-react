@@ -1,0 +1,33 @@
+---
+title: Columns
+section: reference
+kind: component
+module: tvml-react/layout
+group: Layout
+order: 6
+abstract: Column-shaped data, like an hourly forecast, drawn as rows of equal-width cells.
+declaration: "function Columns(props: ColumnsProps): JSX.Element[]"
+---
+
+import Example from "../../../components/Example.astro";
+import Prop from "../../../components/Prop.astro";
+
+## Overview
+
+Each line of the columns becomes a row of fixed-width cells, so the columns line up, and cells
+with the same background touch to read as one tile per column. Use it when every column needs
+a fill; organizers (and so [`Stack`](/reference/stack/)) can't draw one.
+
+<Example name="columns-forecast" />
+
+## Properties
+
+<Prop name="columns" type="Array<Column>">
+Each column: a `key`, a `width`, its `lines` top to bottom, and optionally `align`, `offset`
+and `background`.
+</Prop>
+<Prop name="lineStyles" type="Array<TextStyle>">
+The style of each line, shared across columns: `size`, `weight`, `color`, `background`,
+`height`, `lines`.
+</Prop>
+<Prop name="region" type="Region">The region the rows go in. Also takes `align`, `gap`, `bleed`, `marginTop` and `marginBottom`, like `Row`.</Prop>

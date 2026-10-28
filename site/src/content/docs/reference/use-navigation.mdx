@@ -1,0 +1,32 @@
+---
+title: useNavigation
+section: reference
+kind: hook
+module: tvml-react
+group: Navigation
+order: 1
+abstract: Push screens, present modals and go back, with every screen in the same React tree.
+declaration: "function useNavigation(): Navigation"
+---
+
+import Example from "../../../components/Example.astro";
+import Prop from "../../../components/Prop.astro";
+
+## Overview
+
+Each screen is its own TVML document, rendered through a portal from your one React tree. So a
+pushed screen keeps working state, sees providers in `launch`'s `wrapper`, and unmounts when
+TVMLKit unloads it, including when the user presses Menu.
+
+<Example name="navigation-push" />
+
+A screen is presented once its content has rendered, so it never appears empty.
+
+## Methods
+
+<Prop name="push" type="(screen: ReactNode) => void">Push a screen onto the navigation stack.</Prop>
+<Prop name="presentModal" type="(screen: ReactNode) => void">Present a screen modally over the current one.</Prop>
+<Prop name="replace" type="(screen: ReactNode) => void">Replace the top screen. Also how to change a screen's background image, which TVMLKit reads once.</Prop>
+<Prop name="pop" type="() => void">Go back one screen.</Prop>
+<Prop name="popToRoot" type="() => void">Go back to the first screen.</Prop>
+<Prop name="dismissModal" type="() => void">Dismiss the presented modal.</Prop>

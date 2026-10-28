@@ -1,0 +1,68 @@
+---
+title: usePlayer
+section: reference
+kind: hook
+module: tvml-react
+group: Media
+order: 1
+abstract: Play video and audio in TVMLKit's fullscreen player, with its state as React state.
+declaration: "function usePlayer(): PlayerControls"
+---
+
+import Note from "../../../components/Note.astro";
+import Prop from "../../../components/Prop.astro";
+
+## Overview
+
+```tsx
+const player = usePlayer();
+
+<lockup
+  onSelect={() =>
+    player.play({ url, title: "Episode 1", subtitle: "Show", artworkImageURL: art })
+  }
+/>;
+```
+
+Inside a `PlayerProvider` (pass it to `launch`'s `wrapper`), every screen shares one player.
+Without one, each `usePlayer` call owns a player that stops when the component unmounts.
+
+The item's `title`, `subtitle` and artwork are what AVKit publishes to Now Playing; there's
+nothing else to set up.
+
+<Note>
+Menu during audio returns to your app with the audio still playing, and TVJS reports nothing.
+`state` stays `"playing"`; call `present()` to show the player again. Menu during video ends
+it, with an `itemEnd` reason of `"userInitiated"`.
+</Note>
+
+## State
+
+<Prop name="state" type={`"idle" | "begin" | "loading" | "playing" | "paused" | "scanning" | "end"`}>Playback state.</Prop>
+<Prop name="currentTime" type="number">Seconds into the current item, updated about once a second.</Prop>
+<Prop name="duration" type="number">Seconds, or `NaN` until known and for live streams.</Prop>
+<Prop name="currentItem" type="MediaItemInput | null">The item playing, or last played.</Prop>
+<Prop name="isLive" type="boolean">Playing with no known duration.</Prop>
+<Prop name="error" type="boolean">The last item stopped because of an error.</Prop>
+<Prop name="endReason" type="EndReason | null">Why the last item ended.</Prop>
+
+## Actions
+
+<Prop name="play" type="(items, options?) => void">Present the player and play one item or a playlist, optionally from `startIndex`.</Prop>
+<Prop name="pause" type="() => void">Pause.</Prop>
+<Prop name="resume" type="() => void">Resume.</Prop>
+<Prop name="seek" type="(seconds: number) => void">Seek.</Prop>
+<Prop name="stop" type="() => void">Stop and dismiss the player.</Prop>
+<Prop name="present" type="() => void">Show the fullscreen player again.</Prop>
+<Prop name="nativePlayer" type="() => NativePlayer">The TVJS `Player` itself.</Prop>
+
+## Media items
+
+<Prop name="url" type="string">The media URL (HLS, MP4, MP3, …).</Prop>
+<Prop name="type" type={`"video" | "audio"`} default={`"video"`}>Audio plays over a black screen unless you add a `PlayerOverlay`.</Prop>
+<Prop name="title" type="string">Shown in the player and Now Playing.</Prop>
+<Prop name="subtitle" type="string" />
+<Prop name="description" type="string" />
+<Prop name="artworkImageURL" type="string" />
+<Prop name="startTime" type="number">Seconds to start from.</Prop>
+<Prop name="resumeTime" type="number">Offers to resume from here with a prompt, and waits. Usually you want `startTime`.</Prop>

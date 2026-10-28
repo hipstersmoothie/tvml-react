@@ -1,0 +1,79 @@
+---
+// Page frame: the header with the section switcher, and an optional sidebar
+// and table of contents around the page's content.
+import "../styles/site.css";
+
+import { hrefOf, navFor, type Section } from "../lib/nav";
+
+interface Props {
+  title: string;
+  description?: string;
+  /** The active top-level section. */
+  active?: Section | "examples";
+  /** Show this section's sidebar. */
+  sidebar?: Section;
+  /** Current page, highlighted in the sidebar. */
+  currentHref?: string;
+  /** Headings for "On this page". */
+  toc?: Array<{ depth: number; slug: string; text: string }>;
+}
+
+const { title, description, active, sidebar, currentHref, toc = [] } = Astro.props;
+const groups = sidebar ? await navFor(sidebar) : [];
+const tocItems = toc.filter((heading) => heading.depth === 2);
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title === "tvml-react" ? title : `${title} | tvml-react`}</title>
+    {description && <meta name="description" content={description} />}
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="logo" href="/">tvml-react</a>
+      <nav class="segments">
+        <a href="/learn/getting-started/" class:list={[{ on: active === "learn" }]}>Learn</a>
+        <a href="/reference/stack/" class:list={[{ on: active === "reference" }]}>Reference</a>
+        <a href="/examples/" class:list={[{ on: active === "examples" }]}>Examples</a>
+      </nav>
+      <div class="header-links">
+        <a href="/learn/platform-notes/">Platform notes</a>
+        <a href="https://github.com/hipstersmoothie/tvml-react">GitHub</a>
+      </div>
+    </header>
+    {
+      sidebar ? (
+        <div class:list={["shell", { "no-toc": tocItems.length < 2 }]}>
+          <aside class="sidebar">
+            {groups.map((group) => (
+              <section>
+                <h4>{group.title}</h4>
+                {group.entries.map((entry) => (
+                  <a href={hrefOf(entry)} class:list={[{ current: hrefOf(entry) === currentHref }]}>
+                    <i class:list={["dot", entry.data.kind ?? "article"]} />
+                    {entry.data.title}
+                  </a>
+                ))}
+              </section>
+            ))}
+          </aside>
+          <main>
+            <slot />
+          </main>
+          {tocItems.length >= 2 && (
+            <nav class="toc">
+              <h4>On this page</h4>
+              {tocItems.map((heading) => (
+                <a href={`#${heading.slug}`}>{heading.text}</a>
+              ))}
+            </nav>
+          )}
+        </div>
+      ) : (
+        <slot />
+      )
+    }
+  </body>
+</html>

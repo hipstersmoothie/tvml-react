@@ -1,0 +1,41 @@
+---
+title: useScreenQuery
+section: reference
+kind: hook
+module: tvml-react/query
+group: Data
+order: 1
+abstract: TanStack Query's useQuery, paused while its screen is hidden.
+declaration: "function useScreenQuery(options: UseQueryOptions & ScreenQueryOptions): UseQueryResult"
+---
+
+import Prop from "../../../components/Prop.astro";
+
+## Overview
+
+A hidden screen, like a tab that isn't selected or a screen under a pushed one, keeps its data
+cached but stops refetching on an interval, on resume and on reconnect. When it appears again,
+stale data is refetched.
+
+```tsx
+import { useScreenQuery } from "tvml-react/query";
+
+const { data } = useScreenQuery({
+  queryKey: ["shows", id],
+  queryFn: () => fetch(`${api}/shows/${id}`).then((r) => r.json()),
+  refetchInterval: 60_000,
+});
+```
+
+Wrap the app in `TVMLQueryProvider` (in `launch`'s `wrapper`), which connects TanStack Query to
+app resume and network changes. `useScreenInfiniteQuery` and `useScreenQueries` work the same
+way.
+
+## Options
+
+Everything `useQuery` takes, plus:
+
+<Prop name="refreshWhileHidden" type="boolean" default="false">
+Keep refreshing while the screen is hidden, for data drawn in a player overlay, whose screen is
+covered while the video plays.
+</Prop>

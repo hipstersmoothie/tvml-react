@@ -1,0 +1,44 @@
+---
+title: MenuBar
+section: reference
+kind: component
+module: tvml-react
+group: Navigation
+order: 2
+abstract: A native tab bar whose items each show their own screen.
+declaration: "function MenuBar(props: MenuBarProps): JSX.Element"
+---
+
+import Prop from "../../../components/Prop.astro";
+
+## Overview
+
+TVMLKit shows each `menuItem`'s content as a separate document. `MenuBarItem` renders its
+children into that document, so tabs stay in your app's React tree and share its state and
+context. A tab mounts the first time it's selected and stays mounted, so switching back keeps
+its scroll position and data.
+
+```tsx
+import { MenuBar, MenuBarItem } from "tvml-react";
+
+<menuBarTemplate>
+  <MenuBar onChange={(id) => console.log(id)}>
+    <MenuBarItem id="home" title="Home"><Home /></MenuBarItem>
+    <MenuBarItem id="search" title="Search"><Search /></MenuBarItem>
+  </MenuBar>
+</menuBarTemplate>
+```
+
+Focusing a menu item switches tabs; no select press is needed. `useMenuBar().select(id)`
+switches from code.
+
+## MenuBar
+
+<Prop name="defaultSelected" type="string">The tab shown first. Defaults to the first item.</Prop>
+<Prop name="onChange" type="(id: string) => void">Called when the selected tab changes.</Prop>
+
+## MenuBarItem
+
+<Prop name="id" type="string">Identifies the tab.</Prop>
+<Prop name="title" type="ReactNode">The label in the bar.</Prop>
+<Prop name="children" type="ReactNode">The tab's screen: a template element such as `stackTemplate`.</Prop>

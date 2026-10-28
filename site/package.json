@@ -3,11 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "astro dev --port 4321",
-    "build": "astro build",
+    "sync": "node scripts/sync-guides.mjs",
+    "dev": "node scripts/sync-guides.mjs && astro dev --port 4321",
+    "build": "node scripts/sync-guides.mjs && astro build",
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/mdx": "^8.1.1",
     "astro": "^7.4.2",
     "react": "^19.2.0",
     "tvml-react": "link:.."

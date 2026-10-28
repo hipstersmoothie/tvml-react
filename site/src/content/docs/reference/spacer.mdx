@@ -1,0 +1,30 @@
+---
+title: Spacer
+section: reference
+kind: component
+module: tvml-react/layout
+group: Layout
+order: 5
+abstract: Horizontal space in a row.
+declaration: "function Spacer(props: { width: number }): JSX.Element"
+---
+
+import Prop from "../../../components/Prop.astro";
+
+## Overview
+
+A blank cell of a fixed width, for pushing a group of cells to the far side of a row:
+
+```tsx
+<Row>
+  <Cell width={600}>Title</Cell>
+  <Spacer width={CONTENT_WIDTH - 600 - 300} />
+  <Cell width={300} align="right">12:41</Cell>
+</Row>
+```
+
+For a single group, `Row`'s `align` does this for you.
+
+## Properties
+
+<Prop name="width" type="number">Width in points.</Prop>

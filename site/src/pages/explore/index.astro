@@ -1,0 +1,50 @@
+---
+// Design exploration index.
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>tvml-react docs: design exploration</title>
+  </head>
+  <body>
+    <main>
+      <h1>tvml-react docs: design exploration</h1>
+      <p>The same reference page (<code>Stack</code>) in three directions.</p>
+      <ol>
+        <li>
+          <a href="/explore/a">A. Faithful</a>
+          <span>Apple's developer documentation as closely as possible: light, sidebar of symbols with kind badges, declaration box, Overview / Topics / See Also. The example is a code listing and a screenshot.</span>
+        </li>
+        <li>
+          <a href="/explore/b">B. Apple, plus a live example panel</a>
+          <span>Same chrome, but every example is a panel: the React source, the TVML it renders (produced at build time by running the example through tvml-react), and a capture from the tvOS simulator in a TV frame. Parameters as rows with type pills, See Also as cards.</span>
+        </li>
+        <li>
+          <a href="/explore/c">C. tvOS-flavoured, runs in the browser</a>
+          <span>Dark, glassy, focus-lift hover like tvOS. The example runs in the page: change align, gap and width and the scaled 1920×1080 preview and the code update together, with a toggle to the real simulator capture.</span>
+        </li>
+      </ol>
+    </main>
+  </body>
+</html>
+
+<style>
+  main {
+    max-width: 760px;
+    margin: 60px auto;
+    font-family: -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+  li {
+    margin: 18px 0;
+  }
+  li a {
+    display: block;
+    font-weight: 600;
+    font-size: 19px;
+  }
+  li span {
+    color: #555;
+  }
+</style>

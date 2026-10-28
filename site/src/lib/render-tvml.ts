@@ -11,9 +11,9 @@ import { createRoot } from "tvml-react";
 
 import { FakeDocument } from "../../../test/fake-dom";
 
-export function renderToTVML(element: ReactNode): string {
+export function renderToTVML(element: ReactNode, create: typeof createRoot = createRoot): string {
   const doc = new FakeDocument();
-  const root = createRoot(doc as never);
+  const root = create(doc as never);
   root.render(element);
   const xml = doc.toXML();
   root.unmount();
@@ -63,13 +63,17 @@ export async function runExample(source: string, props: Record<string, unknown> 
     jsxImportSource: "tvml-react",
     format: "esm",
   });
+  // Render through the example's own copy of tvml-react: the site bundle has
+  // another, and hooks like useNavigation need the root from the same one.
+  const runnable = `${code}\nexport { createRoot as __createRoot } from "tvml-react";\n`;
   mkdirSync(CACHE, { recursive: true });
-  const file = join(CACHE, createHash("sha1").update(code).digest("hex") + ".mjs");
-  writeFileSync(file, code);
+  const file = join(CACHE, createHash("sha1").update(runnable).digest("hex") + ".mjs");
+  writeFileSync(file, runnable);
   const module = (await import(/* @vite-ignore */ pathToFileURL(file).href)) as {
     default: ComponentType<Record<string, unknown>>;
+    __createRoot: typeof createRoot;
   };
-  return renderToTVML(createElement(module.default, props));
+  return renderToTVML(createElement(module.default, props), module.__createRoot);
 }
 
 /** Source as shown in the docs: without the JSX pragmas the build needs. */

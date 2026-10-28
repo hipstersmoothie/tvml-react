@@ -1,0 +1,96 @@
+---
+// Every TVML template, as rendered by the kitchen-sink example on the tvOS
+// simulator (captured by KitchenSinkTests).
+import Site from "../layouts/Site.astro";
+
+const SOURCE = "https://github.com/hipstersmoothie/tvml-react/tree/main/examples/kitchen-sink/src";
+
+const screens = [
+  ["alertTemplate", "A message with buttons."],
+  ["catalogTemplate", "Categories beside a grid."],
+  ["compilationTemplate", "An album or season."],
+  ["descriptiveAlertTemplate", "Long text with buttons."],
+  ["divTemplate", "Free-form nine-region layout."],
+  ["formTemplate", "A single text field."],
+  ["listTemplate", "A list with a preview panel."],
+  ["loadingTemplate", "A spinner."],
+  ["menuBarTemplate", "Tabs, each its own document."],
+  ["oneupTemplate", "Fullscreen images, one at a time."],
+  ["paradeTemplate", "A list beside an image deck."],
+  ["productBundleTemplate", "A bundle of items."],
+  ["productTemplate", "A single item's page."],
+  ["ratingTemplate", "Rate an item."],
+  ["searchTemplate", "A search field and results."],
+  ["showcaseTemplate", "A carousel of images."],
+  ["stackTemplate", "Carousel, shelf and grid."],
+  ["Lockups", "Overlays, badges, monograms, cards."],
+  ["layout", "tvml-react/layout rows and cells."],
+  ["stacks-and-boxes", "tvml-react/layout organizers."],
+];
+---
+
+<Site title="Examples" description="Every TVML template, rendered with tvml-react on tvOS." active="examples">
+  <main class="gallery">
+    <p class="eyebrow">Examples</p>
+    <h1>Every template, on tvOS.</h1>
+    <p class="abstract">
+      Each of these is a screen in the <a href={SOURCE}>kitchen-sink example</a>, captured on the
+      tvOS 26.5 simulator by its UI tests, which open every one with the remote.
+    </p>
+    <div class="grid">
+      {
+        screens.map(([name, description]) => (
+          <a class="shot" href={`${SOURCE}`}>
+            <img src={`/screens/${name}.jpg`} alt={name} loading="lazy" />
+            <b>{name}</b>
+            <span>{description}</span>
+          </a>
+        ))
+      }
+    </div>
+  </main>
+</Site>
+
+<style>
+  .gallery {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 40px 28px 120px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 28px;
+  }
+  .shot {
+    display: grid;
+    gap: 6px;
+    color: var(--text);
+    transition: transform 0.18s;
+  }
+  .shot:hover,
+  .shot:focus-visible {
+    transform: scale(1.04);
+    text-decoration: none;
+    outline: none;
+  }
+  .shot img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+    margin-bottom: 6px;
+  }
+  .shot:hover img {
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+  }
+  .shot b {
+    font: 600 15px var(--mono);
+  }
+  .shot span {
+    font-size: 14px;
+    color: var(--secondary);
+  }
+</style>

@@ -1,0 +1,46 @@
+---
+title: Stack
+section: reference
+kind: component
+module: tvml-react/layout
+group: Layout
+order: 7
+abstract: A column of cells and images that can sit in a row.
+declaration: "function Stack(props: StackProps): JSX.Element"
+---
+
+import Example from "../../../components/Example.astro";
+import Note from "../../../components/Note.astro";
+import Prop from "../../../components/Prop.astro";
+
+## Overview
+
+A `<stack>` inside a `divTemplate` `<row>` never renders, so content that needs more than one
+line, like a title and subtitle beside artwork, can't be built from TVML's stack. `Stack`
+renders an `<organizer>` instead, which TVMLKit lays out as a column inside a row.
+
+<Example
+  name="stack-artwork"
+  props={{ artwork: "https://example.com/art.jpg" }}
+  capture="/screens/stacks-and-boxes.jpg"
+  caption="The kitchen-sink Stacks and boxes screen, which includes this example"
+/>
+
+Cells in a stack take its width and alignment, so text lines up on the left, center or right.
+Without a width, the stack is as wide as its widest child. Stacks are vertically centered in
+their row.
+
+<Example name="stack-forecast" />
+
+<Note kind="Important">
+TVMLKit draws no background for an organizer, so a stack can't have a fill. Give its cells a
+background, or use [`Columns`](/reference/columns/).
+</Note>
+
+## Properties
+
+<Prop name="width" type="number">The stack's width. Defaults to its widest child; cells without their own width take this one.</Prop>
+<Prop name="align" type={`"left" | "center" | "right"`} default={`"left"`}>Text alignment for the stack's cells. Images stay on the left.</Prop>
+<Prop name="gap" type="number" default="0">Vertical space between children.</Prop>
+<Prop name="offset" type="number">Extra space before the stack in a row.</Prop>
+<Prop name="position" type="Position">Where the stack goes inside a `Box`.</Prop>

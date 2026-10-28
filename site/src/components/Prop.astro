@@ -1,0 +1,62 @@
+---
+// One property of a component or option of a function.
+interface Props {
+  name: string;
+  type: string;
+  /** Shown as "= value". */
+  default?: string;
+}
+const { name, type, default: fallback } = Astro.props;
+---
+
+<div class="prop" id={`prop-${name}`}>
+  <div class="signature">
+    <code class="name">{name}</code>
+    <code class="type">{type}</code>
+    {fallback && <code class="default">= {fallback}</code>}
+  </div>
+  <div class="description"><slot /></div>
+</div>
+
+<style>
+  .prop {
+    margin: 10px 0;
+    padding: 14px 18px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+  }
+  .signature {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .name {
+    font: 600 16px var(--mono);
+    color: var(--text);
+    background: none !important;
+    padding: 0 !important;
+  }
+  .type {
+    font: 13px var(--mono);
+    color: var(--accent);
+    background: none !important;
+    padding: 0 !important;
+  }
+  .default {
+    font: 13px var(--mono);
+    color: var(--tertiary);
+    background: none !important;
+    padding: 0 !important;
+  }
+  .description {
+    margin-top: 4px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--secondary);
+  }
+  .description :global(p) {
+    margin: 0;
+  }
+</style>

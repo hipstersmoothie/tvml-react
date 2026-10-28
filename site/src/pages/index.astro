@@ -1,50 +1,205 @@
 ---
-// Design exploration index.
+import { Code } from "astro:components";
+
+import Site from "../layouts/Site.astro";
+
+const counter = `import { launch, type StartOptions } from "tvml-react";
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <alertTemplate>
+      <title>{\`Pressed \${count} times\`}</title>
+      <button onSelect={() => setCount((c) => c + 1)}>
+        <text>Press me</text>
+      </button>
+    </alertTemplate>
+  );
+}
+
+export function start(_options: StartOptions) {
+  launch(<Counter />);
+}`;
+
+const features = [
+  {
+    title: "Native TVML, from React",
+    body: "Write screens as components; tvOS draws real TVML templates, so focus, the remote and the system look just work.",
+    href: "/learn/getting-started/",
+  },
+  {
+    title: "Screens in one tree",
+    body: "Push screens, present modals and build tab bars that share state and context, with an error boundary per screen.",
+    href: "/learn/screens-and-navigation/",
+  },
+  {
+    title: "Layout that holds",
+    body: "Rows, cells, stacks and boxes for free-form screens, inside the TV-safe area, built on what TVMLKit actually does.",
+    href: "/learn/layout/",
+  },
+  {
+    title: "Media",
+    body: "Video and audio in the system player, shared across screens, with overlays and Now Playing from your metadata.",
+    href: "/learn/media/",
+  },
+  {
+    title: "Data",
+    body: "TanStack Query that pauses on hidden screens, plus fetch and WebSockets for TVJS.",
+    href: "/learn/data/",
+  },
+  {
+    title: "Platform hooks",
+    body: "App state, appearance, accessibility, network, display, storage and keeping the screen awake.",
+    href: "/learn/platform-hooks/",
+  },
+];
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>tvml-react docs: design exploration</title>
-  </head>
-  <body>
-    <main>
-      <h1>tvml-react docs: design exploration</h1>
-      <p>The same reference page (<code>Stack</code>) in three directions.</p>
-      <ol>
-        <li>
-          <a href="/explore/a">A. Faithful</a>
-          <span>Apple's developer documentation as closely as possible: light, sidebar of symbols with kind badges, declaration box, Overview / Topics / See Also. The example is a code listing and a screenshot.</span>
-        </li>
-        <li>
-          <a href="/explore/b">B. Apple, plus a live example panel</a>
-          <span>Same chrome, but every example is a panel: the React source, the TVML it renders (produced at build time by running the example through tvml-react), and a capture from the tvOS simulator in a TV frame. Parameters as rows with type pills, See Also as cards.</span>
-        </li>
-        <li>
-          <a href="/explore/c">C. tvOS-flavoured, runs in the browser</a>
-          <span>Dark, glassy, focus-lift hover like tvOS. The example runs in the page: change align, gap and width and the scaled 1920×1080 preview and the code update together, with a toggle to the real simulator capture.</span>
-        </li>
-      </ol>
-    </main>
-  </body>
-</html>
+<Site title="tvml-react" description="A React renderer for Apple TV's TVMLKit.">
+  <main class="landing">
+    <section class="hero">
+      <div class="copy">
+        <p class="eyebrow">tvml-react</p>
+        <h1>React for Apple&nbsp;TV.</h1>
+        <p class="abstract">
+          A React renderer for TVMLKit. Your components become native tvOS screens, with focus,
+          the remote and the system look handled by tvOS.
+        </p>
+        <div class="install"><span>$</span> npm create tvml-react my-app</div>
+        <div class="actions">
+          <a class="primary" href="/learn/getting-started/">Get started</a>
+          <a class="secondary" href="/reference/stack/">Reference</a>
+        </div>
+      </div>
+      <div class="tv">
+        <img src="/screens/hello-albums.jpg" alt="The hello example: a shelf of albums under a tab bar" />
+      </div>
+    </section>
+
+    <section class="features tiles">
+      {
+        features.map((feature) => (
+          <a class="tile" href={feature.href}>
+            <b>{feature.title}</b>
+            <span>{feature.body}</span>
+          </a>
+        ))
+      }
+    </section>
+
+    <section class="code">
+      <div>
+        <h2>A screen is a component.</h2>
+        <p>
+          TVML's elements are typed JSX tags, events are props, and state is React state. Export{" "}
+          <code>start</code>, and <code>tvml-react dev</code> serves it to your Apple TV with live reload.
+        </p>
+        <a href="/learn/screens-and-navigation/">Screens and navigation →</a>
+      </div>
+      <Code code={counter} lang="tsx" theme="github-dark-default" />
+    </section>
+  </main>
+</Site>
 
 <style>
-  main {
-    max-width: 760px;
-    margin: 60px auto;
-    font-family: -apple-system, sans-serif;
-    line-height: 1.5;
+  .landing {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 40px 28px 120px;
   }
-  li {
-    margin: 18px 0;
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 56px;
+    align-items: center;
+    min-height: 560px;
   }
-  li a {
-    display: block;
+  .hero h1 {
+    font-size: 76px;
+  }
+  .install {
+    display: inline-block;
+    margin: 4px 0 26px;
+    padding: 12px 18px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    font: 15px var(--mono);
+  }
+  .install span {
+    color: var(--tertiary);
+    margin-right: 6px;
+  }
+  .actions {
+    display: flex;
+    gap: 12px;
+  }
+  .actions a {
+    padding: 11px 22px;
+    border-radius: 999px;
     font-weight: 600;
-    font-size: 19px;
+    font-size: 15px;
+    transition: transform 0.15s;
   }
-  li span {
-    color: #555;
+  .actions a:hover {
+    transform: scale(1.05);
+    text-decoration: none;
+  }
+  .primary {
+    background: var(--focus);
+    color: #000;
+  }
+  .secondary {
+    background: var(--glass-strong);
+    color: var(--text);
+    border: 1px solid var(--line);
+  }
+  .tv {
+    padding: 10px;
+    background: #000;
+    border-radius: 22px;
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+    transform: perspective(1600px) rotateY(-6deg);
+  }
+  .tv img {
+    display: block;
+    width: 100%;
+    border-radius: 12px;
+  }
+  .features {
+    margin: 40px 0 0;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .features b {
+    font-size: 18px;
+  }
+  .code {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 48px;
+    align-items: center;
+    margin-top: 96px;
+  }
+  .code h2 {
+    font-size: 40px;
+    margin: 0 0 12px;
+  }
+  .code p {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--body);
+  }
+  .code p code {
+    font: 0.9em var(--mono);
+    color: var(--text);
+  }
+  .code :global(pre) {
+    margin: 0;
+    padding: 22px 24px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    font: 14px/1.6 var(--mono);
+    background: rgba(0, 0, 0, 0.45) !important;
   }
 </style>
