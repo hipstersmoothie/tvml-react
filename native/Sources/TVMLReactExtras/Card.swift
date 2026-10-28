@@ -1,7 +1,7 @@
 import TVMLKit
 import UIKit
 
-// <card title subtitle body image material radius>: a blurred, rounded panel
+// <materialCard title subtitle body image material radius>: a blurred, rounded panel
 // that draws its own content. Native elements can't contain TVML children, so
 // the content comes from attributes.
 final class CardView: UIView {

@@ -48,6 +48,61 @@ describe("rendering", () => {
     );
   });
 
+  // libxml2 merges adjacent text nodes and frees one, which crashes TVMLKit
+  // when React's handle to it is garbage collected.
+  it("writes text-only children as a single text node", () => {
+    const { doc, root } = setup();
+    function Track({ n, extra }: { n: number; extra?: boolean }) {
+      return (
+        <title id="t">
+          Track {n}
+          {extra && "!"}
+        </title>
+      );
+    }
+
+    root.render(<Track n={1} />);
+    const title = byId(doc, "t");
+    expect(title.children).toHaveLength(1);
+    expect(title.textContent).toBe("Track 1");
+    const node = title.firstChild;
+
+    root.render(<Track n={2} extra />);
+    expect(title.children).toHaveLength(1);
+    expect(title.firstChild).toBe(node);
+    expect(title.textContent).toBe("Track 2!");
+  });
+
+  it("warns about adjacent text next to elements", () => {
+    const { root } = setup();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const name = "Ada";
+    root.render(
+      <buttonLockup>
+        Hi {name}
+        <badge src="resource://button-play" />
+      </buttonLockup>,
+    );
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("<buttonLockup> has adjacent text"));
+    warn.mockRestore();
+  });
+
+  it("switches between text and element children", () => {
+    const { doc, root } = setup();
+    function Row({ rich }: { rich: boolean }) {
+      return <row id="r">{rich ? <text>rich</text> : `plain ${1}`}</row>;
+    }
+
+    root.render(<Row rich={false} />);
+    expect(byId(doc, "r").textContent).toBe("plain 1");
+
+    root.render(<Row rich />);
+    expect(doc.toXML()).toBe('<row id="r"><text>rich</text></row>');
+
+    root.render(<Row rich={false} />);
+    expect(doc.toXML()).toBe('<row id="r">plain 1</row>');
+  });
+
   it("serializes style objects, className and booleans", () => {
     const { doc, root } = setup();
 

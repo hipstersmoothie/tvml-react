@@ -31,6 +31,20 @@ tvml-react bugs, but you'll run into them.
   simulator's log. Use `tvml-react dev`, which relays it to your terminal, or
   Safari's Web Inspector.
 
+## DOM
+
+- **Adjacent text nodes crash.** Appending a text node next to another one
+  merges them (libxml2 frees the added node), but its JS wrapper still points
+  at it. When the wrapper is garbage collected the node is freed again: a
+  malloc abort in `-[IKDOMNode dealloc]`, often seconds later and on another
+  screen. Plain TVJS reproduces it within a few pushes. tvml-react writes
+  text-only children (`Track {n}`) as one text node and warns when adjacent
+  text sits next to elements; join those into one string.
+- **Custom tag names.** Give natively registered elements names that aren't
+  in the TVML catalog, since `TVElementFactory` is keyed by tag name. `card`,
+  for one, is a built-in element, which is why tvml-react's native `Card`
+  renders `<materialCard>`.
+
 ## Documents and focus
 
 - **Lifecycle events.** Documents get `load`, `appear`, `disappear` and
@@ -72,6 +86,12 @@ tvml-react bugs, but you'll run into them.
   `tvTextMaxLines`. A focused row title marquees, which drops leading
   whitespace.
 - **`alertTemplate`.** Titles render small. A modal alert is fully opaque.
+- **`oneupTemplate`** hides lockup titles until you interact with it.
+- **`card`** needs an explicit `width`/`height`. Its children are placed with
+  `tv-position`/`tv-align`, and unstyled text is small and black.
+- **Failed images** leave an empty box; there's no placeholder.
+- **`textField` placeholders** aren't exposed to accessibility, so UI tests
+  can't find a form by its placeholder.
 - **Long text.** `handlesOverflow="true"` on `description`/`text` adds a
   "MORE" affordance and makes it selectable. `\n` in text gives line and
   paragraph breaks.
@@ -81,7 +101,11 @@ tvml-react bugs, but you'll run into them.
 `divTemplate` is a 9-region flow layout (`tv-position: top-left` … `bottom-right`),
 not absolute positioning.
 
+- **Text is black** unless you set `color`, whatever the `theme` or system
+  appearance.
 - **Regions stack.** Children in the same region stack vertically.
+- **`top`, `center` and `bottom` left-align** their content; add
+  `tv-align: center`.
 - **Columns size to content.** Left and right columns are as wide as their
   widest child, which shifts the centre column.
 - **A predictable recipe.** Full-width `<row>`s in the top, centre and bottom
@@ -105,6 +129,20 @@ not absolute positioning.
 **Gotchas:**
 - An empty `<text>` collapses; render `" "` instead.
 - `fontSize` overrides `tvTextStyle`.
+
+## Template sweep
+
+[`examples/kitchen-sink`](../examples/kitchen-sink) has a screen for every
+template plus lockup variants and `mediaContent`, and `KitchenSinkTests` opens
+each one with the remote. On the tvOS 26.5 simulator all of them render and
+pop cleanly: `alertTemplate`, `catalogTemplate`, `compilationTemplate`,
+`descriptiveAlertTemplate`, `divTemplate`, `formTemplate`, `listTemplate`,
+`loadingTemplate`, `menuBarTemplate`, `oneupTemplate`, `paradeTemplate`
+(with `imgDeck`), `productBundleTemplate`, `productTemplate` (with
+`ratingCard`, `reviewCard` and `productInfo`), `ratingTemplate`,
+`searchTemplate`, `showcaseTemplate` and `stackTemplate`. The only crash it
+found was the adjacent text node bug above. Whether `mediaContent` previews
+actually play wasn't checked.
 
 ## Images
 

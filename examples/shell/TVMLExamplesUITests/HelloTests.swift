@@ -4,7 +4,8 @@ import XCTest
 // focus movement and presses through TVMLKit, not synthetic JS events.
 //
 // Needs the hello dev server: `cd examples/hello && pnpm dev` (port 9100).
-// Override with the TVML_SERVER_URL environment variable.
+// Override with TEST_RUNNER_TVML_SERVER_URL (xcodebuild passes TEST_RUNNER_*
+// variables to the test runner without the prefix).
 final class HelloTests: XCTestCase {
   private var app: XCUIApplication!
   private let remote = XCUIRemote.shared

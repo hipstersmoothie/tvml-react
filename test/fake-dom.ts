@@ -21,6 +21,10 @@ export class FakeElement implements TVMLElement {
     readonly tagName: string | undefined,
   ) {}
 
+  get nodeType(): number {
+    return this.tagName === undefined ? 3 : 1;
+  }
+
   get firstChild(): FakeElement | null {
     return this.children[0] ?? null;
   }

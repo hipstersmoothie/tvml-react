@@ -12,6 +12,7 @@
 		81D6AB0488DDA69769AE1A48 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA13BB141EBB8F8C80A54A68 /* AppDelegate.swift */; };
 		D000BAFA6490FD8715F2ED3E /* TVMLReactExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 74497E6A50BB09FF99EA7F67 /* TVMLReactExtras */; };
 		F5132DDCF9840C738E9E5146 /* TVMLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7741B5EF6CC235BA752D965E /* TVMLKit.framework */; };
+		F7273B042BE30F3A9A9D459F /* KitchenSinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0E6319131C7204F27EDD62 /* KitchenSinkTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +31,7 @@
 		7741B5EF6CC235BA752D965E /* TVMLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVMLKit.framework; path = System/Library/Frameworks/TVMLKit.framework; sourceTree = SDKROOT; };
 		8792BB94126ED96FEC658740 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		89DBB0C609E65364955210C8 /* TVMLExamplesUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TVMLExamplesUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8E0E6319131C7204F27EDD62 /* KitchenSinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KitchenSinkTests.swift; sourceTree = "<group>"; };
 		B5B8F954158513C738EBC1DF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D991DD16A225EF7C9F7F5BA1 /* tvml-react */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "tvml-react"; path = ../..; sourceTree = SOURCE_ROOT; };
 		DA13BB141EBB8F8C80A54A68 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -71,6 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				6636F50E06BF62EA5EF1177E /* HelloTests.swift */,
+				8E0E6319131C7204F27EDD62 /* KitchenSinkTests.swift */,
 			);
 			path = TVMLExamplesUITests;
 			sourceTree = "<group>";
@@ -197,6 +200,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4FE062C3F5C783E8D6AA5D1E /* HelloTests.swift in Sources */,
+				F7273B042BE30F3A9A9D459F /* KitchenSinkTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

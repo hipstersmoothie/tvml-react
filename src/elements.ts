@@ -129,6 +129,8 @@ export interface TVMLIntrinsicElements {
 
   // Lockups
   buttonLockup: FocusableAttributes;
+  /** Children arranged with `tv-position`/`tv-align` styles. */
+  card: FocusableAttributes;
   listItemLockup: FocusableAttributes;
   lockup: FocusableAttributes;
   monogramLockup: FocusableAttributes;
@@ -141,6 +143,8 @@ export interface TVMLIntrinsicElements {
   footer: TVMLAttributes;
   grid: TVMLAttributes;
   header: TVMLAttributes;
+  /** A stack of images, e.g. in a `paradeTemplate`'s `relatedContent`. */
+  imgDeck: TVMLAttributes;
   info: TVMLAttributes;
   itemBanner: TVMLAttributes;
   infoList: TVMLAttributes;
@@ -149,6 +153,8 @@ export interface TVMLIntrinsicElements {
   menuBar: TVMLAttributes;
   menuItem: FocusableAttributes;
   organizer: TVMLAttributes;
+  /** `infoTable`s at the bottom of a `productTemplate`. */
+  productInfo: TVMLAttributes;
   overlay: TVMLAttributes;
   prototypes: TVMLAttributes;
   relatedContent: TVMLAttributes;
@@ -178,12 +184,15 @@ export interface TVMLIntrinsicElements {
     lastName?: string;
     src?: string;
   };
-  ordinal: TVMLAttributes;
+  /** `minLength` pads the number with leading zeros. */
+  ordinal: TVMLAttributes & { minLength?: string | number };
   placeholder: TVMLAttributes;
   progressBar: ProgressBarAttributes;
   ratingBadge: RatingBadgeAttributes;
   ratingButton: FocusableAttributes;
+  ratingCard: FocusableAttributes;
   reviewCard: FocusableAttributes;
+  seasonBadge: ImageAttributes;
   subtitle: TVMLAttributes;
   text: LongTextAttributes;
   textBadge: TVMLAttributes;

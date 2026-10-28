@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
@@ -120,11 +120,13 @@ describe("useNavigation", () => {
 
   it("pushes screens that share context and unmount when popped", async () => {
     let navigation!: Navigation;
+    const unloaded = vi.fn();
     const unmounted = vi.fn();
 
     function Detail() {
       const theme = useContext(Theme);
-      useScreenEvent("unload", unmounted);
+      useScreenEvent("unload", unloaded);
+      useEffect(() => unmounted, []);
       return (
         <alertTemplate>
           <title id="detail">{`detail in ${theme}`}</title>
@@ -159,6 +161,7 @@ describe("useNavigation", () => {
     // Menu button / pop: TVMLKit unloads the document and the screen unmounts.
     navigation.pop();
     await flush();
+    expect(unloaded).toHaveBeenCalledTimes(1);
     expect(unmounted).toHaveBeenCalledTimes(1);
     expect(globals.navigation.documents).toHaveLength(1);
     expect(detail.toXML()).toBe("");
@@ -172,17 +175,24 @@ describe("useNavigation", () => {
     }
     mount(<Home />);
 
-    navigation.presentModal(
-      <alertTemplate>
-        <title id="modal">sure?</title>
-      </alertTemplate>,
-    );
+    const unmounted = vi.fn();
+    function Modal() {
+      useEffect(() => unmounted, []);
+      return (
+        <alertTemplate>
+          <title id="modal">sure?</title>
+        </alertTemplate>
+      );
+    }
+    navigation.presentModal(<Modal />);
     await flush();
     const modal = globals.navigation.modal as FakeDocument;
     expect(text(modal, "modal")).toBe("sure?");
 
     navigation.dismissModal();
     await flush();
+    expect(globals.navigation.modal).toBeFalsy();
+    expect(unmounted).toHaveBeenCalledTimes(1);
     expect(modal.toXML()).toBe("");
   });
 

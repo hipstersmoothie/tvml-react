@@ -116,6 +116,60 @@ let currentUpdatePriority: number = NoEventPriority;
 // support form actions.
 const HostTransitionContext = createContext<unknown>(null);
 
+const isText = (part: unknown) =>
+  typeof part === "string" || typeof part === "number" || typeof part === "bigint";
+
+// Children that are only text, such as `Track {n}`, are written as a single
+// text node instead of one per string. TVMLKit's DOM (libxml2) merges a text
+// node into an adjacent one and frees it, leaving React's handle dangling; it
+// gets freed again when garbage collected (a malloc abort in -[IKDOMNode
+// dealloc]). Returns null when the children include elements.
+function textContent(children: unknown): string | null {
+  const parts = Array.isArray(children) ? children : [children];
+  let text = "";
+  for (const part of parts) {
+    if (isText(part)) {
+      text += String(part);
+    } else if (part != null && typeof part !== "boolean") {
+      return null;
+    }
+  }
+  return children == null || typeof children === "boolean" ? null : text;
+}
+
+// Mixed children (`Hi {name}<badge/>`) still give React one text node per
+// string, and two in a row trigger the crash above. Warn once per tag.
+const warnedAdjacentText = new Set<string>();
+function checkAdjacentText(type: string, children: unknown): void {
+  if (!Array.isArray(children) || warnedAdjacentText.has(type)) return;
+  for (let i = 1; i < children.length; i++) {
+    if (isText(children[i - 1]) && isText(children[i])) {
+      warnedAdjacentText.add(type);
+      console.warn(
+        `tvml-react: <${type}> has adjacent text children next to elements, which can crash ` +
+          "TVMLKit. Join them into one string, e.g. {`Hi ${name}`}.",
+      );
+      return;
+    }
+  }
+}
+
+function setTextContent(element: Instance, text: string): void {
+  const first = element.firstChild;
+  if (first && first.nodeType === 3 && !first.nextSibling) {
+    if (text) {
+      first.nodeValue = text;
+      return;
+    }
+  }
+  while (element.firstChild) {
+    element.removeChild(element.firstChild);
+  }
+  if (text) {
+    element.appendChild(element.ownerDocument.createTextNode(text));
+  }
+}
+
 export const hostConfig = {
   supportsMutation: true,
   supportsPersistence: false,
@@ -127,6 +181,12 @@ export const hostConfig = {
     const element = rootContainer.ownerDocument.createElement(type);
     for (const key in props) {
       applyProp(element, type, key, props[key], true);
+    }
+    const text = textContent(props.children);
+    if (text) {
+      element.appendChild(rootContainer.ownerDocument.createTextNode(text));
+    } else if (text === null) {
+      checkAdjacentText(type, props.children);
     }
     return element;
   },
@@ -198,6 +258,18 @@ export const hostConfig = {
       if ((key === "style" || key === "srcset") && shallowEqual(prev, next)) continue;
       applyProp(instance, type, key, next);
     }
+
+    const text = textContent(nextProps.children);
+    if (text !== null && text !== textContent(prevProps.children)) {
+      setTextContent(instance, text);
+    } else if (text === null) {
+      checkAdjacentText(type, nextProps.children);
+    }
+  },
+
+  // Before element children replace text content.
+  resetTextContent(instance: Instance) {
+    setTextContent(instance, "");
   },
 
   commitTextUpdate(textInstance: TextInstance, _oldText: string, newText: string) {
@@ -217,7 +289,7 @@ export const hostConfig = {
   commitMount(instance: Instance) {
     syncKeyboard(instance);
   },
-  shouldSetTextContent: () => false,
+  shouldSetTextContent: (_type: string, props: Props) => textContent(props.children) !== null,
   getRootHostContext: (): HostContext => ({}),
   getChildHostContext: (parentContext: HostContext) => parentContext,
   getPublicInstance: (instance: Instance) => instance,

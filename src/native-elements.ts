@@ -82,5 +82,5 @@ export interface CardProps extends Omit<TVMLAttributes, "children"> {
  * TVML children, so the content comes from props. Size it with `style`.
  */
 export function Card(props: CardProps) {
-  return createElement("card", props);
+  return createElement("materialCard", props);
 }

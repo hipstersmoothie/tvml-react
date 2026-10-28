@@ -19,8 +19,12 @@ xcrun simctl launch booted dev.tvml-react.examples -TVMLServerURL http://localho
 Each example's `pnpm dev` serves on its own port (see its `package.json`). For
 a real Apple TV, use your Mac's LAN address and set a development team.
 
-`ui-tests.sh` runs the remote-driven UI tests (`TVMLExamplesUITests`) against
-the hello example.
+`ui-tests.sh` runs the remote-driven UI tests (`TVMLExamplesUITests`):
+`HelloTests` against the hello example and `KitchenSinkTests` against the
+kitchen-sink example. Extra arguments go to `xcodebuild`, e.g.
+`-only-testing:TVMLExamplesUITests/KitchenSinkTests`. Set
+`TEST_RUNNER_KITCHEN_SINK_SCREENSHOTS=/some/dir` to save a screenshot of every
+template.
 
 The Xcode project is generated from `project.yml` with
 [XcodeGen](https://github.com/yonaskolb/XcodeGen).

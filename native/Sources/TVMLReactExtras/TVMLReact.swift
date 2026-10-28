@@ -59,7 +59,7 @@ public enum TVMLReact {
       view.update(with: element)
       return view
     }
-    register("card") { element, existingView in
+    register("materialCard") { element, existingView in
       let view = existingView as? CardView ?? CardView()
       view.update(with: element)
       return view

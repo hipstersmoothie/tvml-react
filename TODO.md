@@ -14,14 +14,14 @@ Known gaps and missing features, roughly in priority order within each section.
 
 - [ ] **More remote-driven UI tests.** `examples/shell/ui-tests.sh` covers the
       hello example (select, Menu, tab bar focus, native list rows, typing).
-      Add the menu-bar examples (does focusing a `menuItem` fire `select`?), the
+      `KitchenSinkTests` opens every template. Add the menu-bar examples (does
+      focusing a `menuItem` fire `select`?), the
       player (Menu out of playback, `onPlay`) and long press (`onHoldSelect`),
       and run them in CI once a tvOS simulator is available on the runners.
-- [ ] **tvOS 26 sweep of every template and element.** Only `<shelf>`/`<row>`
-      were confirmed to hit the `UIScreen.focusedView` crash that
-      `TVMLReact.install()` works around. Render each template (`catalogTemplate`,
-      `productTemplate`, `showcaseTemplate`, `grid`, `carousel`, ...) and note what
-      works, what crashes and what needs a workaround.
+- [ ] **Elements the template sweep didn't cover.** `examples/kitchen-sink`
+      renders every template (see docs/platform-notes.md). Not yet: whether
+      `mediaContent` previews play, `rules`/`specialize` focus styling,
+      `organizer`, `seasonBadge` and `ratingButton`.
 - [ ] **Real hardware.** The extracted package and example have only run in the
       simulator. Check on an Apple TV, especially layout (`stackTemplate` and
       `divTemplate` have been seen to differ between device and simulator) and

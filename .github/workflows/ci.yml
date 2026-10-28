@@ -19,9 +19,11 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
-      - name: Build example
-        working-directory: examples/hello
-        run: pnpm typecheck && pnpm build
+      - name: Build examples
+        run: |
+          for example in hello kitchen-sink; do
+            (cd examples/$example && pnpm typecheck && pnpm build)
+          done
 
   swift:
     runs-on: macos-latest

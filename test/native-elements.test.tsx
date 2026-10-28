@@ -32,7 +32,7 @@ describe("native element components", () => {
         '<backdrop src="https://x/bg.jpg" dim="0.4" style="width: 1; height: 1; tv-position: top-left;"/>' +
         '<qrCode value="https://example.com" foreground="#112233" style="width: 200; height: 200;"/>' +
         '<avatar src="https://x/a.jpg" name="Miles Davis"/>' +
-        '<card title="T" subtitle="S" body="B" material="light" lines="3"/>' +
+        '<materialCard title="T" subtitle="S" body="B" material="light" lines="3"/>' +
         "</divTemplate>",
     );
   });
