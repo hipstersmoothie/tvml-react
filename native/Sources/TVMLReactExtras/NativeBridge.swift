@@ -17,7 +17,10 @@ import UIKit
 final class NativeBridge {
   private static let globalName = "TVMLReactNative"
 
-  weak var controller: TVApplicationController?
+  weak var controller: TVApplicationController? {
+    didSet { webSockets.controller = controller }
+  }
+  private nonisolated let webSockets = WebSocketBridge()
   private weak var window: UIWindow?
   private let pathMonitor = NWPathMonitor()
   private var observers: [NSObjectProtocol] = []
@@ -44,6 +47,7 @@ final class NativeBridge {
       DispatchQueue.main.async { UIApplication.shared.isIdleTimerDisabled = disabled }
     }
     bridge.setValue(setIdleTimerDisabled, forProperty: "setIdleTimerDisabled")
+    webSockets.install(on: bridge)
 
     context.setObject(bridge, forKeyedSubscript: Self.globalName as NSString)
   }

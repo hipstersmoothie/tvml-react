@@ -1,3 +1,4 @@
+import { createWebSocketClass, type WebSocketBridge } from "./websocket.js";
 import {
   AbortControllerPolyfill,
   AbortSignalPolyfill,
@@ -23,6 +24,8 @@ const globalScope = globalThis as unknown as {
   AbortController?: unknown;
   AbortSignal?: unknown;
   XMLHttpRequest?: unknown;
+  WebSocket?: unknown;
+  TVMLReactNative?: Partial<WebSocketBridge>;
 };
 
 if (
@@ -216,4 +219,13 @@ if (
   );
   globalScope.Headers = HeadersPolyfill;
   globalScope.Response = ResponsePolyfill;
+}
+
+// TVJS has no WebSocket. The native bridge installed by TVMLReact.launch
+// provides one over URLSessionWebSocketTask.
+if (
+  typeof globalScope.WebSocket !== "function" &&
+  typeof globalScope.TVMLReactNative?.webSocketOpen === "function"
+) {
+  globalScope.WebSocket = createWebSocketClass(globalScope.TVMLReactNative as WebSocketBridge);
 }
