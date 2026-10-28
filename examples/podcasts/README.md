@@ -20,11 +20,13 @@ search the iTunes directory, read show feeds, subscribe, and listen with resume.
   picks the rows on screen, 40 more at a time.
 - **Episode actions**: long press (`onHoldSelect`) opens a modal with
   *Play from Beginning*, *Mark as Played/Unplayed* and *Go to Show*.
-- **Playback**: one `usePlayer()` in a `PlayerProvider` passed as `launch`'s
-  `wrapper`, so every screen shares one player. Audio items get an artwork
-  overlay rendered with `<PlayerOverlay>`, and playback resumes where you left
-  off (`startTime`). Pressing play/pause on a focused episode (`onPlay`) starts
-  it.
+- **Playback**: tvml-react's `PlayerProvider` in `launch`'s `wrapper`, so
+  every screen shares one player. `PodcastPlayer` (`src/PlayerProvider.tsx`)
+  adds `playEpisode` on top: it resumes where you left off (`startTime`) and
+  saves progress with `usePlayerState` selectors (every 15 s and on pause, so
+  it doesn't re-render every second) and `usePlayerEvent("itemEnd")`. Audio
+  items get an artwork overlay rendered with `<PlayerOverlay>`. Pressing
+  play/pause on a focused episode (`onPlay`) starts it.
 - **Persistence** with `useLocalStorage`: subscriptions, plus each episode's
   position and played state. The position is saved every 15 s of playback and
   on pause or stop.
@@ -69,6 +71,6 @@ terminal; you don't need to rebuild in Xcode.
 - **Resuming.** `startTime` starts where you left off without TVMLKit's
   *Resume Playback / Start from Beginning* prompt (which `resumeTime` shows).
 - **Audio artwork.** On their own, audio items play over a black screen, so
-  `PlayerProvider` renders the artwork with `<PlayerOverlay>`.
+  `PodcastPlayer` renders the artwork with `<PlayerOverlay>`.
 - **Icons.** There's no `resource://button-search` image, so the Search button
   uses `symbol://magnifyingglass`.

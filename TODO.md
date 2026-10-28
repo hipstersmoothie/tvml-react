@@ -44,10 +44,6 @@ Known gaps and missing features, roughly in priority order within each section.
 - [ ] **WebSocket.** TVJS has neither `WebSocket` nor `EventSource`. Provide a
       native-bridge `WebSocket` (`URLSessionWebSocketTask`) so real-time
       services work (stream.place chat currently polls third-party indexes).
-- [ ] **Shared player.** `usePlayer` creates one player per call and re-renders
-      every second. Add a `PlayerProvider` and `usePlayerState(selector)`, as in
-      `examples/podcasts`. Also: an `isLive` flag, a `mediaItemWillChange`
-      reason, and an `onStop({ time, duration, reason })` callback.
 - [ ] **`Slideshow` wrapper.** A typed `startSlideshow(images, options)`.
       Blank in the simulator; needs a hardware check.
 - [ ] **Keyboard suggestions.** Expose the Keyboard feature's `suggestions` on

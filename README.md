@@ -359,32 +359,50 @@ function NowPlaying() {
 
 ## Media playback
 
+For anything beyond a single screen, put one `PlayerProvider` in `launch`'s
+`wrapper` so the whole app shares a player:
+
 ```tsx
-const player = usePlayer();
+launch(<App />, { wrapper: [QueryProvider, PlayerProvider] });
 
-<lockup onSelect={() => player.play({ url, title, artworkImageURL, startTime: saved })} />
+// Any screen can start playback…
+const { play, pause, stop } = usePlayerControls();     // stable, never re-renders
+<lockup onSelect={() => play({ url, title, artworkImageURL, startTime: saved })} />
 
-<PlayerOverlay player={player}>
-  <divTemplate>{/* artwork for audio, live chat, … */}</divTemplate>
+// …and any can show what's playing. Selectors re-render only when their value changes.
+const title = usePlayerState((s) => s.currentItem?.title);
+const playing = usePlayerState((s) => s.state === "playing");
+
+// Save where the user stopped, whatever the reason.
+usePlayerEvent("itemEnd", ({ item, time, duration, reason }) => save(item, time));
+
+// Draw over the video: artwork for audio, live chat, a now-playing card.
+<PlayerOverlay>
+  <divTemplate>…</divTemplate>
 </PlayerOverlay>
 ```
 
-- **`usePlayer()`** returns `play(items, { startIndex })`, `pause`, `resume`,
-  `stop` and `seek`, plus `state`, `currentTime`, `duration`, `currentItem` and
-  `error`. `nativePlayer()` returns the TVJS `Player` itself, for anything else.
+- **State.** `usePlayerState()` gives `state`, `currentTime`, `duration`,
+  `currentItem`, `error`, `isLive` (playing with no known duration) and
+  `endReason`. Pass a selector that returns a primitive or a stable value, so
+  the caller doesn't re-render once a second during playback.
+- **`itemEnd` reasons.** `"playedToEnd"`, `"stopped"`, `"userInitiated"` (Menu),
+  `"error"`, `"forwardedToEnd"`, `"playlistChanged"`. The event carries the last
+  real position and is reported once per item. `PlayerProvider` also takes an
+  `onItemEnd` prop.
 - **Start position.** `startTime` starts playback at a position. `resumeTime`
   instead makes TVMLKit ask "Resume Playback / Start from Beginning" and wait.
-- **Last position.** `currentTime` keeps the last real position after playback
-  stops, so you can save where the user left off.
-- **`<PlayerOverlay>`** renders React over the fullscreen player. It can be
-  mounted before or during playback. With `interactive`, the overlay takes focus
-  when the user swipes down.
-- **One player per `usePlayer` call.** The player stops when its component
-  unmounts. Call it once per screen, or share it through `launch`'s `wrapper`,
-  not once per row.
-- **Visibility.** Presenting the player fires `disappear` on the screen
-  underneath, so polling gated on `useIsScreenVisible()` pauses while the video
-  is up.
+- **`<PlayerOverlay>`** uses the shared player, and can be mounted before or
+  during playback. With `interactive`, it takes focus when the user swipes
+  down.
+- **`usePlayer()`.** Inside a provider it's the shared player, with state and
+  actions in one object, re-rendering as playback progresses. Without a
+  provider, each call owns a player that stops when the component unmounts.
+  That's fine for a single screen; pass the result to `<PlayerOverlay player>`.
+- **Escape hatch.** `nativePlayer()` returns the TVJS `Player` itself.
+- **Covered screens.** Presenting the player fires `disappear` on the screen
+  underneath, so screen queries pause while the video is up. Pass
+  `refreshWhileHidden` for data drawn in an overlay.
 
 ## Data fetching
 

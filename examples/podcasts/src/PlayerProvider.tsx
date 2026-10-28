@@ -1,8 +1,7 @@
-// One player for the whole app. usePlayer() owns a TVJS Player per calling
-// component (and stops it when that component unmounts), so it lives here, in
-// the `wrapper` passed to launch(), where it outlives every pushed screen.
-// Screens get stable actions through context; the once-a-second time updates
-// stay inside this component.
+// The app's playback layer, on top of tvml-react's shared <PlayerProvider>
+// (one player for the whole app, set up in main.tsx's `wrapper`). Adds
+// `playEpisode` (resume where the user left off) and saves listening progress:
+// every SAVE_EVERY seconds, on pause, and when an episode ends for any reason.
 
 import {
   createContext,
@@ -14,54 +13,50 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { usePlayer } from "tvml-react";
+import { usePlayerControls, usePlayerEvent, usePlayerState } from "tvml-react";
 
 import { useProgress } from "./library";
 import { NowPlayingOverlay } from "./NowPlayingOverlay";
 import type { Episode, Podcast } from "./types";
 
-interface PlayerActions {
+interface PodcastPlayerActions {
   /** Play an episode, resuming where the user left off unless `fromStart`. */
   playEpisode(episode: Episode, podcast: Podcast, options?: { fromStart?: boolean }): void;
 }
 
-const PlayerContext = createContext<PlayerActions | null>(null);
+const PodcastPlayerContext = createContext<PodcastPlayerActions | null>(null);
 
-export function usePodcastPlayer(): PlayerActions {
-  const actions = useContext(PlayerContext);
-  if (!actions) throw new Error("usePodcastPlayer must be used inside <PlayerProvider>");
+export function usePodcastPlayer(): PodcastPlayerActions {
+  const actions = useContext(PodcastPlayerContext);
+  if (!actions) throw new Error("usePodcastPlayer must be used inside <PodcastPlayer>");
   return actions;
 }
 
 // Within this many seconds of the end counts as finished.
 const FINISHED_MARGIN = 30;
-// How often (in media seconds) to persist the position while playing, so a
-// crash or force-quit loses little. Pausing and stopping save right away.
+// Save the position this often (in media seconds) while playing, so a crash or
+// force-quit loses little.
 const SAVE_EVERY = 15;
-const FINISHED = -1;
 
-// `play` counts calls to playEpisode; see the overlay below.
-type NowPlaying = { episode: Episode; podcast: Podcast; play: number };
+type NowPlaying = { episode: Episode; podcast: Podcast };
 
-export function PlayerProvider({ children }: { children?: ReactNode }) {
-  const player = usePlayer();
+export function PodcastPlayer({ children }: { children?: ReactNode }) {
+  const { play } = usePlayerControls();
   const { progress, save } = useProgress();
   const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
-  const lastSaved = useRef(0);
 
   // Read the latest progress without making playEpisode change identity.
   const progressRef = useRef(progress);
   progressRef.current = progress;
 
-  const playEpisode = useCallback<PlayerActions["playEpisode"]>(
+  const playEpisode = useCallback<PodcastPlayerActions["playEpisode"]>(
     (episode, podcast, options = {}) => {
       const saved = progressRef.current[episode.id];
       const startTime =
         !options.fromStart && saved && !saved.played ? Math.max(0, saved.position - 5) : 0;
-      setNowPlaying((current) => ({ episode, podcast, play: (current?.play ?? 0) + 1 }));
-      lastSaved.current = startTime;
+      setNowPlaying({ episode, podcast });
       save(episode, podcast, { position: startTime, played: false });
-      player.play({
+      play({
         url: episode.url,
         type: episode.mediaType,
         title: episode.title,
@@ -71,41 +66,51 @@ export function PlayerProvider({ children }: { children?: ReactNode }) {
         startTime,
       });
     },
-    [player.play, save],
+    [play, save],
   );
 
-  const { currentTime, duration, state, currentItem } = player;
+  const savePosition = useCallback(
+    (time: number, duration: number, ended = false) => {
+      if (!nowPlaying || time <= 0) return;
+      const known = Number.isFinite(duration) && duration > 0 ? duration : nowPlaying.episode.duration;
+      const finished = known > 0 && time >= known - FINISHED_MARGIN;
+      if (finished) {
+        save(nowPlaying.episode, nowPlaying.podcast, { position: 0, duration: known, played: true });
+      } else if (!ended || time > 0) {
+        save(nowPlaying.episode, nowPlaying.podcast, { position: time, duration: known });
+      }
+    },
+    [nowPlaying, save],
+  );
 
-  // Persist the playback position: every SAVE_EVERY seconds while playing, and
-  // on pause and end (currentTime keeps its last value once playback stops).
+  // Periodically while playing. Selecting a SAVE_EVERY-second bucket (not the
+  // time itself) means this component re-renders every 15s, not every second.
+  const bucket = usePlayerState((s) =>
+    s.state === "playing" ? Math.floor(s.currentTime / SAVE_EVERY) : -1,
+  );
+  const duration = usePlayerState((s) => s.duration);
   useEffect(() => {
-    if (!nowPlaying || currentItem?.url !== nowPlaying.episode.url || currentTime <= 0) return;
+    if (bucket > 0) savePosition(bucket * SAVE_EVERY, duration);
+  }, [bucket]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const known =
-      Number.isFinite(duration) && duration > 0 ? duration : nowPlaying.episode.duration;
-    if (known > 0 && currentTime >= known - FINISHED_MARGIN) {
-      if (lastSaved.current === FINISHED) return;
-      lastSaved.current = FINISHED;
-      save(nowPlaying.episode, nowPlaying.podcast, { position: 0, duration: known, played: true });
-      return;
-    }
+  // On pause (the time doesn't move while paused, so this fires once).
+  const pausedAt = usePlayerState((s) => (s.state === "paused" ? s.currentTime : null));
+  useEffect(() => {
+    if (pausedAt !== null) savePosition(pausedAt, duration);
+  }, [pausedAt]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const stateChange = state === "paused" || state === "end";
-    if (!stateChange && Math.abs(currentTime - lastSaved.current) < SAVE_EVERY) return;
-    lastSaved.current = currentTime;
-    save(nowPlaying.episode, nowPlaying.podcast, { position: currentTime, duration: known });
-  }, [nowPlaying, currentTime, duration, state, currentItem, save]);
+  // When it ends: played through, stopped, errored, or the user pressed Menu.
+  usePlayerEvent("itemEnd", ({ time, duration: total, reason }) => {
+    savePosition(reason === "playedToEnd" ? total : time, total, true);
+  });
 
   const actions = useMemo(() => ({ playEpisode }), [playEpisode]);
   return (
-    <PlayerContext.Provider value={actions}>
+    <PodcastPlayerContext.Provider value={actions}>
       {children}
       {nowPlaying?.episode.mediaType === "audio" ? (
-        <NowPlayingOverlay
-          player={player}
-          artwork={nowPlaying.episode.artwork || nowPlaying.podcast.artwork}
-        />
+        <NowPlayingOverlay artwork={nowPlaying.episode.artwork || nowPlaying.podcast.artwork} />
       ) : null}
-    </PlayerContext.Provider>
+    </PodcastPlayerContext.Provider>
   );
 }

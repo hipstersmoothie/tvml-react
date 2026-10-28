@@ -73,13 +73,25 @@ export type {
   Restrictions,
   TVMLTraitCollection,
 } from "./platform.js";
-export { PlayerOverlay, usePlayer } from "./player.js";
+export {
+  PlayerOverlay,
+  PlayerProvider,
+  usePlayer,
+  usePlayerControls,
+  usePlayerEvent,
+  usePlayerState,
+} from "./player.js";
 export type {
+  EndReason,
+  ItemEndEvent,
   MediaItemInput,
   NativePlayer,
   PlaybackState,
+  PlayerActions,
   PlayerControls,
   PlayerOverlayProps,
+  PlayerProviderProps,
+  PlayerState,
 } from "./player.js";
 export { createPortal } from "./reconciler.js";
 export { createRoot, launch } from "./root.js";
