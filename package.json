@@ -71,7 +71,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "tvml-react": "./bin/tvml-react.js"
+    "tvml-react": "bin/tvml-react.js"
   },
   "files": [
     "bin",
