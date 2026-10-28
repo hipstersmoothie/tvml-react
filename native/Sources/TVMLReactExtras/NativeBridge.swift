@@ -49,6 +49,20 @@ final class NativeBridge {
     bridge.setValue(setIdleTimerDisabled, forProperty: "setIdleTimerDisabled")
     webSockets.install(on: bridge)
 
+    // measureText(text, fontSize, fontWeight) -> { width, height } in points,
+    // for sizing TVML cells to their text (TVML has no intrinsic sizing).
+    let measureText: @convention(block) (String, Double, String) -> [String: Double] = {
+      text, fontSize, weight in
+      let font = UIFont.systemFont(ofSize: CGFloat(fontSize), weight: Self.fontWeight(weight))
+      let size = (text as NSString).boundingRect(
+        with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude),
+        options: [.usesLineFragmentOrigin, .usesFontLeading],
+        attributes: [.font: font], context: nil
+      ).size
+      return ["width": Double(ceil(size.width)), "height": Double(ceil(size.height))]
+    }
+    bridge.setValue(measureText, forProperty: "measureText")
+
     context.setObject(bridge, forKeyedSubscript: Self.globalName as NSString)
   }
 
@@ -91,6 +105,20 @@ final class NativeBridge {
       }
     }
     pathMonitor.start(queue: DispatchQueue(label: "tvml-react.network"))
+  }
+
+  private nonisolated static func fontWeight(_ name: String) -> UIFont.Weight {
+    switch name.lowercased() {
+    case "ultralight": return .ultraLight
+    case "thin": return .thin
+    case "light": return .light
+    case "medium": return .medium
+    case "semibold": return .semibold
+    case "bold": return .bold
+    case "heavy": return .heavy
+    case "black": return .black
+    default: return .regular
+    }
   }
 
   private nonisolated func state() -> [String: Any] {

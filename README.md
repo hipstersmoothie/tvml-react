@@ -52,8 +52,10 @@ The [example app](examples/hello) running in the tvOS 26 simulator.
 - **CLI.** `tvml-react build` and `tvml-react dev` bundle your app for TVJS using esbuild,
   serve it on your LAN, and ship a bootstrap `Application.js`.
 - **Swift package.** One call to launch the app. It also fixes a TVMLKit crash
-  on tvOS 26, registers custom native elements for you, and ships a focus
-  bridge for header navs and a scrollable native list.
+  on tvOS 26 and registers custom native elements for you. It ships a focus
+  bridge for header navs, plus native elements for what TVML can't do:
+  changeable backdrops, blurred cards, rounded avatars, QR codes and a
+  scrolling list.
 
 ## Getting started
 
@@ -548,22 +550,36 @@ a control with nothing directly above it can't get back up to a header
 window. It adds a `UIFocusGuide` that connects the header and the body in both
 directions.
 
-### `SimplifiedList`
+### Native elements
 
-`divTemplate` doesn't scroll. `SimplifiedList` is a custom view element backed
-by a `UITableView`: drop it into a `divTemplate` and it scrolls and handles
-focus natively. A `segmentBar` header above it stays standard TVML.
-`TVMLReact.install()` registers it.
+`TVMLReact.install()` registers native view elements for the things TVML can't
+do; import them as components from `tvml-react/native`. Each is a leaf that
+draws itself. TVMLKit places it using its `style` width, height and
+`tvPosition`, but it can't contain TVML children.
 
 ```tsx
-import { SimplifiedList, SimplifiedListRow } from "tvml-react/simplified-list";
-
-<SimplifiedList summary="Recently played" style={{ width: 1920, height: 880 }}>
-  {tracks.map((t) => (
-    <SimplifiedListRow key={t.id} title={t.title} subtitle={t.artist} accessory={t.time} image={t.art} />
-  ))}
-</SimplifiedList>
+import { Avatar, Backdrop, Card, QRCode, SimplifiedList, SimplifiedListRow } from "tvml-react/native";
 ```
+
+| Component | What it's for |
+| --- | --- |
+| `Backdrop` | A full-bleed background image that, unlike `<background>`, can change after the screen is shown. Cross-fades between images (`crossfade` seconds) and can darken them (`dim`, 0–1). Draws behind the whole template, header included, and takes no layout space. |
+| `Card` | A blurred, rounded panel with `title`, `subtitle`, `body` and an `image`. `material` is `"dark"`, `"light"` or `"regular"`. TVML has no blur or rounded panels. |
+| `Avatar` | A rounded (by default circular) image, showing the `name`'s initials while it loads or when there's no `src`. TVML ignores `border-radius` on images. |
+| `QRCode` | A QR code for `value`, drawn natively: offline and sharp at 4K. `foreground` and `background` take hex colors. |
+| `SimplifiedList` / `SimplifiedListRow` | A natively scrolling list for `divTemplate`, which doesn't scroll. Rows take `title`, `subtitle`, `accessory` and `image`, and report presses and focus through `onSelect` and `onHighlight`. A `segmentBar` header above it stays standard TVML. |
+
+```tsx
+<divTemplate>
+  <Backdrop src={artworkURL} dim={0.5} />
+  <Card style={{ tvPosition: "center", width: 900, height: 280 }} title={album} subtitle={artist} image={coverURL} />
+  <QRCode style={{ tvPosition: "bottom-right", width: 220, height: 220 }} value="https://example.com/link" />
+</divTemplate>
+```
+
+`measureText(text, { fontSize, fontWeight })` (from `tvml-react`) returns
+`{ width, height }` in points, measured natively, so you can size a cell to
+its text. TVML has no intrinsic sizing.
 
 ## Build tooling without the CLI
 

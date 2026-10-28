@@ -36,11 +36,6 @@ Known gaps and missing features, roughly in priority order within each section.
       no-op styles (see docs/platform-notes.md). Ship `tvml-react/layout`
       (`Row`, `Cell`, `Columns`, safe-area constants), starting from
       `examples/dashboard/src/layout.tsx`.
-- [ ] **Native visual elements.** Register through `TVMLReact.install()`:
-  - `Backdrop`: a crossfading background image with a scrim. TVML's
-    `<background>` is frozen once presented.
-  - `Panel`: a blurred, rounded `UIVisualEffectView`.
-  - `measureText()` on the native bridge, for cells sized to their text.
 - [ ] **`Slideshow` wrapper.** A typed `startSlideshow(images, options)`.
       Blank in the simulator; needs a hardware check.
 - [ ] **Keyboard suggestions.** Expose the Keyboard feature's `suggestions` on
@@ -92,9 +87,6 @@ Known gaps and missing features, roughly in priority order within each section.
 
 ## Native extras
 
-- [ ] **`SimplifiedList` rows can't be selected.** Rows are native table cells
-      and don't dispatch TVML events back to JS. Fire `select` / `highlight` on
-      the row elements (or expose a callback) so `onSelect` works.
 - [ ] **`SimplifiedList` styling is hard-coded.** Row height, fonts, colours
       and artwork size are fixed in Swift. Read them from TVML attributes or
       styles.

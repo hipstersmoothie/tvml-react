@@ -1,14 +1,16 @@
 import { useState } from "react";
 
 import { Albums } from "./Albums";
+import { Elements } from "./Elements";
 import { NativeList } from "./NativeList";
 import { Platform } from "./Platform";
 
-type Tab = "albums" | "list" | "platform";
+type Tab = "albums" | "list" | "elements" | "platform";
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: "albums", label: "Albums" },
   { id: "list", label: "Native list" },
+  { id: "elements", label: "Elements" },
   { id: "platform", label: "Platform" },
 ];
 
@@ -26,6 +28,7 @@ export function App() {
       </segmentBar>
       {tab === "albums" && <Albums />}
       {tab === "list" && <NativeList />}
+      {tab === "elements" && <Elements />}
       {tab === "platform" && <Platform />}
     </divTemplate>
   );

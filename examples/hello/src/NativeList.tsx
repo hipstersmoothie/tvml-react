@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { useKeepAwake } from "tvml-react";
-import { SimplifiedList, SimplifiedListRow } from "tvml-react/simplified-list";
+import { useKeepAwake, useNavigation } from "tvml-react";
+import { SimplifiedList, SimplifiedListRow } from "tvml-react/native";
 
+import { AlbumDetail } from "./AlbumDetail";
 import { ALBUMS, artwork } from "./data";
 
 // Uses the native list view from the TVMLReactExtras Swift package.
 export function NativeList() {
   const now = useClock();
+  const navigation = useNavigation();
   // A clock is worth keeping on screen: no screensaver while this tab is open.
   useKeepAwake();
 
@@ -19,6 +21,7 @@ export function NativeList() {
           subtitle={album.artist}
           accessory={String(album.year)}
           image={artwork(album)}
+          onSelect={() => navigation.push(<AlbumDetail album={album} />)}
         />
       ))}
     </SimplifiedList>

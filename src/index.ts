@@ -32,6 +32,7 @@ export type { TVMLKeyboard } from "./keyboard.js";
 export {
   getNetworkStatus,
   hasNativeBridge,
+  measureText,
   onNetworkStatusChange,
   useAccessibility,
   useColorScheme,
@@ -44,6 +45,7 @@ export type {
   ColorScheme,
   DisplayInfo,
   NetworkStatus,
+  TextMeasurement,
 } from "./native.js";
 export { MenuBar, MenuBarItem, useMenuBar } from "./menu-bar.js";
 export type {

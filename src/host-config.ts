@@ -56,8 +56,14 @@ function shallowEqual(a: unknown, b: unknown): boolean {
   );
 }
 
+// value/defaultValue/onTextChange drive the keyboard of these elements; on
+// any other element (ratingBadge, progressBar, custom ones) `value` is a plain
+// attribute.
+const TEXT_INPUTS = new Set(["textField", "searchField"]);
+
 function applyProp(
   element: TVMLElement,
+  type: string,
   key: string,
   value: unknown,
   isNew = false,
@@ -71,7 +77,7 @@ function applyProp(
     return;
   }
 
-  if (KEYBOARD_PROPS.has(key)) {
+  if (TEXT_INPUTS.has(type) && KEYBOARD_PROPS.has(key)) {
     setKeyboardProp(element, key, value);
     return;
   }
@@ -120,7 +126,7 @@ export const hostConfig = {
   createInstance(type: string, props: Props, rootContainer: Container) {
     const element = rootContainer.ownerDocument.createElement(type);
     for (const key in props) {
-      applyProp(element, key, props[key], true);
+      applyProp(element, type, key, props[key], true);
     }
     return element;
   },
@@ -173,13 +179,13 @@ export const hostConfig = {
 
   commitUpdate(
     instance: Instance,
-    _type: string,
+    type: string,
     prevProps: Props,
     nextProps: Props,
   ) {
     for (const key in prevProps) {
       if (!(key in nextProps)) {
-        applyProp(instance, key, undefined);
+        applyProp(instance, type, key, undefined);
       }
     }
 
@@ -190,7 +196,7 @@ export const hostConfig = {
       // Style and srcset objects are usually recreated each render; skip them
       // when nothing inside changed.
       if ((key === "style" || key === "srcset") && shallowEqual(prev, next)) continue;
-      applyProp(instance, key, next);
+      applyProp(instance, type, key, next);
     }
   },
 
@@ -206,8 +212,8 @@ export const hostConfig = {
 
   // The keyboard feature is only reachable once the element is in a document,
   // so text inputs hook it up in commitMount.
-  finalizeInitialChildren: (_instance: Instance, _type: string, props: Props) =>
-    needsKeyboard(props),
+  finalizeInitialChildren: (_instance: Instance, type: string, props: Props) =>
+    TEXT_INPUTS.has(type) && needsKeyboard(props),
   commitMount(instance: Instance) {
     syncKeyboard(instance);
   },

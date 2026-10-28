@@ -47,6 +47,7 @@ interface NativeBridgeGlobal {
   state: NativeState;
   onChange?: (() => void) | null;
   setIdleTimerDisabled(disabled: boolean): void;
+  measureText?(text: string, fontSize: number, fontWeight: string): { width: number; height: number };
 }
 
 interface Globals {
@@ -219,4 +220,30 @@ export function useKeepAwake(enabled = true): void {
       }
     };
   }, [enabled]);
+}
+
+export interface TextMeasurement {
+  /** Points. */
+  width: number;
+  height: number;
+}
+
+/**
+ * Measure text set in the system font, for sizing cells to their content
+ * (TVML has no intrinsic sizing). Uses the native bridge; without it, a rough
+ * estimate.
+ */
+export function measureText(
+  text: string,
+  { fontSize = 29, fontWeight = "regular" }: { fontSize?: number; fontWeight?: string } = {},
+): TextMeasurement {
+  const native = bridge()?.measureText;
+  if (native) {
+    return native(text, fontSize, fontWeight);
+  }
+  const lines = text.split("\n");
+  return {
+    width: Math.ceil(Math.max(...lines.map((line) => line.length)) * fontSize * 0.55),
+    height: Math.ceil(lines.length * fontSize * 1.2),
+  };
 }

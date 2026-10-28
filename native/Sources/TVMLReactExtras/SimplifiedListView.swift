@@ -21,6 +21,9 @@ struct SimplifiedListRowModel {
 // the view is safe to reuse across updates.
 final class SimplifiedListView: UIView {
   private var rows: [SimplifiedListRowModel] = []
+  // The <simplifiedListRow> elements, so presses and focus can be reported
+  // back to JavaScript (onSelect / onHighlight on SimplifiedListRow).
+  private var rowElements: [TVViewElement] = []
   private let tableView = UITableView(frame: .zero, style: .plain)
   private let summaryLabel = UILabel()
   private static let cellReuseID = "SimplifiedListCell"
@@ -67,9 +70,9 @@ final class SimplifiedListView: UIView {
     summaryLabel.text = summary
     tableView.tableHeaderView = (summary?.isEmpty == false) ? summaryLabel : nil
 
+    rowElements = (element.children ?? []).filter { $0.name == SimplifiedListElement.row }
     rows =
-      (element.children ?? []).compactMap { child in
-        guard child.name == SimplifiedListElement.row else { return nil }
+      rowElements.compactMap { child in
         let image = child.attributes?["image"].flatMap(URL.init(string:))
         return SimplifiedListRowModel(
           title: child.attributes?["title"] ?? "",
@@ -107,5 +110,24 @@ extension SimplifiedListView: UITableViewDataSource, UITableViewDelegate {
       as! SimplifiedListCell
     cell.configure(with: rows[indexPath.row])
     return cell
+  }
+
+  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    dispatch(.select, at: indexPath)
+  }
+
+  func tableView(
+    _ tableView: UITableView, didUpdateFocusIn context: UITableViewFocusUpdateContext,
+    with coordinator: UIFocusAnimationCoordinator
+  ) {
+    if let indexPath = context.nextFocusedIndexPath {
+      dispatch(.highlight, at: indexPath)
+    }
+  }
+
+  private func dispatch(_ type: TVElementEventType, at indexPath: IndexPath) {
+    guard rowElements.indices.contains(indexPath.row) else { return }
+    rowElements[indexPath.row].dispatchEvent(
+      type: type, canBubble: true, cancellable: false, extraInfo: nil, completion: nil)
   }
 }

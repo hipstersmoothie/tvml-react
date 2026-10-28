@@ -350,6 +350,20 @@ describe("host config", () => {
     doc.dispatch("change", doc.getElementById("r")!);
     expect(onChange).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps `value` a plain attribute on non-input elements", () => {
+    const doc = new FakeDocument();
+    const root = createRoot(doc);
+    roots.push(root);
+    root.render(
+      <ratingTemplate>
+        <ratingBadge id="r" value={0.8} />
+        <progressBar id="p" value="0.5" />
+      </ratingTemplate>,
+    );
+    expect(doc.getElementById("r")!.getAttribute("value")).toBe("0.8");
+    expect(doc.getElementById("p")!.getAttribute("value")).toBe("0.5");
+  });
 });
 
 // --- Player -------------------------------------------------------------------------

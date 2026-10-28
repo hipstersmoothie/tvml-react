@@ -37,12 +37,33 @@ public enum TVMLReact {
   }
 
   /// Install TVMLKit workarounds and the elements tvml-react ships with
-  /// (`SimplifiedList`). Safe to call more than once; `launch` calls it.
+  /// (`SimplifiedList`, `Backdrop`, `QRCode`, `Avatar`, `Card`). Safe to call more than once; `launch` calls it.
   public static func install() {
     guard !installed else { return }
     installed = true
 
     TVMLKitCompatibility.install()
+
+    register("backdrop") { element, existingView in
+      let view = existingView as? BackdropView ?? BackdropView()
+      view.update(with: element)
+      return view
+    }
+    register("qrCode") { element, existingView in
+      let view = existingView as? QRCodeView ?? QRCodeView(frame: .zero)
+      view.update(with: element)
+      return view
+    }
+    register("avatar") { element, existingView in
+      let view = existingView as? AvatarView ?? AvatarView()
+      view.update(with: element)
+      return view
+    }
+    register("card") { element, existingView in
+      let view = existingView as? CardView ?? CardView()
+      view.update(with: element)
+      return view
+    }
 
     register(
       SimplifiedListElement.list,
