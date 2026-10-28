@@ -75,7 +75,7 @@
     "dev": "tsc -p tsconfig.build.json --watch",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "prepack": "pnpm build"
+    "prepare": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "react-reconciler": "^0.33.0"
