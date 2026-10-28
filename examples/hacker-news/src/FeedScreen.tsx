@@ -1,14 +1,20 @@
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useNavigation } from "tvml-react";
 import { useScreenInfiniteQuery } from "tvml-react/query";
 
 import { PAGE_SIZE, type FeedId, type Story } from "./hn";
-import { feedQuery } from "./queries";
+import { PREVIEW_SUBTITLE, PREVIEW_TEXT, PREVIEW_TITLE } from "./Comments";
+import { feedQuery, threadQuery } from "./queries";
 import { ErrorScreen, Loading } from "./Status";
 import { StoryScreen } from "./StoryScreen";
 import { domain, excerpt, plural, timeAgo } from "./text";
 
 export function FeedScreen({ feed, title }: { feed: FeedId; title: string }) {
   const navigation = useNavigation();
+  // The story whose comments the preview shows, once focus rests on it.
+  const [highlighted, setHighlighted] = useState<number>();
+  const active = useDebouncedValue(highlighted, 400);
   const {
     data: stories,
     error,
@@ -60,9 +66,13 @@ export function FeedScreen({ feed, title }: { feed: FeedId; title: string }) {
               key={story.id}
               story={story}
               rank={index + 1}
+              active={story.id === active}
               onSelect={() => navigation.push(<StoryScreen story={story} />)}
-              // Infinite scroll: start loading the next page a few rows early.
-              onHighlight={index >= stories.length - 5 && !isFetchNextPageError ? loadMore : undefined}
+              onHighlight={() => {
+                setHighlighted(story.id);
+                // Infinite scroll: start loading the next page a few rows early.
+                if (index >= stories.length - 5 && !isFetchNextPageError) loadMore();
+              }}
             />
           ))}
           {hasNextPage && (
@@ -94,15 +104,21 @@ export function FeedScreen({ feed, title }: { feed: FeedId; title: string }) {
 function StoryRow({
   story,
   rank,
+  active,
   onSelect,
   onHighlight,
 }: {
   story: Story;
   rank: number;
+  /** Highlighted for a moment: load its comments for the preview. */
+  active: boolean;
   onSelect: () => void;
-  onHighlight?: () => void;
+  onHighlight: () => void;
 }) {
-  const site = domain(story.url);
+  // The same query the story screen uses, so opening it is instant.
+  const { data: thread } = useQuery({ ...threadQuery(story.id), enabled: active && story.comments > 0 });
+  const top = thread?.comments[0];
+  const site = domain(story.url) ?? "news.ycombinator.com";
   const meta = [
     plural(story.score, "point"),
     story.type === "job" ? undefined : plural(story.comments, "comment"),
@@ -111,21 +127,34 @@ function StoryRow({
   ]
     .filter(Boolean)
     .join(" · ");
+  const body = story.text
+    ? excerpt(story.text, 600)
+    : top
+      ? `Top comment, from ${top.author}:\n\n${excerpt(top.text, 600)}`
+      : "";
 
   return (
     <listItemLockup onSelect={onSelect} onHighlight={onHighlight}>
       <ordinal>{String(rank)}</ordinal>
       <title>{story.title}</title>
+      <subtitle>{story.type === "job" ? site : `${site} · ${plural(story.comments, "comment")}`}</subtitle>
       <decorationLabel>{`▲ ${story.score}`}</decorationLabel>
       <relatedContent>
         <lockup>
-          <title style={{ tvTextMaxLines: 3 }}>{story.title}</title>
-          <subtitle>{site ?? "news.ycombinator.com"}</subtitle>
-          <description style={{ tvTextMaxLines: 12 }}>
-            {story.text ? `${meta}\n\n${excerpt(story.text, 600)}` : meta}
-          </description>
+          <title style={PREVIEW_TITLE}>{story.title}</title>
+          <subtitle style={PREVIEW_SUBTITLE}>{site}</subtitle>
+          <description style={PREVIEW_TEXT}>{body ? `${meta}\n\n${body}` : meta}</description>
         </lockup>
       </relatedContent>
     </listItemLockup>
   );
+}
+
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
 }

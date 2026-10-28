@@ -7,7 +7,6 @@ import { formatRemaining } from "./format";
 import { useProgress, useSubscriptions } from "./library";
 import { usePodcastPlayer } from "./PlayerProvider";
 import { chartQuery } from "./queries";
-import { Search } from "./Search";
 
 const GENRES: Array<{ id: number; name: string }> = [
   { id: 1489, name: "News" },
@@ -18,20 +17,10 @@ const GENRES: Array<{ id: number; name: string }> = [
 ];
 
 export function Home() {
-  const navigation = useNavigation();
   const { subscriptions } = useSubscriptions();
 
   return (
     <stackTemplate theme="dark">
-      <banner>
-        <title>Podcasts</title>
-        <row>
-          <buttonLockup onSelect={() => navigation.push(<Search />)}>
-            <badge src="symbol://magnifyingglass" />
-            <title>Search</title>
-          </buttonLockup>
-        </row>
-      </banner>
       <collectionList>
         <ContinueListening />
         {subscriptions.length > 0 ? (

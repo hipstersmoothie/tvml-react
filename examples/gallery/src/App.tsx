@@ -1,37 +1,12 @@
-import { MenuBar, MenuBarItem, useNavigation } from "tvml-react";
+import { MenuBar, MenuBarItem } from "tvml-react";
 
-import { useFavorites } from "./hooks";
-import { AmbientScreen } from "./screens/AmbientScreen";
 import { BrowseScreen } from "./screens/BrowseScreen";
 import { CollectionsScreen } from "./screens/CollectionsScreen";
 import { FavoritesScreen } from "./screens/FavoritesScreen";
 import { SearchScreen } from "./screens/SearchScreen";
 
 function HighlightsScreen() {
-  return (
-    <BrowseScreen
-      title="Highlights"
-      showTitle={false}
-      query={{}}
-      actions={<HighlightsActions />}
-    />
-  );
-}
-
-function HighlightsActions() {
-  const navigation = useNavigation();
-  const { favorites } = useFavorites();
-  return (
-    <row>
-      <buttonLockup
-        disabled={favorites.length === 0}
-        onSelect={() => navigation.push(<AmbientScreen items={favorites} />)}
-      >
-        <badge src="resource://button-play" />
-        <title>Ambient</title>
-      </buttonLockup>
-    </row>
-  );
+  return <BrowseScreen title="Highlights" heading="From the Art Institute of Chicago" showTitle={false} query={{}} />;
 }
 
 export function App() {

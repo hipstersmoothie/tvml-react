@@ -78,13 +78,15 @@ export interface Comment {
   author: string;
   time: number;
   text: string;
-  depth: number;
+  /** Direct replies. */
+  children: Array<Comment>;
   /** Number of replies below this one, at any depth. */
   replies: number;
 }
 
 export interface Thread {
   story: Story;
+  /** Top-level comments; each carries its replies. */
   comments: Array<Comment>;
 }
 
@@ -100,35 +102,29 @@ interface AlgoliaItem {
   children: Array<AlgoliaItem>;
 }
 
-/** A story and its whole comment tree, flattened depth-first. */
+/** A story and its whole comment tree. */
 export async function fetchThread(id: number, signal?: AbortSignal): Promise<Thread> {
   const root = await getJSON<AlgoliaItem>(`${ALGOLIA}/items/${id}`, { signal });
-  const comments: Array<Comment> = [];
 
-  const walk = (children: Array<AlgoliaItem>, depth: number): number => {
-    let count = 0;
-    for (const child of children) {
+  const walk = (children: Array<AlgoliaItem>): Array<Comment> =>
+    children.flatMap((child) => {
       // Deleted comments come back with no author and no text, but their
-      // replies are still worth showing.
-      if (child.text == null && child.author == null) {
-        count += walk(child.children, depth);
-        continue;
-      }
-      const comment: Comment = {
-        id: child.id,
-        author: child.author ?? "[deleted]",
-        time: child.created_at_i,
-        text: child.text ? decodeHtml(child.text) : "[deleted]",
-        depth,
-        replies: 0,
-      };
-      comments.push(comment);
-      comment.replies = walk(child.children, depth + 1);
-      count += 1 + comment.replies;
-    }
-    return count;
-  };
-  const total = walk(root.children, 0);
+      // replies are still worth showing: they take its place.
+      if (child.text == null && child.author == null) return walk(child.children);
+      const replies = walk(child.children);
+      return [
+        {
+          id: child.id,
+          author: child.author ?? "[deleted]",
+          time: child.created_at_i,
+          text: child.text ? decodeHtml(child.text) : "[deleted]",
+          children: replies,
+          replies: replies.reduce((sum, reply) => sum + 1 + reply.replies, 0),
+        },
+      ];
+    });
+  const comments = walk(root.children);
+  const total = comments.reduce((sum, comment) => sum + 1 + comment.replies, 0);
 
   return {
     story: {

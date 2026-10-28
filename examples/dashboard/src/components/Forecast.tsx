@@ -44,7 +44,8 @@ function hourlyColumns(forecast: ForecastData, locale: Locale, now: Date, highli
         i === 0 ? "Now" : locale.hour.format(wallClock(hourly.time[index])),
         condition(hourly.weather_code[index], hourly.is_day[index] === 1).icon,
         degrees(hourly.temperature_2m[index]),
-        rain >= 10 ? `💧${rain}%` : "",
+        // A blank line would leave a gap at the bottom of the tile.
+        `💧 ${rain}%`,
       ],
     });
   }

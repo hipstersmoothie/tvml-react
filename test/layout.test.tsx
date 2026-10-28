@@ -65,6 +65,13 @@ describe("layout", () => {
     expect(render(<Cell size={40}>abc</Cell>)).toContain("width: 70;");
   });
 
+  it("insets text from the edges of its background, inside its width", () => {
+    expect(render(<Cell width={300} inset={24}>a</Cell>)).toContain("width: 300;");
+    expect(render(<Cell width={300} inset={24}>a</Cell>)).toContain("padding: 0 24;");
+    // Sized to its text, the cell grows by the inset on both sides.
+    expect(render(<Cell size={40} inset={10}>abc</Cell>)).toContain("width: 90;");
+  });
+
   it("colors text from the Screen, white by default and black with the light theme", () => {
     expect(
       render(

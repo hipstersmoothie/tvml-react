@@ -19,8 +19,8 @@ function About({ title, text }: { title: string; text?: string }) {
   return (
     <relatedContent>
       <lockup>
-        <title>{title}</title>
-        <description>{text}</description>
+        <title style={{ fontSize: 44, fontWeight: "bold", color: "white" }}>{title}</title>
+        <description style={{ fontSize: 30, tvTextMaxLines: 6 }}>{text}</description>
       </lockup>
     </relatedContent>
   );

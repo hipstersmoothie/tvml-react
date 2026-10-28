@@ -14,7 +14,7 @@ import {
 import { useStreamChat, type ChatMessage, type ChatStatus } from "./chat";
 import { ago, oneLine, uptime, viewers } from "./format";
 import { useNow } from "./hooks";
-import { livestreamQuery, profileQuery, STREAM_REFRESH_MS } from "./queries";
+import { LIVE_REFRESH_MS, liveStreamsQuery, livestreamQuery, profileQuery, STREAM_REFRESH_MS } from "./queries";
 
 export function StreamScreen({ did }: { did: string }) {
   const navigation = useNavigation();
@@ -179,42 +179,27 @@ function LiveStream({
 
   return (
     <productTemplate theme="dark">
+      <background>
+        <img src={thumb} />
+      </background>
       <banner>
-        <infoList>
-          <info>
-            <header>
-              <title>Streamer</title>
-            </header>
-            <text>{name}</text>
-            <text>{`@${live.author.handle}`}</text>
-          </info>
-          {activity && (
-            <info>
-              <header>
-                <title>Streaming</title>
-              </header>
-              <text>{activity}</text>
-            </info>
-          )}
-          {tags.length > 0 && (
-            <info>
-              <header>
-                <title>Tags</title>
-              </header>
-              {tags.slice(0, 4).map((tag) => (
-                <text key={tag}>{`#${tag}`}</text>
-              ))}
-            </info>
-          )}
-        </infoList>
         <stack>
           <title>{title}</title>
           <row>
-            <textBadge style={{ backgroundColor: "rgb(220, 38, 38)", color: "white" }}>LIVE</textBadge>
+            <textBadge style={LIVE_BADGE}>LIVE</textBadge>
             <text>{viewers(live.viewerCount?.count)}</text>
             <text>{uptime(live.record.createdAt, now)}</text>
+            {activity && <text>{activity}</text>}
+          </row>
+          <row>
+            <text>{`${name} · @${live.author.handle}`}</text>
           </row>
           {profile?.description && <description>{profile.description}</description>}
+          {tags.length > 0 && (
+            <row>
+              <text>{tags.slice(0, 4).map((tag) => `#${tag}`).join("  ")}</text>
+            </row>
+          )}
           <row>
             <buttonLockup onSelect={connecting ? undefined : watch}>
               <badge src="resource://button-play" />
@@ -222,25 +207,54 @@ function LiveStream({
             </buttonLockup>
           </row>
         </stack>
-        <heroImg src={thumb} />
       </banner>
-      <shelf>
-        <header>
-          <title>{chatHeading(chat.status, messages.length)}</title>
-        </header>
-        <section>
-          {messages.map((m) => (
-            <reviewCard key={m.uri}>
-              <title>{`@${m.handle}`}</title>
-              <description>{m.text}</description>
-              <text>{ago(m.createdAt, now)}</text>
-            </reviewCard>
-          ))}
-        </section>
-      </shelf>
+      {messages.length > 0 ? (
+        <shelf>
+          <header>
+            <title>{chatHeading(chat.status, messages.length)}</title>
+          </header>
+          <section>
+            {messages.map((m) => (
+              <reviewCard key={m.uri}>
+                <title>{`@${m.handle}`}</title>
+                <description>{m.text}</description>
+                <text>{ago(m.createdAt, now)}</text>
+              </reviewCard>
+            ))}
+          </section>
+        </shelf>
+      ) : null}
+      <MoreLive did={did} />
     </productTemplate>
   );
 }
+
+/** Other streams that are live now, from the home screen's list. */
+function MoreLive({ did }: { did: string }) {
+  const navigation = useNavigation();
+  const { data: streams = [], dataUpdatedAt } = useScreenQuery(liveStreamsQuery);
+  const version = Math.floor(dataUpdatedAt / LIVE_REFRESH_MS);
+  const others = streams.filter((s) => s.author.did !== did);
+  if (others.length === 0) return null;
+  return (
+    <shelf>
+      <header>
+        <title>More live streams</title>
+      </header>
+      <section>
+        {others.map((stream) => (
+          <lockup key={stream.author.did} onSelect={() => navigation.replace(<StreamScreen did={stream.author.did} />)}>
+            <img src={thumbnailUrl(stream.author.did, version)} width={432} height={243} />
+            <title>{oneLine(stream.record.title)}</title>
+            <subtitle>{viewers(stream.viewerCount?.count)}</subtitle>
+          </lockup>
+        ))}
+      </section>
+    </shelf>
+  );
+}
+
+export const LIVE_BADGE = { backgroundColor: "rgb(230, 30, 50)", color: "white", fontSize: 22, fontWeight: "bold", borderRadius: 6, padding: "4 10" } as const;
 
 function chatHeading(status: ChatStatus, count: number): string {
   if (status === "unavailable") return "Chat is unavailable";

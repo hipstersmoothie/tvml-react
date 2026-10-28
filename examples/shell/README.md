@@ -26,5 +26,16 @@ kitchen-sink example. Extra arguments go to `xcodebuild`, e.g.
 `TEST_RUNNER_KITCHEN_SINK_SCREENSHOTS=/some/dir` to save a screenshot of every
 template.
 
+`TourTests` walks any example with a list of remote presses and saves
+screenshots along the way, for looking over an app's screens while working on
+it (start the example's `pnpm dev` first):
+
+```sh
+TEST_RUNNER_TOUR_URL=http://localhost:9101/ \
+TEST_RUNNER_TOUR_STEPS="wait:8 shot:home select wait:5 shot:stream" \
+TEST_RUNNER_SCREENSHOTS=/tmp/tour \
+./ui-tests.sh -only-testing:TVMLExamplesUITests/TourTests
+```
+
 The Xcode project is generated from `project.yml` with
 [XcodeGen](https://github.com/yonaskolb/XcodeGen).

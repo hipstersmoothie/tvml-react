@@ -20,8 +20,8 @@ export const apps: Array<ExampleApp> = [
     name: "stream.place",
     pitch: "Live streams from the AT Protocol, with live chat over the video.",
     highlights: [
-      "A “Live now” shelf that refreshes every 30 seconds, only while you're looking at it",
-      "Stream pages with chat that streams in over a WebSocket",
+      "The busiest streams in a big carousel, refreshed every 30 seconds while you're looking at it",
+      "Stream pages over a full-screen frame of the stream, with chat that arrives over a WebSocket",
       "Live HLS in the system player, with the chat drawn over the video",
     ],
     apis: [
@@ -39,12 +39,13 @@ export const apps: Array<ExampleApp> = [
     name: "Podcasts",
     pitch: "Browse Apple's charts, search, subscribe, and pick up where you left off.",
     highlights: [
-      "Continue Listening, with progress bars on each episode",
+      "Listen Now and Search tabs, and Continue Listening with progress bars on each episode",
       "RSS feeds parsed on the TV, and search as you type",
       "One player for the whole app, resuming each episode where you stopped",
       "Long-press an episode for more actions",
     ],
     apis: [
+      ["MenuBar", "/reference/menu-bar/"],
       ["PlayerProvider", "/reference/player-provider/"],
       ["usePlayer", "/reference/use-player/"],
       ["useLocalStorage", "/reference/use-local-storage/"],
@@ -96,12 +97,12 @@ export const apps: Array<ExampleApp> = [
     pitch: "A Hacker News reader, with threaded comments.",
     highlights: [
       "Top, New, Best, Ask and Show in a tab bar",
-      "Stories in a list with a preview panel",
-      "The whole comment tree, with HTML turned into TV-friendly text",
+      "Stories in a list, with the highlighted story's top comment beside it",
+      "Comment threads one level at a time, with HTML turned into TV-friendly text",
     ],
     apis: [
       ["MenuBar", "/reference/menu-bar/"],
-      ["useScreenQuery", "/reference/use-screen-query/"],
+      ["useScreenInfiniteQuery", "/reference/use-screen-query/"],
       ["useNavigation", "/reference/use-navigation/"],
     ],
     image: "hacker-news.jpg",

@@ -16,7 +16,7 @@ export function CommentScreen({
   return (
     <descriptiveAlertTemplate theme="dark">
       <title>{`${author} · ${timeAgo(time)}`}</title>
-      <description>{text}</description>
+      <description style={{ fontSize: 34, tvAlign: "left" }}>{text}</description>
       <subtitle>{title}</subtitle>
     </descriptiveAlertTemplate>
   );

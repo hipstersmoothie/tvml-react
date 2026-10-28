@@ -7,7 +7,8 @@ search the iTunes directory, read show feeds, subscribe, and listen with resume.
 
 ## What it shows
 
-- **Home** (`stackTemplate`): *Continue Listening* (lockups with a
+- **Tabs** (`menuBarTemplate`): *Listen Now* and *Search*.
+- **Listen Now** (`stackTemplate`): *Continue Listening* (lockups with a
   `progressBar` overlay), *Your Shows*, then Apple Podcasts top charts overall
   and by genre. Each shelf loads on its own.
 - **Search** (`searchTemplate`): `<searchField onTextChange>` with a 400 ms
@@ -72,5 +73,3 @@ terminal; you don't need to rebuild in Xcode.
   *Resume Playback / Start from Beginning* prompt (which `resumeTime` shows).
 - **Audio artwork.** On their own, audio items play over a black screen, so
   `PodcastPlayer` renders the artwork with `<PlayerOverlay>`.
-- **Icons.** There's no `resource://button-search` image, so the Search button
-  uses `symbol://magnifyingglass`.

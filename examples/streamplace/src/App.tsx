@@ -6,7 +6,7 @@ import { thumbnailUrl } from "./api";
 import { ago, clockTime, oneLine, viewers } from "./format";
 import { useNow, useRecentlyLive, type SeenStreamer } from "./hooks";
 import { LIVE_REFRESH_MS, liveStreamsQuery, profilesQuery } from "./queries";
-import { StreamScreen } from "./StreamScreen";
+import { LIVE_BADGE, StreamScreen } from "./StreamScreen";
 
 export function App() {
   const navigation = useNavigation();
@@ -70,40 +70,63 @@ export function App() {
   // A new thumbnail URL per refresh so TVMLKit fetches a fresh frame.
   const thumbVersion = Math.floor(live.dataUpdatedAt / LIVE_REFRESH_MS);
 
+  // The busiest few streams up top, big; everyone else in a grid below.
+  const featured = streams.slice(0, 5);
+  const rest = streams.slice(5);
+  const name = (did: string, handle: string) => profiles[did]?.displayName || `@${handle}`;
+  // A footnote, unless there's nothing live: then it's the news.
+  const statusShelf = (
+    <shelf>
+      <header>
+        <title>{status}</title>
+      </header>
+    </shelf>
+  );
+
   return (
     <stackTemplate theme="dark">
-      <banner>
-        <title>stream.place</title>
-        <description>{status}</description>
-      </banner>
       <collectionList>
-        {streams.length > 0 && (
-          <shelf>
-            <header>
-              <title>Live now</title>
-            </header>
+        {streams.length === 0 && statusShelf}
+        {featured.length > 0 && (
+          <carousel>
             <section>
-              {streams.map((stream) => {
+              {featured.map((stream) => {
                 const { did, handle } = stream.author;
-                const profile = profiles[did];
                 return (
                   <lockup key={did} onSelect={() => open(did)}>
-                    <img src={thumbnailUrl(did, thumbVersion)} width={480} height={270} />
-                    <overlay style={{ padding: 16 }}>
-                      {profile?.avatar && (
-                        <badge src={profile.avatar} width={64} height={64} style={{ tvPosition: "bottom-left", borderRadius: 32 }} />
-                      )}
-                      <textBadge style={{ tvPosition: "top-left", backgroundColor: "rgb(220, 38, 38)", color: "white" }}>
-                        LIVE
-                      </textBadge>
+                    <img src={thumbnailUrl(did, thumbVersion)} width={1280} height={720} />
+                    <overlay style={{ padding: 28 }}>
+                      <textBadge style={{ tvPosition: "top-left", ...LIVE_BADGE }}>LIVE</textBadge>
                     </overlay>
                     <title>{oneLine(stream.record.title)}</title>
-                    <subtitle>{`${profile?.displayName || `@${handle}`} · ${viewers(stream.viewerCount?.count)}`}</subtitle>
+                    <subtitle>{`${name(did, handle)} · ${viewers(stream.viewerCount?.count)}`}</subtitle>
                   </lockup>
                 );
               })}
             </section>
-          </shelf>
+          </carousel>
+        )}
+        {rest.length > 0 && (
+          <grid>
+            <header>
+              <title>More live streams</title>
+            </header>
+            <section>
+              {rest.map((stream) => {
+                const { did, handle } = stream.author;
+                return (
+                  <lockup key={did} onSelect={() => open(did)}>
+                    <img src={thumbnailUrl(did, thumbVersion)} width={548} height={308} />
+                    <overlay style={{ padding: 16 }}>
+                      <textBadge style={{ tvPosition: "top-left", ...LIVE_BADGE }}>LIVE</textBadge>
+                    </overlay>
+                    <title>{oneLine(stream.record.title)}</title>
+                    <subtitle>{`${name(did, handle)} · ${viewers(stream.viewerCount?.count)}`}</subtitle>
+                  </lockup>
+                );
+              })}
+            </section>
+          </grid>
         )}
         {offline.length > 0 && (
           <shelf>
@@ -117,6 +140,7 @@ export function App() {
             </section>
           </shelf>
         )}
+        {streams.length > 0 && statusShelf}
       </collectionList>
     </stackTemplate>
   );

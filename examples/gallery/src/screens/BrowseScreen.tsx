@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { useScreenInfiniteQuery } from "tvml-react/query";
 
 import type { ArtworkQuery } from "../api";
@@ -11,16 +10,16 @@ const formatCount = (n: number) => new Intl.NumberFormat("en-US").format(n);
 /** An endless grid of artworks for a query: highlights, a department, an artist. */
 export function BrowseScreen({
   title,
+  heading,
   query,
-  actions,
   showTitle = true,
 }: {
   title: string;
+  /** Above the grid when the title isn't shown. */
+  heading?: string;
   /** Off for screens under the menu bar, which covers the top of the banner. */
   showTitle?: boolean;
   query: ArtworkQuery;
-  /** Buttons for the banner. */
-  actions?: ReactNode;
 }) {
   // Paused while another tab or screen covers this one, like useScreenQuery.
   const pages = useScreenInfiniteQuery(artworkPagesQuery(query));
@@ -44,16 +43,17 @@ export function BrowseScreen({
 
   return (
     <stackTemplate theme="dark">
-      <banner>
-        {showTitle ? <title>{title}</title> : null}
-        {showTitle ? <description>{footer}</description> : null}
-        {actions}
-      </banner>
+      {showTitle ? (
+        <banner>
+          <title>{title}</title>
+          <description>{footer}</description>
+        </banner>
+      ) : null}
       <collectionList>
         <ArtworkGrid
           items={items}
           onEndReached={() => loadNextPage(pages)}
-          title={showTitle ? undefined : footer}
+          title={showTitle ? undefined : heading ? `${heading} · ${footer}` : footer}
         />
       </collectionList>
     </stackTemplate>

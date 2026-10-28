@@ -2,7 +2,7 @@
 
 A Hacker News reader for Apple TV, built with tvml-react.
 
-<img src="screenshot.jpg" width="640" alt="A story's threaded comments, with the highlighted comment's full text on the left" />
+<img src="screenshot.jpg" width="640" alt="Top stories in a list, with the highlighted story and its top comment on the left" />
 
 ## What it shows
 
@@ -22,19 +22,23 @@ A Hacker News reader for Apple TV, built with tvml-react.
   tvml-react polyfills `fetch` and `AbortController` on top of TVJS's
   `XMLHttpRequest`. `src/lib/http.ts` adds a timeout, typed JSON and error
   messages worth showing on screen.
-- **Story lists** in a `listTemplate`: rank, title and score in each
-  `listItemLockup`, with a `relatedContent` preview of the highlighted story
-  (domain, points, comments, author, relative age via `Intl.RelativeTimeFormat`,
-  and the text of Ask HN posts). Each feed is a `useInfiniteQuery` that loads 30
-  stories at a time from the Firebase API (10 requests at once), and
+- **Story lists** in a `listTemplate`: rank, title, site and score in each
+  `listItemLockup`, with a large `relatedContent` preview of the highlighted
+  story: points, comments, author, relative age via `Intl.RelativeTimeFormat`,
+  and the text of Ask HN posts. When focus rests on a story for a moment, its
+  comments load and the preview shows the top one; the story screen uses the
+  same query, so opening it is instant. Each feed is a `useInfiniteQuery` that
+  loads 30 stories at a time from the Firebase API (10 requests at once), and
   `fetchNextPage` runs when focus gets within five rows of the end. The first
   page fetches the feed's ids and later pages carry them along, so Refresh
   reloads every page that's on screen from the same list.
-- **Story detail** with the whole comment tree from one Algolia request,
-  flattened and indented by depth. The highlighted comment's full text shows in
-  `relatedContent` (`tv-text-max-lines: 16`). Selecting a comment opens it in a
-  `descriptiveAlertTemplate`, which scrolls long text. Links show as a QR code
-  you can scan with your phone, since tvOS has no web browser.
+- **Story detail** with the comment tree from one Algolia request, one level
+  at a time: the story lists its top-level comments, and selecting a comment
+  opens its replies, and so on down (`src/Comments.tsx`). The highlighted
+  comment's full text fills the preview. Play, or selecting a comment with no
+  replies, opens it in a `descriptiveAlertTemplate`, which scrolls long text.
+  Links show as a QR code you can scan with your phone, since tvOS has no web
+  browser.
 - **HTML to text** (`src/text.ts`). TVML text elements can't render HTML, so
   `<p>` becomes a blank line, links become their full URL, and entities are
   decoded.

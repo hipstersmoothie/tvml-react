@@ -3,7 +3,8 @@ import { useNavigation } from "tvml-react";
 import { useScreenQuery } from "tvml-react/query";
 
 import { CommentScreen } from "./CommentScreen";
-import type { Comment, Story } from "./hn";
+import { CommentRow, PREVIEW_SUBTITLE, PREVIEW_TEXT, PREVIEW_TITLE } from "./Comments";
+import type { Story } from "./hn";
 import { threadQuery } from "./queries";
 import { domain, excerpt, plural, timeAgo } from "./text";
 
@@ -42,8 +43,8 @@ export function StoryScreen({ story: initial }: { story: Story }) {
                     width={400}
                     height={400}
                   />
-                  <title>Scan to open on your phone</title>
-                  <description style={{ tvTextMaxLines: 4 }}>{story.url}</description>
+                  <title style={PREVIEW_TITLE}>Scan to open on your phone</title>
+                  <description style={{ ...PREVIEW_TEXT, tvTextMaxLines: 4 }}>{story.url}</description>
                 </lockup>
               </relatedContent>
             </listItemLockup>
@@ -54,8 +55,9 @@ export function StoryScreen({ story: initial }: { story: Story }) {
               <decorationLabel>Read</decorationLabel>
               <relatedContent>
                 <lockup>
-                  <title>{`${story.by} · ${timeAgo(story.time)}`}</title>
-                  <description style={{ tvTextMaxLines: 16 }}>{story.text}</description>
+                  <title style={PREVIEW_TITLE}>{story.by}</title>
+                  <subtitle style={PREVIEW_SUBTITLE}>{timeAgo(story.time)}</subtitle>
+                  <description style={PREVIEW_TEXT}>{story.text}</description>
                 </lockup>
               </relatedContent>
             </listItemLockup>
@@ -65,7 +67,7 @@ export function StoryScreen({ story: initial }: { story: Story }) {
           <header>
             <title>
               {thread.data
-                ? (comments.length > 0 ? plural(comments.length, "comment") : "No comments yet") +
+                ? (comments.length > 0 ? plural(story.comments, "comment") : "No comments yet") +
                   (thread.isRefetchError ? " · couldn't refresh" : "")
                 : thread.isLoadingError
                   ? "Couldn't load comments"
@@ -84,15 +86,7 @@ export function StoryScreen({ story: initial }: { story: Story }) {
             </listItemLockup>
           )}
           {comments.slice(0, shown).map((comment) => (
-            <CommentRow
-              key={comment.id}
-              comment={comment}
-              onSelect={() =>
-                navigation.push(
-                  <CommentScreen title={story.title} author={comment.author} time={comment.time} text={comment.text} />,
-                )
-              }
-            />
+            <CommentRow key={comment.id} comment={comment} story={story.title} />
           ))}
           {comments.length > shown && (
             <listItemLockup onSelect={() => setShown((n) => n + COMMENT_PAGE)}>
@@ -102,25 +96,5 @@ export function StoryScreen({ story: initial }: { story: Story }) {
         </section>
       </list>
     </listTemplate>
-  );
-}
-
-const INDENT = " "; // em space
-
-function CommentRow({ comment, onSelect }: { comment: Comment; onSelect: () => void }) {
-  const indent = INDENT.repeat(Math.min(comment.depth, 8) * 2);
-  return (
-    <listItemLockup onSelect={onSelect}>
-      <title>{`${indent}${comment.depth > 0 ? "↳ " : ""}${excerpt(comment.text, 90)}`}</title>
-      <subtitle>{`${indent}${comment.author} · ${timeAgo(comment.time)}`}</subtitle>
-      {comment.replies > 0 && <decorationLabel>{String(comment.replies)}</decorationLabel>}
-      <relatedContent>
-        <lockup>
-          <title>{`${comment.author} · ${timeAgo(comment.time)}`}</title>
-          <subtitle>{comment.replies > 0 ? plural(comment.replies, "reply", "replies") : "No replies"}</subtitle>
-          <description style={{ tvTextMaxLines: 16 }}>{comment.text}</description>
-        </lockup>
-      </relatedContent>
-    </listItemLockup>
   );
 }

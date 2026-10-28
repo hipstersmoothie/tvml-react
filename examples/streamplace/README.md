@@ -4,8 +4,8 @@ A [stream.place](https://stream.place) client: live streams from the AT Protocol
 
 ![Home screen](screenshot.jpg)
 
-- **Home:** a "Live now" shelf (live thumbnail, LIVE badge, streamer avatar, title, viewers), refreshed every 30 s while the screen is visible and the app is in the foreground. Below it, "Recently live" streamers remembered in `localStorage`. When nobody is live, that shelf becomes "Streamers you might like". Loading and error templates are handled, and a failed refresh keeps the last list.
-- **Stream page:** title, streamer, activity, tags, uptime and live viewer count, plus a shelf of chat (`<reviewCard>`s) that starts with the last 15 minutes and updates in real time over a WebSocket. Offline streamers get a profile page with "Check Again".
+- **Home:** the five most-watched streams in a big `carousel`, and everyone else live in a grid below (live thumbnail, LIVE badge, title, streamer, viewers), refreshed every 30 s while the screen is visible and the app is in the foreground. Below it, "Recently live" streamers remembered in `localStorage`. When nobody is live, that shelf becomes "Streamers you might like". Loading and error templates are handled, and a failed refresh keeps the last list.
+- **Stream page:** a `productTemplate` over a full-screen frame of the stream, with its title, streamer, activity, tags, uptime and live viewer count. Below, a shelf of chat (`<reviewCard>`s) that starts with the last 15 minutes and updates in real time over a WebSocket, and the other streams that are live. Offline streamers get a profile page with "Check Again".
 - **Watching:** plays the live HLS (CMAF) playlist with `usePlayer`, keeps the screen awake with `useKeepAwake`, and draws the live chat **over the video** with `<PlayerOverlay>`.
 
 ```sh

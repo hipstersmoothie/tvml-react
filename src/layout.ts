@@ -129,6 +129,8 @@ export interface TextStyle {
   height?: number;
   /** Lines before truncating with an ellipsis (default 1). `\n` starts a new line. */
   lines?: number;
+  /** Space between the text and the left and right edges of its background. */
+  inset?: number;
 }
 
 export interface CellProps extends TextStyle {
@@ -145,16 +147,16 @@ export interface CellProps extends TextStyle {
 }
 
 /** The width a cell takes up in its row (not counting `offset`). */
-export function cellWidth({ width, children, size, weight }: CellProps): number {
+export function cellWidth({ width, children, size, weight, inset = 0 }: CellProps): number {
   if (width !== undefined) return width;
   const text = String(children);
   // A little slack so measured text never truncates.
-  return Math.ceil(measureText(text, { fontSize: size ?? DEFAULT_SIZE, fontWeight: weight }).width) + 4;
+  return Math.ceil(measureText(text, { fontSize: size ?? DEFAULT_SIZE, fontWeight: weight }).width) + 4 + 2 * inset;
 }
 
 /** A text box in a row. */
 export function Cell(props: CellProps) {
-  const { offset, position, children, size, weight, background, height, lines } = props;
+  const { offset, position, children, size, weight, background, height, lines, inset } = props;
   const screen = useContext(LayoutContext);
   const stack = useContext(StackContext);
   const text = String(children);
@@ -171,6 +173,7 @@ export function Cell(props: CellProps) {
         color: props.color ?? screen.color,
         backgroundColor: background,
         tvTextMaxLines: lines ?? 1,
+        padding: inset ? `0 ${inset}` : undefined,
         margin: offset ? `0 0 0 ${offset}` : undefined,
       },
     },
