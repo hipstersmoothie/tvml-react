@@ -1,0 +1,65 @@
+---
+title: Live data
+section: learn
+group: Building features
+order: 23
+abstract: Stream scores, chat and other live updates with WebSockets.
+---
+
+import Note from "../../../components/Note.astro";
+
+For data that changes by the second, like scores, chat or a live feed, polling isn't enough. TVJS
+has no `WebSocket`; tvml-react provides the standard one, backed by the Apple TV's native
+networking.
+
+```tsx
+function Chat({ channel }: { channel: string }) {
+  const [messages, setMessages] = useState<Array<Message>>([]);
+
+  useEffect(() => {
+    const socket = new WebSocket(`wss://chat.example.com/${channel}`);
+    socket.onmessage = (event) => {
+      const message = JSON.parse(event.data as string);
+      setMessages((current) => [...current.slice(-50), message]);
+    };
+    return () => socket.close();
+  }, [channel]);
+
+  return (/* … */);
+}
+```
+
+It's the same API as in the browser: `onopen`, `onmessage`, `onerror` and `onclose` (or
+`addEventListener`), `send` and `close`. Text messages arrive as strings; binary ones as
+`ArrayBuffer`.
+
+<Note kind="Important">
+WebSockets go through tvml-react's native bridge, so they need an app launched with
+`TVMLReact.launch`, as every app from `npm create tvml-react` is.
+</Note>
+
+## Only while it's on screen
+
+A socket keeps a connection open and messages flowing, even when nobody can see them. Connect only
+while the screen is visible, and reconnect when it comes back:
+
+```tsx
+const visible = useIsScreenVisible();
+
+useEffect(() => {
+  if (!visible) return;
+  const socket = new WebSocket(url);
+  // …
+  return () => socket.close();
+}, [visible, url]);
+```
+
+## Reconnecting
+
+Connections drop, especially when the Apple TV sleeps or the network changes. Reconnect after
+`close` with a delay that grows, and use [`useNetworkStatus`](/learn/the-apple-tv/#network) to wait
+for the network instead of retrying while offline.
+
+## Next
+
+- [Loading data](/learn/loading-data/): for everything that isn't live.

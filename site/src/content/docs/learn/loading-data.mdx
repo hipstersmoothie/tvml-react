@@ -1,0 +1,132 @@
+---
+title: Loading data
+section: learn
+group: Building features
+order: 20
+abstract: Fetch from your API with TanStack Query, show loading and error screens, and handle going offline.
+---
+
+import Note from "../../../components/Note.astro";
+
+TVMLKit's JavaScript engine doesn't have `fetch`. tvml-react adds it, along with `URL`,
+`URLSearchParams` and `AbortController`, so you load data the way you would on the web. For
+anything beyond a one-off request, use TanStack Query through `tvml-react/query`.
+
+## Set up
+
+```sh
+npm install @tanstack/react-query
+```
+
+Wrap your app in `TVMLQueryProvider`, in `launch`'s `wrapper` so pushed screens and tabs share the
+cache:
+
+```tsx
+import { launch } from "tvml-react";
+import { TVMLQueryProvider } from "tvml-react/query";
+
+launch(<App />, { wrapper: TVMLQueryProvider });
+```
+
+`TVMLQueryProvider` connects TanStack Query to tvOS: queries refetch when your app comes back from
+the background and when the network returns. Its default client retries once and treats data as
+fresh for 30 seconds; pass your own `client` to change that.
+
+## Loading a screen's data
+
+[`useScreenQuery`](/reference/use-screen-query/) is TanStack Query's `useQuery`, made for TV
+screens:
+
+```tsx
+import { useScreenQuery } from "tvml-react/query";
+
+function Show({ id }: { id: string }) {
+  const show = useScreenQuery({
+    queryKey: ["show", id],
+    queryFn: () => fetch(`${API}/shows/${id}`).then((response) => response.json()),
+  });
+
+  if (show.isPending) {
+    return (
+      <loadingTemplate>
+        <activityIndicator>
+          <title>Loading</title>
+        </activityIndicator>
+      </loadingTemplate>
+    );
+  }
+  if (show.isError) return <ErrorScreen error={show.error} retry={show.refetch} />;
+  return <ShowPage show={show.data} />;
+}
+```
+
+The difference from `useQuery`: when the screen is hidden, because another screen is pushed on top,
+its tab isn't selected or the video player covers it, it stops refetching on intervals, on resume
+and on reconnect. The data stays cached, and when the screen comes back, stale data is refetched.
+Live data refreshes only where someone can see it.
+
+`useScreenInfiniteQuery` and `useScreenQueries` work the same way. For data drawn over the video
+player, where the screen underneath is hidden on purpose, pass `refreshWhileHidden: true`.
+
+## Loading and error screens
+
+Return a different template for each state, as above. tvml-react swaps the template in place, so
+going from `loadingTemplate` to your content is seamless. An `alertTemplate` with a Try Again button
+makes a good error screen:
+
+```tsx
+function ErrorScreen({ error, retry }: { error: Error; retry: () => void }) {
+  return (
+    <alertTemplate>
+      <title>Something went wrong</title>
+      <description>{error.message}</description>
+      <button onSelect={retry}>
+        <text>Try Again</text>
+      </button>
+    </alertTemplate>
+  );
+}
+```
+
+## Preloading the next screen
+
+Shared cache means you can start loading before the user gets there: prefetch on `onHighlight`,
+and the detail screen opens with its data ready.
+
+```tsx
+const queryClient = useQueryClient();
+
+<lockup
+  onHighlight={() =>
+    queryClient.prefetchQuery({ queryKey: ["show", show.id], queryFn: () => getShow(show.id) })
+  }
+  onSelect={() => navigation.push(<Show id={show.id} />)}
+>
+```
+
+## Requests
+
+The `fetch` tvml-react provides covers what TV apps need: methods, headers, JSON and text bodies,
+and `AbortController`. It adds a `timeout` option, in milliseconds:
+
+```ts
+const response = await fetch(url, { timeout: 10_000 });
+```
+
+<Note>
+TVMLKit's network stack reports HTTP errors like 404 as failures; tvml-react's `fetch` turns them
+back into normal responses with `ok: false`, so check `response.ok` as usual.
+</Note>
+
+## Offline
+
+[`useNetworkStatus`](/learn/the-apple-tv/#network) tells you whether the Apple TV is online, so you
+can show cached data with a notice instead of an error:
+
+```tsx
+const { online } = useNetworkStatus();
+```
+
+## Next
+
+- [Live data](/learn/live-data/): WebSockets for scores, chat and other streams.

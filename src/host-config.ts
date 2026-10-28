@@ -44,7 +44,7 @@ const warnedSrcsets = new Set<string>();
 function serializeSrcset(srcset: Record<string, string>): string {
   return Object.entries(srcset)
     .map(([descriptor, url]) => {
-      if (url.includes(",") && !warnedSrcsets.has(url)) {
+      if (isDev && url.includes(",") && !warnedSrcsets.has(url)) {
         warnedSrcsets.add(url);
         console.warn(
           `[tvml-react] srcset URL contains a comma, which TVMLKit can't parse; the image will be blank: ${url}`,
@@ -147,10 +147,11 @@ function textContent(children: unknown): string | null {
 }
 
 // Mixed children (`Hi {name}<badge/>`) still give React one text node per
-// string, and two in a row trigger the crash above. Warn once per tag.
+// string, and two in a row trigger the crash above. Warn once per tag, in
+// development.
 const warnedAdjacentText = new Set<string>();
 function checkAdjacentText(type: string, children: unknown): void {
-  if (!Array.isArray(children) || warnedAdjacentText.has(type)) return;
+  if (!isDev || !Array.isArray(children) || warnedAdjacentText.has(type)) return;
   for (let i = 1; i < children.length; i++) {
     if (isText(children[i - 1]) && isText(children[i])) {
       warnedAdjacentText.add(type);

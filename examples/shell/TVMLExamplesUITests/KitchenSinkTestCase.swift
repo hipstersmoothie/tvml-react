@@ -11,11 +11,17 @@ class KitchenSinkTestCase: XCTestCase {
   let remote = XCUIRemote.shared
 
   func launch() {
+    launch(
+      server: ProcessInfo.processInfo.environment["KITCHEN_SINK_URL"] ?? "http://localhost:9108/",
+      waitingFor: "Kitchen sink")
+  }
+
+  /// Launches the shell app against an example's dev server.
+  func launch(server: String, waitingFor text: String) {
     app = XCUIApplication()
-    let server = ProcessInfo.processInfo.environment["KITCHEN_SINK_URL"] ?? "http://localhost:9108/"
     app.launchArguments = ["-TVMLServerURL", server]
     app.launch()
-    XCTAssert(element("Kitchen sink").waitForExistence(timeout: 20), "index list")
+    XCTAssert(element(text).waitForExistence(timeout: 20), "\(text) on screen")
   }
 
   /// First element whose label contains `text`.
@@ -57,7 +63,8 @@ class KitchenSinkTestCase: XCTestCase {
     attachment.name = name
     attachment.lifetime = .keepAlways
     add(attachment)
-    if let dir = ProcessInfo.processInfo.environment["KITCHEN_SINK_SCREENSHOTS"] {
+    let environment = ProcessInfo.processInfo.environment
+    if let dir = environment["SCREENSHOTS"] ?? environment["KITCHEN_SINK_SCREENSHOTS"] {
       try? shot.pngRepresentation.write(to: URL(fileURLWithPath: dir).appendingPathComponent("\(name).png"))
     }
   }
@@ -68,7 +75,8 @@ class KitchenSinkTestCase: XCTestCase {
     attachment.name = name
     attachment.lifetime = .keepAlways
     add(attachment)
-    if let dir = ProcessInfo.processInfo.environment["KITCHEN_SINK_SCREENSHOTS"] {
+    let environment = ProcessInfo.processInfo.environment
+    if let dir = environment["SCREENSHOTS"] ?? environment["KITCHEN_SINK_SCREENSHOTS"] {
       try? text.write(
         to: URL(fileURLWithPath: dir).appendingPathComponent("\(name).txt"), atomically: true,
         encoding: .utf8)

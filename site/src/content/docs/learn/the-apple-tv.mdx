@@ -1,0 +1,104 @@
+---
+title: The Apple TV itself
+section: learn
+group: Building features
+order: 25
+abstract: Hooks for app state, appearance, accessibility, the network, the display, storage and more.
+---
+
+import Note from "../../../components/Note.astro";
+
+A TV app should fit the room it's in: pause when the user leaves, respect their accessibility
+settings, adapt to the display. These hooks give you the Apple TV's state as React state, updating
+when it changes.
+
+## App state
+
+```tsx
+const state = useAppState(); // "active" | "background"
+
+useAppEvent("resume", () => refreshClock());
+useAppEvent("suspend", () => saveProgress());
+```
+
+The app goes to the background when the user leaves it, with the TV button for example. Screen
+events like `disappear` don't fire for that; use these.
+
+## Appearance
+
+```tsx
+const scheme = useColorScheme(); // "light" | "dark"
+```
+
+Templates follow the appearance setting on their own; use this for colors you set yourself.
+
+## Accessibility
+
+```tsx
+const { reduceMotion, voiceOver, boldText, reduceTransparency } = useAccessibility();
+```
+
+Respect `reduceMotion` in anything that moves on its own, like a rotating hero or an auto-advancing
+slideshow, and `reduceTransparency` in translucent panels. `closedCaptioning` and
+`darkerSystemColors` are there too.
+
+## Network
+
+```tsx
+const { online, expensive, constrained } = useNetworkStatus();
+```
+
+`expensive` is a cellular or hotspot connection and `constrained` is Low Data Mode: good moments to
+skip autoplaying previews.
+
+## Display
+
+```tsx
+const { width, height, scale, hdr, maximumFramesPerSecond } = useDisplay();
+```
+
+`hdr` says whether this TV and Apple TV can play HDR, for picking a stream; `scale` is 2 on a 4K TV,
+for picking image sizes.
+
+## Keeping the screen awake
+
+A slideshow, a dashboard or a live game shouldn't hand over to the screensaver:
+
+```tsx
+useKeepAwake();          // while this component is mounted
+useKeepAwake(visible);   // or only while a condition holds
+```
+
+## Device and settings
+
+```tsx
+const { model, systemVersion, appVersion } = useDevice();
+const { language, storefrontCountryCode, restrictions } = usePlatformSettings();
+```
+
+`restrictions` reflects the parental controls in Settings, like `allowsExplicit` and
+`maxMovieRank`, so you can hide content the household has restricted.
+
+## Storage
+
+`useLocalStorage` is `useState` that's saved on the Apple TV and survives relaunches. Every
+component using the same key stays in sync:
+
+```tsx
+const [volume, setVolume] = useLocalStorage("volume", 0.8);
+```
+
+Values are stored as JSON. Keep it to settings and small lists; anything people can't afford to
+lose belongs on your server.
+
+## Opening other apps
+
+```tsx
+if (canOpenURL("myotherapp://show/42")) openURL("myotherapp://show/42");
+```
+
+<Note>
+`useColorScheme`, `useAccessibility`, `useDisplay`, `useKeepAwake` and `measureText` read the Apple
+TV through tvml-react's native bridge, which `TVMLReact.launch` sets up. Without it,
+`useNetworkStatus` still reports `online` by polling; the other hooks use TVJS directly.
+</Note>

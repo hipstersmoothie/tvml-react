@@ -1,0 +1,114 @@
+---
+title: Handling the remote
+section: learn
+group: Essentials
+order: 11
+abstract: Respond to selection, focus and the remote's buttons, and move focus when you need to.
+---
+
+import Note from "../../../components/Note.astro";
+
+On Apple TV, nobody points or taps. The user moves **focus** with the remote's touch surface or
+arrows, and acts on whatever is focused. tvOS runs all of that; your app reacts to it with event
+props.
+
+## Events
+
+| Prop | Fires when |
+| --- | --- |
+| `onSelect` | The user clicks the touch surface (or presses the center button) on the element. |
+| `onHighlight` | The element gets focus. |
+| `onPlay` | The user presses play/pause while the element is focused. |
+| `onHoldSelect` | The user presses and holds on the element: a long press, for a context menu. |
+| `onChange` | A value changes, like a rating in a `ratingTemplate`. |
+
+```tsx
+<lockup
+  onSelect={() => navigation.push(<Movie movie={movie} />)}
+  onPlay={() => player.play(movie.trailer)}
+  onHoldSelect={() => navigation.presentModal(<MovieActions movie={movie} />)}
+  onHighlight={() => setPreview(movie)}
+>
+  <img src={movie.poster} width={250} height={375} />
+  <title>{movie.title}</title>
+</lockup>
+```
+
+Handlers get the TVML event, with `event.target` set to the element the user acted on. If that
+element has no handler, the nearest ancestor with one gets the event, so a single handler on a
+`section` or `shelf` can serve every lockup in it, which is handy for long lists.
+
+## Focus
+
+You don't manage focus; tvOS does. The focus engine moves between focusable elements
+(lockups, buttons, list items) by where they are on screen, scrolls shelves and grids to keep the
+focused one visible, and animates it. Use `onHighlight` to follow along, for example to update a
+preview panel or the background as the user browses:
+
+```tsx
+const [highlighted, setHighlighted] = useState<Album | null>(null);
+
+<shelf>
+  <header>
+    <title>{highlighted ? highlighted.title : "Pick a record"}</title>
+  </header>
+  <section>
+    {albums.map((album) => (
+      <lockup key={album.id} onHighlight={() => setHighlighted(album)}>
+        …
+      </lockup>
+    ))}
+  </section>
+</shelf>
+```
+
+### Where focus starts
+
+When a screen appears, tvOS focuses its first focusable element, or the one with
+`autoHighlight`:
+
+```tsx
+<lockup autoHighlight={album.id === lastPlayed}>…</lockup>
+```
+
+After going back with Menu, focus returns to whatever opened the screen.
+
+### Moving focus from code
+
+TVJS has no focus API. `focus(element)` from tvml-react moves focus to an element by re-setting
+its `autoHighlight`, which works in most templates:
+
+```tsx
+import { focus } from "tvml-react";
+
+const searchButton = useRef<TVMLElement>(null);
+// …
+focus(searchButton.current!);
+```
+
+<Note>
+`focus()` doesn't work in a `formTemplate`, where the keyboard keeps focus.
+</Note>
+
+## Disabled elements
+
+`disabled` makes a lockup or button unfocusable and dims it:
+
+```tsx
+<buttonLockup disabled={favorites.length === 0} onSelect={startSlideshow}>
+  <badge src="resource://button-play" />
+  <title>Slideshow</title>
+</buttonLockup>
+```
+
+## Menu and the TV button
+
+The Menu (back) button is handled for you: it goes back a screen, closes a modal, leaves the
+player, or, on the first screen, returns to the Home screen. The TV button always goes Home. Your
+app doesn't get events for either; use [screen events](/learn/screens-and-navigation/#screen-lifecycle)
+and [app state](/learn/the-apple-tv/) to react to where the user went.
+
+## Next
+
+- [Screens and navigation](/learn/screens-and-navigation/)
+- [Text input and search](/learn/text-input/): the on-screen keyboard.

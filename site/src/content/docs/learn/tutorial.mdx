@@ -1,0 +1,375 @@
+---
+title: "Tutorial: a photo browser"
+section: learn
+group: Start here
+order: 3
+abstract: Build an Apple TV app that loads photos from the web, opens them, saves favorites and has tabs.
+---
+
+import Note from "../../../components/Note.astro";
+import Screenshot from "../../../components/Screenshot.astro";
+
+In this tutorial you'll build a photo browser: a grid of photos from
+[Lorem Picsum](https://picsum.photos), a screen for each photo, and favorites that are saved on
+the Apple TV, in two tabs. Along the way you'll use the pieces most tvml-react apps are made of:
+templates, data loading, navigation, local storage and a tab bar.
+
+The finished app is [`examples/photos`](https://github.com/hipstersmoothie/tvml-react/tree/main/examples/photos)
+in the repo; every screenshot here is from it, running on the tvOS simulator.
+
+## Set up
+
+Create an app and add TanStack Query, which tvml-react uses for loading data:
+
+```sh
+npm create tvml-react photos
+cd photos
+npm install @tanstack/react-query
+npm run dev
+```
+
+Open `tvos/Photos.xcodeproj` and run it on an Apple TV simulator, as in the
+[quick start](/learn/quick-start/). Keep it running: every time you save, the app reloads.
+
+## 1. Load the photos
+
+Start with the data. Lorem Picsum has a JSON list of photos and serves each one at any size.
+Make `src/api.ts`:
+
+```ts
+// src/api.ts
+export interface Photo {
+  id: string;
+  author: string;
+  width: number;
+  height: number;
+}
+
+export async function getPhotos(): Promise<Array<Photo>> {
+  const response = await fetch("https://picsum.photos/v2/list?limit=30");
+  if (!response.ok) throw new Error(`Couldn't load photos (HTTP ${response.status})`);
+  return response.json();
+}
+
+/** The photo, cropped to a size. */
+export function imageUrl(photo: Photo, width: number, height: number): string {
+  return `https://picsum.photos/id/${photo.id}/${width}/${height}`;
+}
+```
+
+TVJS doesn't have `fetch`; tvml-react adds it, along with `URL`, `AbortController` and the other
+basics, so code like this works as it would in a browser.
+
+Next, show the photos in a grid. A grid of focusable lockups in a `stackTemplate` is the classic
+tvOS browsing screen:
+
+```tsx
+// src/PhotoGrid.tsx
+import { imageUrl, type Photo } from "./api";
+
+export function PhotoGrid({ photos }: { photos: Array<Photo> }) {
+  return (
+    <stackTemplate>
+      <collectionList>
+        <grid>
+          <section>
+            {photos.map((photo) => (
+              <lockup key={photo.id}>
+                <img src={imageUrl(photo, 400, 300)} width={400} height={300} />
+                <title>{photo.author}</title>
+              </lockup>
+            ))}
+          </section>
+        </grid>
+      </collectionList>
+    </stackTemplate>
+  );
+}
+```
+
+Then load them. `useScreenQuery` is TanStack Query's `useQuery`, tuned for TV screens (it pauses
+when the screen is hidden). While the request is in flight, show a `loadingTemplate`; if it
+fails, an alert with a way to try again:
+
+```tsx
+// src/Browse.tsx
+import { useScreenQuery } from "tvml-react/query";
+
+import { getPhotos } from "./api";
+import { PhotoGrid } from "./PhotoGrid";
+
+export function Browse() {
+  const photos = useScreenQuery({ queryKey: ["photos"], queryFn: getPhotos });
+
+  if (photos.isPending) {
+    return (
+      <loadingTemplate>
+        <activityIndicator>
+          <title>Loading photos</title>
+        </activityIndicator>
+      </loadingTemplate>
+    );
+  }
+
+  if (photos.isError) {
+    return (
+      <alertTemplate>
+        <title>Something went wrong</title>
+        <description>{photos.error.message}</description>
+        <button onSelect={() => photos.refetch()}>
+          <text>Try Again</text>
+        </button>
+      </alertTemplate>
+    );
+  }
+
+  return <PhotoGrid photos={photos.data} />;
+}
+```
+
+Each of those returns a different template, and that's fine: tvml-react swaps the screen's
+template in place as the query moves from loading to loaded.
+
+Finally, give the app a query client and show `Browse`. `launch`'s `wrapper` wraps your whole
+app, including screens you push later, so it's where providers go:
+
+```tsx
+// src/main.tsx
+import { launch, type StartOptions } from "tvml-react";
+import { TVMLQueryProvider } from "tvml-react/query";
+
+import { Browse } from "./Browse";
+
+export function start(_options: StartOptions) {
+  launch(<Browse />, { wrapper: TVMLQueryProvider });
+}
+```
+
+Save, and the grid appears. Swipe around: the focus engine moves between photos and lifts the
+focused one, with no code from you.
+
+<Screenshot src="/screens/tutorial-browse.jpg" alt="A grid of photos" caption="The grid (shown here in the finished app, with its tab bar)." />
+
+## 2. Open a photo
+
+Selecting a photo should open it. Make a screen for one photo with a `productTemplate`, the
+template tvOS uses for an item's page:
+
+```tsx
+// src/PhotoDetail.tsx
+import { imageUrl, type Photo } from "./api";
+
+export function PhotoDetail({ photo }: { photo: Photo }) {
+  return (
+    <productTemplate>
+      <banner>
+        <stack>
+          <title>{photo.author}</title>
+          <row>
+            <text>{`${photo.width} × ${photo.height}`}</text>
+          </row>
+        </stack>
+        <heroImg src={imageUrl(photo, 800, 600)} />
+      </banner>
+    </productTemplate>
+  );
+}
+```
+
+To open it, push it from the grid with [`useNavigation`](/reference/use-navigation/). Pushing
+renders the screen from the same React tree and presents it; the remote's Menu button goes back
+and unmounts it.
+
+```tsx
+// src/PhotoGrid.tsx
+import { useNavigation } from "tvml-react";
+
+import { imageUrl, type Photo } from "./api";
+import { PhotoDetail } from "./PhotoDetail";
+
+export function PhotoGrid({ photos }: { photos: Array<Photo> }) {
+  const navigation = useNavigation();
+  return (
+    <stackTemplate>
+      <collectionList>
+        <grid>
+          <section>
+            {photos.map((photo) => (
+              <lockup key={photo.id} onSelect={() => navigation.push(<PhotoDetail photo={photo} />)}>
+                <img src={imageUrl(photo, 400, 300)} width={400} height={300} />
+                <title>{photo.author}</title>
+              </lockup>
+            ))}
+          </section>
+        </grid>
+      </collectionList>
+    </stackTemplate>
+  );
+}
+```
+
+`onSelect` fires when the user clicks the remote's touch surface on the focused lockup.
+
+<Note kind="Tip">
+Text with values in it, like `` {`${photo.width} × ${photo.height}`} ``, is written as one
+template string. Keep text in a single string when you can; tvml-react warns if adjacent text
+sits next to other elements, which TVMLKit doesn't handle well.
+</Note>
+
+## 3. Save favorites
+
+Next, a Favorite button on each photo, remembered across launches. `useLocalStorage` is like
+`useState`, but the value is saved on the Apple TV and every component using the same key stays
+in sync. Wrap it in a hook for favorites:
+
+```ts
+// src/useFavorites.ts
+import { useLocalStorage } from "tvml-react";
+
+import type { Photo } from "./api";
+
+/** Favorite photos, saved on the Apple TV. */
+export function useFavorites() {
+  const [favorites, setFavorites] = useLocalStorage<Array<Photo>>("favorites", []);
+
+  const isFavorite = (photo: Photo) => favorites.some((f) => f.id === photo.id);
+  const toggle = (photo: Photo) =>
+    setFavorites((current) =>
+      current.some((f) => f.id === photo.id)
+        ? current.filter((f) => f.id !== photo.id)
+        : [...current, photo],
+    );
+
+  return { favorites, isFavorite, toggle };
+}
+```
+
+Then add a button to the photo screen. A `buttonLockup` is a round-rect button with a symbol;
+`resource://button-add` and `resource://button-checkmark` are symbols built into tvOS:
+
+```tsx
+// src/PhotoDetail.tsx
+import { imageUrl, type Photo } from "./api";
+import { useFavorites } from "./useFavorites";
+
+export function PhotoDetail({ photo }: { photo: Photo }) {
+  const { isFavorite, toggle } = useFavorites();
+  const favorite = isFavorite(photo);
+
+  return (
+    <productTemplate>
+      <banner>
+        <stack>
+          <title>{photo.author}</title>
+          <row>
+            <text>{`${photo.width} × ${photo.height}`}</text>
+          </row>
+          <row>
+            <buttonLockup onSelect={() => toggle(photo)}>
+              <badge src={favorite ? "resource://button-checkmark" : "resource://button-add"} />
+              <title>{favorite ? "Favorited" : "Favorite"}</title>
+            </buttonLockup>
+          </row>
+        </stack>
+        <heroImg src={imageUrl(photo, 800, 600)} />
+      </banner>
+    </productTemplate>
+  );
+}
+```
+
+The button updates in place when you select it, without moving focus, because React changes only
+the badge and title.
+
+<Screenshot src="/screens/tutorial-detail.jpg" alt="A photo's screen with a Favorite button" caption="A photo's screen, with focus on Favorite." />
+
+## 4. Add tabs
+
+Last, put Browse and a Favorites screen in a tab bar. A `menuBarTemplate` with
+[`MenuBar`](/reference/menu-bar/) gives you the bar at the top of the screen; each
+`MenuBarItem`'s content is that tab's screen:
+
+```tsx
+// src/App.tsx
+import { MenuBar, MenuBarItem } from "tvml-react";
+
+import { Browse } from "./Browse";
+import { Favorites } from "./Favorites";
+
+export function App() {
+  return (
+    <menuBarTemplate>
+      <MenuBar>
+        <MenuBarItem id="browse" title="Browse">
+          <Browse />
+        </MenuBarItem>
+        <MenuBarItem id="favorites" title="Favorites">
+          <Favorites />
+        </MenuBarItem>
+      </MenuBar>
+    </menuBarTemplate>
+  );
+}
+```
+
+The Favorites tab reuses the grid. When there are no favorites yet, it shows a message instead,
+laid out with [`tvml-react/layout`](/learn/custom-layouts/), which centers text on a free-form
+screen:
+
+```tsx
+// src/Favorites.tsx
+import { Cell, Row, Screen } from "tvml-react/layout";
+
+import { PhotoGrid } from "./PhotoGrid";
+import { useFavorites } from "./useFavorites";
+
+export function Favorites() {
+  const { favorites } = useFavorites();
+
+  if (favorites.length === 0) {
+    return (
+      <Screen>
+        <Row region="center" align="center">
+          <Cell size={48} weight="semibold">No favorites yet</Cell>
+        </Row>
+        <Row region="center" align="center" marginTop={16}>
+          <Cell size={30} color="rgba(255, 255, 255, 0.6)">
+            Open a photo and choose Favorite.
+          </Cell>
+        </Row>
+      </Screen>
+    );
+  }
+
+  return <PhotoGrid photos={favorites} />;
+}
+```
+
+Finally, launch `App` instead of `Browse`:
+
+```tsx
+// src/main.tsx
+launch(<App />, { wrapper: TVMLQueryProvider });
+```
+
+Favorite a photo, swipe up to the tab bar, and move to Favorites: it's there. Tabs stay mounted
+once you've visited them, so switching back to Browse keeps your place, and because both tabs use
+`useFavorites`, the Favorites grid updates the moment you change a favorite.
+
+<Screenshot src="/screens/tutorial-favorites.jpg" alt="The Favorites tab with one photo" caption="The Favorites tab." />
+
+## What you built
+
+In under 200 lines, an Apple TV app that:
+
+- loads data from the web, with loading and error screens,
+- browses it in a native, focus-driven grid,
+- opens a screen per item, with the remote's Menu button to go back,
+- saves state on the device, and
+- organizes it all in a tab bar.
+
+## Next
+
+- [Templates and elements](/learn/templates-and-elements/): the other screens you can build.
+- [Playing media](/learn/playing-media/): add a slideshow or video.
+- [Deploying](/learn/deploying/): host the JavaScript and ship the tvOS app.

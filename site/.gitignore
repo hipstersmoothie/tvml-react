@@ -1,4 +1,4 @@
 dist/
 .astro/
 node_modules/
-src/content/docs/learn/
+src/content/docs/learn/platform-notes.md

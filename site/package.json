@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "sync": "node scripts/sync-guides.mjs",
-    "dev": "node scripts/sync-guides.mjs && astro dev --port 4321",
-    "build": "node scripts/sync-guides.mjs && astro build",
+    "sync": "node scripts/sync-notes.mjs",
+    "dev": "node scripts/sync-notes.mjs && astro dev --port 4321",
+    "build": "node scripts/sync-notes.mjs && astro build",
     "preview": "astro preview"
   },
   "dependencies": {

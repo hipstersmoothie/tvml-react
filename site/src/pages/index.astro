@@ -162,7 +162,7 @@ const nativeElements = [
         </p>
         <div class="install"><span>$</span> npm create tvml-react my-app</div>
         <div class="actions">
-          <a class="primary" href="/learn/getting-started/">Get started</a>
+          <a class="primary" href="/learn/quick-start/">Get started</a>
           <a class="secondary" href="/reference/stack/">Reference</a>
         </div>
       </div>
@@ -261,7 +261,7 @@ const nativeElements = [
           stacks and boxes that stay inside the TV-safe area, with text measured by tvOS. In
           development, styles TVMLKit would ignore warn in your terminal.
         </p>
-        <a href="/learn/layout/">Laying out a divTemplate →</a>
+        <a href="/learn/custom-layouts/">Laying out a divTemplate →</a>
       </div>
       <div class="visual">
         <div class="tv"><img src="/screens/stacks-and-boxes.jpg" alt="Stacks and boxes on tvOS" loading="lazy" /></div>
@@ -280,7 +280,7 @@ const nativeElements = [
           <code>&lt;PlayerOverlay&gt;</code>, and your items' titles and artwork show in Now
           Playing. Audio keeps going from the Home screen with the background audio mode.
         </p>
-        <a href="/learn/media/">Media playback →</a>
+        <a href="/learn/playing-media/">Media playback →</a>
       </div>
       <div class="visual">
         <Code code={mediaCode} lang="tsx" theme={theme} />
@@ -297,7 +297,7 @@ const nativeElements = [
           comes back and when the network returns, and pauses queries on screens nobody can see.
           TVJS has no <code>fetch</code> or <code>WebSocket</code>; tvml-react provides both.
         </p>
-        <a href="/learn/data/">Data and networking →</a>
+        <a href="/learn/loading-data/">Data and networking →</a>
       </div>
       <div class="visual">
         <Code code={dataCode} lang="tsx" theme={theme} />
@@ -314,7 +314,7 @@ const nativeElements = [
           keeping the screen awake during a slideshow or a live game, as hooks that update when
           tvOS does.
         </p>
-        <a href="/learn/platform-hooks/">Platform hooks →</a>
+        <a href="/learn/the-apple-tv/">Platform hooks →</a>
       </div>
       <div class="visual chips">
         {hooks.map((hook) => <code>{hook}</code>)}
@@ -332,7 +332,7 @@ const nativeElements = [
           way. It also works around TVMLKit crashes on tvOS 26, and bridges focus between a
           header nav and the content below it.
         </p>
-        <a href="/learn/native/">Native elements and the Swift package →</a>
+        <a href="/learn/native-views/">Native elements and the Swift package →</a>
       </div>
       <div class="visual">
         <div class="tv"><img src="/screens/native-list.jpg" alt="SimplifiedList, a native list" loading="lazy" /></div>
@@ -362,7 +362,7 @@ const nativeElements = [
           shows up in your terminal, alongside warnings about TVML that won't do what you meant.{" "}
           <code>tvml-react/testing</code> drives a running app from JavaScript.
         </p>
-        <a href="/learn/getting-started/">Getting started →</a>
+        <a href="/learn/quick-start/">Getting started →</a>
       </div>
       <div class="visual">
         <pre class="terminal">{terminal}</pre>
@@ -419,7 +419,7 @@ const nativeElements = [
         </li>
       </ol>
       <div class="actions center">
-        <a class="primary" href="/learn/getting-started/">Read the guide</a>
+        <a class="primary" href="/learn/quick-start/">Read the guide</a>
         <a class="secondary" href="https://github.com/hipstersmoothie/tvml-react">GitHub</a>
       </div>
     </section>

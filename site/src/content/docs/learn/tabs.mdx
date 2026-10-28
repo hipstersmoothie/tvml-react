@@ -1,0 +1,96 @@
+---
+title: Tabs
+section: learn
+group: Essentials
+order: 13
+abstract: A native tab bar with a screen per tab, or a segmented control to switch content within one screen.
+---
+
+import Note from "../../../components/Note.astro";
+import Screenshot from "../../../components/Screenshot.astro";
+
+Most Apple TV apps put their sections in a tab bar at the top of the screen. tvml-react gives you
+TVML's native one with [`MenuBar`](/reference/menu-bar/).
+
+## A tab bar
+
+```tsx
+import { MenuBar, MenuBarItem } from "tvml-react";
+
+export function App() {
+  return (
+    <menuBarTemplate>
+      <MenuBar>
+        <MenuBarItem id="home" title="Home">
+          <Home />
+        </MenuBarItem>
+        <MenuBarItem id="search" title="Search">
+          <Search />
+        </MenuBarItem>
+        <MenuBarItem id="library" title="Library">
+          <Library />
+        </MenuBarItem>
+      </MenuBar>
+    </menuBarTemplate>
+  );
+}
+```
+
+Each `MenuBarItem`'s child is that tab's screen: a full template, like a `stackTemplate` or
+`searchTemplate`. Moving focus onto a tab switches to it; there's no need to press select.
+
+<Screenshot src="/screens/menuBarTemplate.jpg" alt="A tab bar" caption="A menuBarTemplate with two tabs." />
+
+Tabs behave the way people expect from Apple's apps:
+
+- **Tabs stay mounted.** A tab renders the first time it's opened and stays alive after, so
+  switching back keeps its scroll position and loaded data.
+- **Tabs share your app's state.** They're part of the same React tree as everything else.
+- **Hidden tabs rest.** A tab that isn't showing counts as hidden for
+  [`useIsScreenVisible`](/learn/screens-and-navigation/#screen-lifecycle), so queries on it stop
+  refreshing until you come back.
+
+## Switching tabs from code
+
+`useMenuBar()` inside a tab gives you the selected tab and a way to change it, for a "See all"
+button that jumps to another section:
+
+```tsx
+const menuBar = useMenuBar();
+
+<buttonLockup onSelect={() => menuBar.select("library")}>
+  <title>Open Library</title>
+</buttonLockup>
+```
+
+`MenuBar`'s `defaultSelected` picks the first tab, and `onChange` tells you when the user switches.
+
+<Note>
+The floating tab bar covers a template's `<banner>` title, so leave banners out of tab screens.
+</Note>
+
+## Switching content within a screen
+
+For choices within one screen, like Albums and Songs in a library, use a `segmentBar` instead.
+It's a row of segments in the template's header; switch content on `onHighlight`, so it changes
+as focus moves:
+
+```tsx
+const [view, setView] = useState<"albums" | "songs">("albums");
+
+<divTemplate>
+  <segmentBar style={{ tvPosition: "header", tvAlign: "center" }}>
+    <segmentBarItem onHighlight={() => setView("albums")}>
+      <title>Albums</title>
+    </segmentBarItem>
+    <segmentBarItem onHighlight={() => setView("songs")}>
+      <title>Songs</title>
+    </segmentBarItem>
+  </segmentBar>
+  {view === "albums" ? <Albums /> : <Songs />}
+</divTemplate>
+```
+
+TVML's focus engine moves strictly by position, so content that isn't directly below the segment
+bar can't reach it by swiping up. `FocusBridgeWindow` from the Swift package fixes that; see
+[Native views](/learn/native-views/#focusbridgewindow).

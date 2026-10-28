@@ -1,0 +1,96 @@
+---
+title: Templates and elements
+section: learn
+group: Essentials
+order: 10
+abstract: The building blocks of every screen, and how to pick the right template.
+---
+
+import Note from "../../../components/Note.astro";
+import Screenshot from "../../../components/Screenshot.astro";
+
+Every screen in a tvml-react app is a **template**: a whole-screen layout tvOS knows how to draw,
+like a product page or a search screen. Inside it go **elements**: shelves and grids of lockups,
+buttons, text and images. You write both as JSX, with lowercase tags.
+
+```tsx
+<stackTemplate>
+  <banner>
+    <title>Featured</title>
+  </banner>
+  <collectionList>
+    <shelf>
+      <section>
+        <lockup onSelect={open}>
+          <img src={poster} width={250} height={375} />
+          <title>Movie</title>
+        </lockup>
+      </section>
+    </shelf>
+  </collectionList>
+</stackTemplate>
+```
+
+The template decides the layout; you decide what goes in it. That's what makes TVML apps feel
+native: spacing, focus behavior, scrolling and animation come from tvOS.
+
+## Choosing a template
+
+| To show | Use |
+| --- | --- |
+| Rows of things to browse (the home screen of most apps) | `stackTemplate` with `shelf`, `grid` and `carousel` |
+| One item: a movie, an album, a product | `productTemplate` |
+| A list with a preview beside it | `listTemplate` |
+| Categories next to a grid | `catalogTemplate` |
+| An album or season of episodes | `compilationTemplate` |
+| Search as you type | `searchTemplate` |
+| Tabs | `menuBarTemplate` (see [Tabs](/learn/tabs/)) |
+| A message, a question, an error | `alertTemplate`, or `descriptiveAlertTemplate` for long text |
+| Waiting | `loadingTemplate` |
+| A single text field | `formTemplate` |
+| Anything free-form | `divTemplate` (see [Custom layouts](/learn/custom-layouts/)) |
+
+The [Examples](/examples/) page shows each of these running on tvOS.
+
+<Screenshot src="/screens/productTemplate.jpg" alt="A productTemplate" caption="A productTemplate: info, a description, buttons and related items." />
+
+## Lockups
+
+Most focusable things in a template are **lockups**: a group of an image and text that lifts and
+shines as one when focused. There are a few kinds:
+
+- `lockup`: a poster or thumbnail with a title, the workhorse of shelves and grids.
+- `buttonLockup`: a round button with a symbol (`resource://button-play`,
+  `resource://button-add`, or any SF Symbol as `symbol://heart`) and a label.
+- `listItemLockup`: a row in a `listTemplate` or `catalogTemplate`.
+- `monogramLockup`: a person, with their initials when there's no photo.
+
+A lockup can carry extras: an `<overlay>` with a `progressBar` or a `textBadge` ("LIVE"), a
+`decorationLabel`, or an `ordinal` number.
+
+## Typed JSX
+
+Every TVML element has its own TypeScript type, so `<div>` doesn't compile, and neither does
+`<lockup theme="dark">` or a misspelled tag. Your editor completes element names and attributes.
+
+Attributes work like you'd expect from React: strings and numbers become attributes, `true`
+becomes `"true"`, and `false`, `null` and `undefined` remove the attribute. `className` becomes
+`class`, and `style` takes an object (see [Styling](/learn/styling/)).
+
+## Changing what's on screen
+
+Templates are documents, and tvml-react updates them in place as your state changes: text, images,
+whole sections, or even the template itself, like going from a `loadingTemplate` to a
+`stackTemplate` when data arrives. Focus stays where it was when the focused element is still
+there.
+
+<Note>
+A few things in TVMLKit are read once, when the screen first appears: a template's
+`<background>` image is the common one. To change those, present a new screen with
+`useNavigation().replace()`. The [platform notes](/learn/platform-notes/) list the others.
+</Note>
+
+## Next
+
+- [Handling the remote](/learn/handling-the-remote/): selection, focus and the other buttons.
+- [Screens and navigation](/learn/screens-and-navigation/): going from one template to another.

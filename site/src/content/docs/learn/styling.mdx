@@ -1,0 +1,92 @@
+---
+title: Styling
+section: learn
+group: Essentials
+order: 14
+abstract: Style objects, light and dark themes, images and symbols.
+---
+
+import Note from "../../../components/Note.astro";
+
+Templates come styled: type, spacing and colors follow tvOS, and they adapt to the user's
+appearance setting. You adjust from there.
+
+## Style objects
+
+`style` takes an object with camelCase keys, like React DOM. Numbers are points, with no units:
+
+```tsx
+<title style={{ color: "white", fontSize: 48, fontWeight: "semibold", tvTextMaxLines: 2 }}>
+  {album.title}
+</title>
+```
+
+That becomes `style="color: white; font-size: 48; font-weight: semibold; tv-text-max-lines: 2;"`.
+TVML's own properties start with `tv-`: `tvAlign`, `tvPosition`, `tvTextMaxLines`,
+`tvInteritemSpacing`, `tvTintColor` and more. Your editor completes the common ones.
+
+tvml-react only writes an attribute when its value changes, so a style object recreated on every
+render doesn't make TVMLKit redraw.
+
+## Light and dark
+
+Templates follow the user's appearance setting (Settings → General → Appearance) unless you set a
+`theme`:
+
+```tsx
+<productTemplate theme="dark">…</productTemplate>
+```
+
+To match your own colors to the system, read it with `useColorScheme`. It updates when the user
+changes the setting:
+
+```tsx
+const scheme = useColorScheme(); // "light" | "dark"
+const text = scheme === "dark" ? "white" : "black";
+```
+
+<Note>
+`useColorScheme` reads the setting through tvml-react's native bridge, so it needs an app launched
+with `TVMLReact.launch` (every app made with `npm create tvml-react` is).
+</Note>
+
+## Images
+
+`<img>` takes a URL and a size. For sharp images on 4K TVs, give a 2× version with `srcset`:
+
+```tsx
+<img
+  src={poster(250, 375)}
+  srcset={{ "1x": poster(250, 375), "2x": poster(500, 750) }}
+  width={250}
+  height={375}
+/>
+```
+
+tvOS ships symbols you can use anywhere an image goes:
+
+- `resource://button-play`, `button-add`, `button-checkmark`, `button-more`, `button-rate`,
+  `button-remove`, `button-shuffle` and `button-preview`, the symbols Apple's apps use in
+  `buttonLockup`s.
+- Any SF Symbol, as `symbol://name`: `symbol://heart.fill`, `symbol://magnifyingglass`.
+
+## Stylesheets
+
+For shared styles, a template can have a `<head>` with a `<style>` block, used with `className`:
+
+```tsx
+<divTemplate>
+  <head>
+    <style>{`.caption { font-size: 28; color: rgba(255, 255, 255, 0.6); }`}</style>
+  </head>
+  <text className="caption">{caption}</text>
+</divTemplate>
+```
+
+## What doesn't work
+
+TVML's styles aren't CSS, and not every property applies to every element. In a free-form
+`divTemplate` especially, some styles are silently ignored, like a background color on a `<row>`.
+tvml-react warns about the ones it knows in development, and the [platform
+notes](/learn/platform-notes/) list them all. For free-form screens, [custom
+layouts](/learn/custom-layouts/) are the reliable route.

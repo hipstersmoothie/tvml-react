@@ -1,0 +1,64 @@
+---
+title: Debugging
+section: learn
+group: Shipping
+order: 31
+abstract: Logs in your terminal, the Web Inspector, error screens and development warnings.
+---
+
+import Note from "../../../components/Note.astro";
+
+## Logs in your terminal
+
+While `npm run dev` is running, your app's `console.log`, `warn` and `error` output appears in the
+same terminal, labeled by level:
+
+```
+[tv log] loaded 24 albums
+[tv warn] tvml-react: in divTemplate, <text> without a color is black, whatever the theme
+[tv error] TypeError: undefined is not an object (evaluating 'show.seasons')
+```
+
+Objects are printed as JSON, so you can log data straight from an API.
+
+## The Web Inspector
+
+For breakpoints, stepping and a live console, use Safari's Web Inspector. It attaches to your app's
+JavaScript on the simulator or on a paired Apple TV:
+
+1. In Safari, turn on **Settings → Advanced → Show features for web developers**.
+2. With your app running, open **Develop**, pick the simulator or Apple TV, and choose your app.
+
+## When a screen throws
+
+If a component throws while rendering, its screen shows an alert with the error and a Try Again
+button, instead of a blank screen, and the rest of the app keeps working. The error is also
+reported to `console.error`, so it shows up in your terminal.
+
+Send errors to your own reporting with `launch`'s `onError`:
+
+```tsx
+launch(<App />, {
+  onError: (error) => reportError(error),
+  errorTitle: "Something went wrong",
+});
+```
+
+## Development warnings
+
+In development builds, tvml-react warns about TVML that won't do what you meant, once per kind:
+
+- styles a `divTemplate` ignores, like a background color on a `<row>`, or a `<stack>` that won't
+  render;
+- text that's black because it has no color;
+- `srcset` URLs with commas, which TVMLKit can't parse;
+- adjacent text next to elements, which TVMLKit handles badly;
+- layout rows wider than the safe area.
+
+Production builds (`npm run build`) leave the warnings out.
+
+## When TVMLKit surprises you
+
+TVMLKit has quirks: styles that only work in some templates, things that can't change once a
+screen appears, focus that won't go where you expect. The [platform notes](/learn/platform-notes/)
+collect everything we've found, with what to do instead.

@@ -1,0 +1,73 @@
+---
+title: Quick start
+section: learn
+group: Start here
+order: 2
+abstract: Create an app, run it on the Apple TV simulator, and see your changes live.
+---
+
+import Note from "../../../components/Note.astro";
+
+You'll need a Mac with Xcode, which includes the Apple TV simulator, and Node.js 20 or later.
+
+## 1. Create the app
+
+```sh
+npm create tvml-react my-app
+cd my-app
+npm install
+```
+
+This makes two things: a React app in `src/`, and a tvOS Xcode project in `tvos/` that loads it.
+
+```
+my-app/
+├── src/
+│   ├── main.tsx        # exports start(), which launches the app
+│   └── App.tsx         # your first screen
+├── tvos/
+│   ├── MyApp.xcodeproj
+│   └── MyApp/          # the tvOS app: AppDelegate, Info.plist
+└── package.json
+```
+
+## 2. Start the dev server
+
+```sh
+npm run dev
+```
+
+The dev server bundles your app, serves it on your network, and watches for changes:
+
+```
+Serving TVML app (live reload + console relay). Set TVMLServerURL to one of:
+  http://localhost:9001/
+  http://192.168.1.42:9001/
+```
+
+## 3. Run it in the simulator
+
+Open `tvos/MyApp.xcodeproj` in Xcode, pick an Apple TV simulator, and press Run. The first
+build downloads tvml-react's Swift package, so it takes a minute.
+
+The app loads `http://localhost:9001/` and shows a shelf of photos. In the simulator, the arrow
+keys move focus and Return selects; select a photo to open it.
+
+## 4. Make a change
+
+Open `src/App.tsx` and change the title in the banner. Save, and the app reloads on the
+simulator with your change. You don't need to rebuild in Xcode for JavaScript changes.
+
+`console.log` from your app shows up in the terminal running `npm run dev`, prefixed with
+`[tv log]`.
+
+<Note kind="Tip">
+For a full debugger, open Safari's **Develop** menu and pick the simulator: you get the Web
+Inspector for your app's JavaScript, with breakpoints and the console.
+</Note>
+
+## Next
+
+- Follow the [tutorial](/learn/tutorial/) to build a real app, or
+- read about [templates and elements](/learn/templates-and-elements/) to see what you can build
+  screens from.

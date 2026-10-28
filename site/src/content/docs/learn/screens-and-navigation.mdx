@@ -1,0 +1,124 @@
+---
+title: Screens and navigation
+section: learn
+group: Essentials
+order: 12
+abstract: Push screens, present modals, react to screens appearing and leaving, and share state between them.
+---
+
+import Note from "../../../components/Note.astro";
+
+A tvOS app is a stack of screens. Selecting something pushes a new one on top; the remote's Menu
+button pops back. In tvml-react, every screen is a component, and every screen lives in your app's
+one React tree.
+
+## Pushing a screen
+
+[`useNavigation`](/reference/use-navigation/) gives you the navigation stack:
+
+```tsx
+import { useNavigation } from "tvml-react";
+
+function MovieLockup({ movie }: { movie: Movie }) {
+  const navigation = useNavigation();
+  return (
+    <lockup onSelect={() => navigation.push(<MovieScreen movie={movie} />)}>
+      <img src={movie.poster} width={250} height={375} />
+      <title>{movie.title}</title>
+    </lockup>
+  );
+}
+```
+
+Pass data to a screen with props, like any component. The pushed screen is rendered first and
+presented once its template is complete, so the user never sees it empty.
+
+When the user presses Menu, TVMLKit pops the screen and tvml-react unmounts it: its effects clean
+up, timers stop and queries are released, the same as any React component leaving the tree. You
+can also go back from code:
+
+| Method | Does |
+| --- | --- |
+| `push(screen)` | Pushes a screen. |
+| `pop()` | Goes back one screen. |
+| `popToRoot()` | Goes back to the first screen. |
+| `presentModal(screen)` | Shows a screen over the current one, for a question or a form. |
+| `dismissModal()` | Closes the modal. |
+| `replace(screen)` | Swaps the top screen for another, without adding to the stack. |
+
+```tsx
+function ConfirmDelete({ onConfirm }: { onConfirm: () => void }) {
+  const navigation = useNavigation();
+  return (
+    <alertTemplate>
+      <title>Delete this recording?</title>
+      <button onSelect={() => { onConfirm(); navigation.dismissModal(); }}>
+        <text>Delete</text>
+      </button>
+      <button onSelect={() => navigation.dismissModal()}>
+        <text>Cancel</text>
+      </button>
+    </alertTemplate>
+  );
+}
+```
+
+## Sharing state between screens
+
+Because every screen is part of the same tree, they can share state through context, stores or
+TanStack Query's cache, and a change on one screen shows up on the others immediately.
+
+Providers need to wrap every screen, including pushed ones. Put them in `launch`'s `wrapper`,
+rather than inside your first screen:
+
+```tsx
+function Providers({ children }: { children?: ReactNode }) {
+  return (
+    <TVMLQueryProvider>
+      <PlayerProvider>
+        <AccountProvider>{children}</AccountProvider>
+      </PlayerProvider>
+    </TVMLQueryProvider>
+  );
+}
+
+launch(<Home />, { wrapper: Providers });
+```
+
+<Note kind="Important">
+A provider rendered inside `<Home />` reaches `Home`, but not the screens `Home` pushes. Providers
+for the whole app go in `wrapper`.
+</Note>
+
+## Screen lifecycle
+
+Screens come and go: a pushed screen covers the one below, a tab is switched away from, the video
+player covers everything. To react to that, use the screen hooks:
+
+```tsx
+import { useIsScreenVisible, useScreenEvent } from "tvml-react";
+
+function LiveScores() {
+  // false while another screen or the player covers this one
+  const visible = useIsScreenVisible();
+
+  useScreenEvent("appear", () => analytics.track("scores"));
+  useScreenEvent("disappear", () => pauseAnimations());
+  // …
+}
+```
+
+The events are `load`, `appear`, `disappear` and `unload`. Data loaded with
+[`useScreenQuery`](/learn/loading-data/) already uses this to stop refreshing screens nobody can
+see.
+
+## When a screen fails
+
+Every screen has its own error boundary. If one throws while rendering, it shows an alert with the
+error and a Try Again button, and the rest of the app keeps working. Customize it with
+`launch`'s `renderError` and `errorTitle` options.
+
+## Next
+
+- [Tabs](/learn/tabs/): screens side by side in a tab bar.
+- [Loading data](/learn/loading-data/)

@@ -1,0 +1,77 @@
+---
+title: Testing
+section: learn
+group: Shipping
+order: 32
+abstract: Drive your app with the remote in UI tests, or from JavaScript in a running app.
+---
+
+import Note from "../../../components/Note.astro";
+
+The most faithful test of a TV app is the remote: real focus, real presses, real templates. Xcode's
+UI testing can drive the Siri Remote in the simulator, and tvml-react apps are easy to test that
+way.
+
+## UI tests with the remote
+
+Add a UI Testing target to your Xcode project, then launch your app pointed at the dev server and
+press buttons with `XCUIRemote`:
+
+```swift
+import XCTest
+
+final class BrowseTests: XCTestCase {
+  let remote = XCUIRemote.shared
+  var app: XCUIApplication!
+
+  /// The first element showing `text`. TVML elements are found by what they show.
+  func element(_ text: String) -> XCUIElement {
+    app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+  }
+
+  func testOpenAPhoto() {
+    app = XCUIApplication()
+    app.launchArguments = ["-TVMLServerURL", "http://localhost:9001/"]
+    app.launch()
+    XCTAssert(element("Browse").waitForExistence(timeout: 20))
+
+    remote.press(.down)
+    remote.press(.select)
+    XCTAssert(element("Favorite").waitForExistence(timeout: 10))
+
+    remote.press(.menu)
+  }
+}
+```
+
+A few tips:
+
+- **Check focus** with `hasFocus`: `app.descendants(matching: .any).matching(NSPredicate(format:
+  "hasFocus == true AND label CONTAINS %@", "Favorite"))`.
+- **Pause between presses** (a few hundred milliseconds) so focus animations finish.
+- **Long presses** are `remote.press(.select, forDuration: 1.5)`, which fires `onHoldSelect`, and the
+  play/pause button is `.playPause`.
+
+tvml-react's own example apps are tested this way; their tests in
+[`examples/shell`](https://github.com/hipstersmoothie/tvml-react/tree/main/examples/shell) cover
+navigation, tabs, typing, every template and the media player, and make good starting points.
+
+## Driving a running app from JavaScript
+
+TVJS accepts synthetic events, so a press can also be faked from inside the app. `tvml-react/testing`
+has helpers for that, which you can call from the Web Inspector's console or a debug-only code path:
+
+```ts
+import { fireSelect, queryAll, queryByText, typeText } from "tvml-react/testing";
+
+fireSelect(queryByText("Settings")!);
+typeText(queryAll("searchField")[0], "miles");
+```
+
+`fireHighlight`, `firePlay` and `fireHoldSelect` work the same way, and all of them refuse disabled
+elements, which a real remote couldn't reach.
+
+<Note>
+Your components are ordinary React, so logic in hooks and data functions can be unit tested with your
+usual tools. For anything that depends on TVMLKit's layout or focus, use UI tests.
+</Note>

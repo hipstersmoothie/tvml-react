@@ -1,0 +1,37 @@
+---
+// A capture from the tvOS simulator, in a TV frame.
+interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+}
+const { src, alt, caption } = Astro.props;
+---
+
+<figure class="screenshot">
+  <div class="tv"><img src={src} alt={alt} loading="lazy" /></div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .screenshot {
+    margin: 28px 0;
+  }
+  .tv {
+    padding: 8px;
+    background: #000;
+    border-radius: 16px;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  }
+  .tv img {
+    display: block;
+    width: 100%;
+    border-radius: 8px;
+  }
+  figcaption {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--tertiary);
+    text-align: center;
+  }
+</style>

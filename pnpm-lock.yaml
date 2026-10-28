@@ -141,6 +141,28 @@ importers:
         specifier: ^6.0.2
         version: 6.0.3
 
+  examples/photos:
+    dependencies:
+      '@tanstack/react-query':
+        specifier: ^5.105.0
+        version: 5.105.0(@types/react@19.3.0)(react@19.3.1)
+      react:
+        specifier: ^19.2.0
+        version: 19.3.1
+      tvml-react:
+        specifier: link:../..
+        version: link:../..
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.3.0
+      esbuild:
+        specifier: ^0.28.0
+        version: 0.28.2
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
   examples/podcasts:
     dependencies:
       '@tanstack/react-query':

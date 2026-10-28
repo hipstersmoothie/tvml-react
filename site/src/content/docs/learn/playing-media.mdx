@@ -1,0 +1,125 @@
+---
+title: Playing media
+section: learn
+group: Building features
+order: 21
+abstract: Play video and audio in the system player, share it across screens, remember where people stopped, and draw over it.
+---
+
+import Note from "../../../components/Note.astro";
+
+Video and audio play in tvOS's own fullscreen player, with its transport bar, scrubbing, subtitles
+and audio options. [`usePlayer`](/reference/use-player/) lets you start it and follow along from
+React.
+
+## Playing something
+
+```tsx
+import { usePlayer } from "tvml-react";
+
+function Episode({ episode }: { episode: Episode }) {
+  const player = usePlayer();
+  return (
+    <buttonLockup
+      onSelect={() =>
+        player.play({
+          url: episode.videoUrl,
+          title: episode.title,
+          subtitle: episode.show,
+          artworkImageURL: episode.thumbnail,
+        })
+      }
+    >
+      <badge src="resource://button-play" />
+      <title>Play</title>
+    </buttonLockup>
+  );
+}
+```
+
+`play` presents the player and starts playback. Pass an array to play a playlist, with
+`{ startIndex }` to start partway through. The `title`, `subtitle` and artwork show in the player's
+info panel, and the system publishes them to Now Playing.
+
+`usePlayer` also returns the player's state, which re-renders your component as it changes:
+`state` (`"playing"`, `"paused"`, `"end"`, …), `currentTime`, `duration`, `currentItem` and more.
+
+## One player for the app
+
+With a `PlayerProvider` in `launch`'s `wrapper`, every screen shares one player: any screen can start
+playback, and any can show what's playing.
+
+```tsx
+launch(<App />, { wrapper: PlayerProvider });
+```
+
+Inside a provider, `usePlayerState` picks just what a component needs, so it doesn't re-render every
+second during playback:
+
+```tsx
+const title = usePlayerState((s) => s.currentItem?.title);
+const playing = usePlayerState((s) => s.state === "playing");
+```
+
+## Resuming where people left off
+
+With a `PlayerProvider`, the `itemEnd` event fires once for each item that stops, whether it
+played to the end, the user left a video with Menu, or it failed, with how far they got:
+
+```tsx
+usePlayerEvent("itemEnd", ({ item, time, duration, reason }) => {
+  savePosition(item.url, reason === "playedToEnd" ? 0 : time);
+});
+```
+
+Next time, start from there with `startTime`:
+
+```tsx
+player.play({ url, title, startTime: savedPosition(url) });
+```
+
+<Note>
+There's also `resumeTime`, which makes tvOS ask "Resume Playback or Start from Beginning?" and wait.
+Most apps want `startTime`.
+</Note>
+
+## Audio
+
+Audio items play in the same player, over a black screen unless you give it something to show:
+
+```tsx
+player.play({ url: episode.audio, type: "audio", title: episode.title, artworkImageURL: art });
+```
+
+Pressing Menu during audio returns to your app **with the audio still playing**, like the Music
+app. Show a "Now Playing" button that calls `player.present()` to bring the player back, and
+`player.stop()` to end it.
+
+To keep playing when the user goes to the Home screen, add the audio background mode to your tvOS
+app's `Info.plist`:
+
+```xml
+<key>UIBackgroundModes</key>
+<array>
+  <string>audio</string>
+</array>
+```
+
+## Drawing over the player
+
+`PlayerOverlay` renders React over the video or audio: artwork and lyrics for a song, a live chat
+next to a stream, a "next episode" card. Its child is a template, usually a free-form `divTemplate`:
+
+```tsx
+import { Backdrop } from "tvml-react/native";
+
+<PlayerOverlay>
+  <divTemplate>
+    <Backdrop src={episode.artwork} dim={0.4} />
+    {/* … */}
+  </divTemplate>
+</PlayerOverlay>
+```
+
+Mount it before or during playback. With `interactive`, the overlay can take focus when the user
+swipes down, for controls of your own.

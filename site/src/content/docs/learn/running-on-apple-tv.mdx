@@ -1,0 +1,57 @@
+---
+title: Running on an Apple TV
+section: learn
+group: Shipping
+order: 30
+abstract: Run your app on a real Apple TV while you develop, with live reload over your network.
+---
+
+import Note from "../../../components/Note.astro";
+
+The simulator is great for building, but check your app on a real Apple TV before you ship:
+layout, image sharpness, performance and the feel of the remote all differ on a TV.
+
+## 1. Pair the Apple TV with Xcode
+
+On the Apple TV, open **Settings → Remotes and Devices → Remote App and Devices**. In Xcode, open
+**Window → Devices and Simulators**; the Apple TV appears there when both are on the same network.
+Select it and pair with the code it shows.
+
+## 2. Sign the app
+
+Running on a device needs a development team. In Xcode, select your app's target, open **Signing &
+Capabilities**, and choose your team.
+
+## 3. Point the app at your Mac
+
+On the simulator, `localhost` reaches your Mac. A real Apple TV needs your Mac's address on the
+network, which `npm run dev` prints:
+
+```
+Serving TVML app (live reload + console relay). Set TVMLServerURL to one of:
+  http://localhost:9001/
+  http://192.168.1.42:9001/
+```
+
+Set `TVMLServerURL` in `tvos/MyApp/Info.plist` to the network address. Or, to leave the plist alone,
+pass it as a launch argument: in Xcode, **Product → Scheme → Edit Scheme… → Run → Arguments**, add
+`-TVMLServerURL http://192.168.1.42:9001/`.
+
+## 4. Run
+
+Choose the Apple TV as the run destination and press Run. Live reload and the console relay work
+the same as on the simulator.
+
+<Note>
+Apps made with `npm create tvml-react` allow plain HTTP to local network addresses
+(`NSAllowsLocalNetworking`), which is what the dev server uses. Production servers should use HTTPS;
+see [Deploying](/learn/deploying/).
+</Note>
+
+## If it doesn't load
+
+- **A spinner that never goes away**: the Apple TV can't reach the dev server. Check that both are
+  on the same network, that the address is your Mac's current one, and that macOS's firewall allows
+  incoming connections for Node.
+- **An alert with an error**: your app loaded and threw while starting. The message and the terminal
+  running `npm run dev` say why.

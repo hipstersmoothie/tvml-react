@@ -1,0 +1,98 @@
+---
+title: Text input and search
+section: learn
+group: Building features
+order: 22
+abstract: Search as the user types, and collect text with the on-screen keyboard.
+---
+
+import Note from "../../../components/Note.astro";
+import Screenshot from "../../../components/Screenshot.astro";
+
+Typing on a TV is slow, so tvOS keeps it simple: a search screen that filters as you type, and
+single-field forms. Both use the system keyboard, which also accepts dictation and typing from a
+paired iPhone.
+
+## Search
+
+A `searchTemplate` has a `searchField` at the top and results below. `onTextChange` gives you the
+text as the user types:
+
+```tsx
+function Search() {
+  const [query, setQuery] = useState("");
+  const results = useScreenQuery({
+    queryKey: ["search", query],
+    queryFn: () => search(query),
+    enabled: query.length > 1,
+  });
+
+  return (
+    <searchTemplate>
+      <searchField onTextChange={setQuery}>Movies, shows and people</searchField>
+      <collectionList>
+        <grid>
+          <section>
+            {(results.data ?? []).map((item) => (
+              <lockup key={item.id} onSelect={() => open(item)}>
+                <img src={item.poster} width={250} height={375} />
+                <title>{item.title}</title>
+              </lockup>
+            ))}
+          </section>
+        </grid>
+      </collectionList>
+    </searchTemplate>
+  );
+}
+```
+
+The field's children are its placeholder. Show something useful before anything's typed, like
+popular items, so the screen isn't empty.
+
+<Screenshot src="/screens/searchTemplate.jpg" alt="A search screen" caption="A searchTemplate with results below the keyboard." />
+
+## Text fields
+
+For a value like a name or a code, use a `formTemplate` with a `textField`:
+
+```tsx
+function Rename({ profile }: { profile: Profile }) {
+  const navigation = useNavigation();
+  const [name, setName] = useState(profile.name);
+
+  return (
+    <formTemplate>
+      <banner>
+        <title>Profile name</title>
+      </banner>
+      <textField defaultValue={profile.name} onTextChange={setName}>
+        Name
+      </textField>
+      <footer>
+        <button onSelect={() => { save(name); navigation.pop(); }}>
+          <text>Save</text>
+        </button>
+      </footer>
+    </formTemplate>
+  );
+}
+```
+
+| Prop | |
+| --- | --- |
+| `onTextChange` | Called with the text as it changes. |
+| `defaultValue` | Text to start with. |
+| `value` | Controlled text: the field shows exactly this, and edits you reject are undone. |
+| `keyboardType` | `"emailAddress"`, `"numberPad"`, `"url"` or `"decimalPad"` for a matching keyboard. |
+| `secure` | Hides what's typed, for passwords (`textField` only). |
+
+<Note kind="Important">
+A `formTemplate` shows only its first `textField`. For a form with several fields, ask for them one
+screen at a time, which is also what Apple's own setup flows do.
+</Note>
+
+## Signing in
+
+Typing a password with a remote is painful. For sign-in, show a code or a QR code that people
+open on their phone instead: the [`QRCode`](/learn/native-views/) native element draws one.

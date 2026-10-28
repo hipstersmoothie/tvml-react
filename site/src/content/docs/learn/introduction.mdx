@@ -1,0 +1,97 @@
+---
+title: Introduction
+section: learn
+group: Start here
+order: 1
+abstract: What tvml-react is, how an app built with it works, and when to reach for it.
+---
+
+import Note from "../../../components/Note.astro";
+
+tvml-react lets you build Apple TV apps with React. You write components; tvOS draws them as
+native screens, with the focus engine, the Siri Remote, VoiceOver and the system look all
+handled for you.
+
+## The idea
+
+Apple TV has a framework for exactly this kind of app: **TVMLKit**. Instead of laying out views
+by hand, you describe each screen in TVML, a small XML vocabulary of *templates* (a product
+page, a grid of posters, a search screen) and the *elements* inside them (shelves, lockups,
+buttons). tvOS turns that description into real UIKit views that look and behave like Apple's
+own apps.
+
+TVMLKit apps are driven by JavaScript, running in a JavaScript engine tvOS provides. tvml-react
+is a React renderer for that environment: your components render TVML directly, and React keeps
+it up to date as your state changes.
+
+```tsx
+function Album({ album }: { album: Album }) {
+  const player = usePlayer();
+  return (
+    <productTemplate>
+      <banner>
+        <stack>
+          <title>{album.title}</title>
+          <row>
+            <buttonLockup onSelect={() => player.play(album.tracks)}>
+              <badge src="resource://button-play" />
+              <title>Play</title>
+            </buttonLockup>
+          </row>
+        </stack>
+        <heroImg src={album.artwork} />
+      </banner>
+    </productTemplate>
+  );
+}
+```
+
+## How an app fits together
+
+A tvml-react app has two halves:
+
+- **The JavaScript app**: your React components, bundled into one file (`app.js`) by
+  `tvml-react build`. It's served from a URL, your Mac during development and any web host in
+  production.
+- **The tvOS app**: a small Xcode project that starts TVMLKit and points it at that URL. You
+  rarely touch it after setup; changing the JavaScript doesn't need an Xcode rebuild.
+
+When the tvOS app launches, it loads your bundle and calls the `start` function you export,
+which renders your first screen with [`launch`](/reference/launch/).
+
+## Screens, focus and the remote
+
+Three ideas carry over from TVMLKit and shape everything else:
+
+- **Each screen is a template.** A screen is one TVML document with one template, like a
+  `stackTemplate` of shelves or a `productTemplate` for a single item. Pushing a screen puts a new
+  document on the navigation stack; the remote's Menu button pops it. tvml-react renders every
+  screen from your one React tree, so screens share state and context.
+- **tvOS owns focus.** You don't track which item is focused; the focus engine moves focus as the
+  user swipes, and tells you about it with events like `onHighlight`. Focusable elements
+  (lockups, buttons) get the familiar lift-and-shine for free.
+- **Events are props.** Pressing the remote's touch surface fires `onSelect`, the play/pause
+  button fires `onPlay`, and a long press fires `onHoldSelect`.
+
+## When to use it
+
+tvml-react is a great fit for the apps TVMLKit was designed for: catalogs, media libraries,
+streaming, dashboards and companion apps, where you want an app that feels at home on tvOS
+without building every view yourself.
+
+It's a less good fit when you need pixel-level control over every frame, like a game or a
+heavily custom visual design. Templates trade some freedom for a lot of platform behavior done
+right. When you need something TVML can't draw, you can [add your own native
+views](/learn/native-views/), and [`tvml-react/layout`](/learn/custom-layouts/) covers free-form
+screens.
+
+<Note>
+TVMLKit is an older Apple framework and hasn't changed much in years, but it ships in every
+version of tvOS. tvml-react works with it as it is and works around what it has to; the
+[platform notes](/learn/platform-notes/) collect what we've learned.
+</Note>
+
+## Next
+
+- [Quick start](/learn/quick-start/): create an app and run it in the simulator.
+- [Tutorial](/learn/tutorial/): build a photo browser, step by step.

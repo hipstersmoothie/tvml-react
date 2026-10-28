@@ -1,0 +1,66 @@
+---
+title: Deploying
+section: learn
+group: Shipping
+order: 33
+abstract: Build your JavaScript, host it, and point the tvOS app at it.
+---
+
+import Note from "../../../components/Note.astro";
+
+A tvml-react app ships in two parts: the JavaScript, which you host on the web, and the tvOS app,
+which you submit to the App Store. The tvOS app loads the JavaScript each time it launches, so most
+updates are a deploy, with no new build of the tvOS app.
+
+## 1. Build the JavaScript
+
+```sh
+npm run build
+```
+
+This writes two files to `dist/`:
+
+- `app.js`: your app, minified, with development warnings left out.
+- `Application.js`: the small bootstrap the tvOS app loads first. It shows a spinner, loads
+  `app.js` from the same folder, and calls your `start()`.
+
+## 2. Host it
+
+Upload both files to the same folder on any static host: a CDN, object storage, or your existing
+web server. Use **HTTPS**; tvOS blocks plain HTTP to servers outside your local network.
+
+Serve both with `Cache-Control: no-cache` (or a short `max-age`), so TVs pick up a new version on
+their next launch instead of a cached one.
+
+## 3. Point the tvOS app at it
+
+Set `TVMLServerURL` in `tvos/MyApp/Info.plist` to the folder's URL:
+
+```xml
+<key>TVMLServerURL</key>
+<string>https://tv.example.com/app/</string>
+```
+
+Development keeps working: a `-TVMLServerURL` launch argument in your Xcode scheme overrides the
+plist, so point that at your dev server.
+
+## 4. Submit the tvOS app
+
+Archive and submit the tvOS app as you would any app (**Product → Archive** in Xcode). It needs app
+icons and Top Shelf images in its asset catalog; Xcode's App Icon template for tvOS lists the sizes.
+
+<Note>
+Loading an app's JavaScript from a server is how TVMLKit is designed to work. As with any app,
+review Apple's App Store Review Guidelines, and keep what the app does consistent with what you
+submitted.
+</Note>
+
+## Updating
+
+- **JavaScript changes**: build and upload. TVs get the new version the next time the app launches.
+- **Changes to the tvOS app**: a new Swift package version, new native elements, Info.plist
+  settings or icons need a new build through the App Store.
+
+Keep the JavaScript compatible with tvOS app versions that are still installed: when you add a
+native element in a new tvOS build, older installs won't have it. Check `useDevice().appVersion`
+before using it.

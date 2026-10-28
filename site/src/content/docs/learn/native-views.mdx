@@ -1,0 +1,104 @@
+---
+title: Native views
+section: learn
+group: Building features
+order: 24
+abstract: Use the native elements tvml-react ships, and add your own UIKit views as React components.
+---
+
+import Note from "../../../components/Note.astro";
+import Screenshot from "../../../components/Screenshot.astro";
+
+TVML covers most of what a TV app needs, but not everything: you can't change a background image
+after a screen appears, draw a QR code, or round an image's corners. tvml-react's Swift package,
+`TVMLReactExtras`, adds native elements for those, and lets you register your own.
+
+## The Swift package
+
+Every app from `npm create tvml-react` already uses it. In your own Xcode project, add the package
+(**File → Add Package Dependencies…**, `https://github.com/hipstersmoothie/tvml-react`) and launch
+from your app delegate:
+
+```swift
+import TVMLReactExtras
+
+let window = UIWindow(frame: UIScreen.main.bounds)
+self.window = window
+appController = TVMLReact.launch(
+  serverURL: URL(string: "http://localhost:9001/")!,
+  window: window,
+  delegate: self
+)
+```
+
+`launch` installs the native elements, starts the bridge that the platform hooks and WebSockets
+use, works around TVMLKit crashes on tvOS 26, and loads your app.
+
+## Native elements
+
+They're React components, imported from `tvml-react/native`:
+
+```tsx
+import { Avatar, Backdrop, Card, QRCode, SimplifiedList, SimplifiedListRow } from "tvml-react/native";
+```
+
+| Component | |
+| --- | --- |
+| `Backdrop` | A full-screen background image you can change, with a cross-fade and a `dim` for legible text. TVML's `<background>` can't change once a screen is up. |
+| `QRCode` | A QR code for a `value`, in any colors. For sign-in links. |
+| `Avatar` | A round (or `radius`-rounded) image, with the `name`'s initials while it loads or when there's none. |
+| `Card` | A blurred, rounded panel with an image, title, subtitle and body. |
+| `SimplifiedList` | A native scrolling list of rows, each with `onSelect`. |
+
+Native elements go in a `divTemplate` and are sized with `style`:
+
+```tsx
+<divTemplate>
+  <Backdrop src={show.artwork} dim={0.5} />
+  <QRCode value={signInUrl} style={{ width: 300, height: 300, tvPosition: "center" }} />
+</divTemplate>
+```
+
+<Screenshot src="/screens/native-list.jpg" alt="SimplifiedList" caption="SimplifiedList, a native UITableView inside a divTemplate." />
+
+## Your own views
+
+Register a UIKit view for a tag in Swift, before `launch`:
+
+```swift
+TVMLReact.register("gauge") { element, existingView in
+  let view = existingView as? GaugeView ?? GaugeView()
+  view.value = Double(element.attributes?["value"] ?? "") ?? 0
+  return view
+}
+appController = TVMLReact.launch(serverURL: url, window: window, delegate: self)
+```
+
+The closure runs when TVMLKit lays the element out and again whenever it changes; reuse
+`existingView` when you can. Attributes arrive as strings.
+
+On the JavaScript side, wrap the tag in a component so the rest of your app imports it like any
+other:
+
+```tsx
+import { createElement } from "react";
+
+export function Gauge({ value, size }: { value: number; size: number }) {
+  return createElement("gauge", { value, style: { width: size, height: size } });
+}
+```
+
+<Note>
+Pick tag names TVML doesn't already use: registrations are keyed by tag name, so reusing a
+built-in name like `card` conflicts with TVMLKit's own element.
+</Note>
+
+## FocusBridgeWindow
+
+TVML moves focus strictly by position, so a control with nothing directly above it can't reach a
+`segmentBar` in the header. Use `FocusBridgeWindow` as your window and it connects the header and
+the content in both directions:
+
+```swift
+let window = FocusBridgeWindow(frame: UIScreen.main.bounds, headerHeight: 130)
+```

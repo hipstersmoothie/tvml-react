@@ -1,0 +1,114 @@
+---
+title: Custom layouts
+section: learn
+group: Essentials
+order: 15
+abstract: Build free-form screens, like a dashboard or a now-playing screen, with tvml-react/layout.
+---
+
+import Example from "../../../components/Example.astro";
+import Note from "../../../components/Note.astro";
+import Screenshot from "../../../components/Screenshot.astro";
+
+When no template fits, like an ambient dashboard, a now-playing screen or a scoreboard, TVML has
+`divTemplate`: a free-form canvas. It's also the easiest template to get wrong, because it isn't
+absolute positioning and many styles quietly do nothing in it. `tvml-react/layout` gives you a
+small set of components that lay out predictably:
+
+```tsx
+import { Cell, Image, Row, Screen, Stack } from "tvml-react/layout";
+```
+
+## Rows and cells
+
+A screen is made of **rows**, and rows are made of **cells**:
+
+```tsx
+<Screen>
+  <Row region="top" marginTop={60}>
+    <Cell size={120} weight="thin">{time}</Cell>
+  </Row>
+  <Row region="top" marginTop={12}>
+    <Cell size={40}>{date}</Cell>
+  </Row>
+</Screen>
+```
+
+- **`Screen`** is the `divTemplate`. It makes text white by default (black with the light theme),
+  and takes a `background` image.
+- **`Row`** goes in a **region**: `header`, `top`, `center`, `bottom` or `footer`. Rows in the same
+  region stack top to bottom; `marginTop` and `marginBottom` space them.
+- **`Cell`** is text. Give it a `size`, `weight` and `color`; without a `width`, it's exactly as wide
+  as its text.
+
+Everything stays inside the **TV-safe area**, the part of the screen every TV shows (90 points in
+from the sides). Rows align their cells within it, `left` by default:
+
+<Example
+  name="row-alignment"
+  capture="/screens/layout.jpg"
+  caption="On tvOS: the kitchen-sink Layout screen, which includes this example"
+/>
+
+A cell can have a `background`, a fixed `height`, `lines` for wrapping, and `align` for its text.
+
+## Images
+
+`Image` is an image sized in points, usable as a cell:
+
+```tsx
+<Row region="bottom" gap={24} marginBottom={60}>
+  <Image src={album.artwork} width={120} height={120} />
+  <Cell size={34} weight="medium">{album.title}</Cell>
+</Row>
+```
+
+## Stacks
+
+A row is one line. For a cell with several lines, like a title and an artist beside artwork, use a
+**`Stack`**: a column that sits in a row.
+
+<Example
+  name="stack-artwork"
+  props={{ artwork: "https://example.com/art.jpg" }}
+  capture="/screens/stacks-and-boxes.jpg"
+  caption="On tvOS: the kitchen-sink Stacks and boxes screen"
+/>
+
+Cells in a stack line up with its `align`, and `gap` spaces them. Stacks side by side make columns,
+like a weekly forecast.
+
+## Boxes
+
+A **`Box`** is a fixed-size area where you place things by `position`, and they can overlap: a
+caption over an image, or a "LIVE" badge in a corner.
+
+```tsx
+<Box width={640} height={360}>
+  <Image src={still} width={640} height={360} position="top-left" />
+  <Cell size={32} weight="semibold" position="bottom-left">{caption}</Cell>
+  <Cell size={22} weight="bold" position="top-right" background="red">LIVE</Cell>
+</Box>
+```
+
+## Planning widths
+
+The layout exports the sizes to plan with: the screen is `SCREEN_WIDTH` × `SCREEN_HEIGHT`
+(1920 × 1080 points), and rows align within `CONTENT_WIDTH` (1740). To line up columns across rows,
+give cells fixed widths that add up to `CONTENT_WIDTH`. `cellWidth(props)` tells you how wide a
+cell sized to its text will be.
+
+<Note>
+In development, rows wider than the safe area warn in your terminal, and so do styles that
+`divTemplate` ignores. If something doesn't show up where you expect, check the dev server output
+first.
+</Note>
+
+## A full example
+
+The dashboard example, a clock, weather and "on this day" over a photo, is built entirely from
+these components.
+
+<Screenshot src="/screens/dashboard.jpg" alt="An ambient dashboard" caption="examples/dashboard, built with tvml-react/layout." />
+
+See the [layout reference](/reference/screen/) for every option.
