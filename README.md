@@ -46,6 +46,8 @@ The [example app](examples/hello) running in the tvOS 26 simulator.
   and modals, and `MenuBar` for native tab bars. Hooks for app state, device, settings, storage, the media player and
   search input. Through the native bridge: appearance, accessibility, network,
   display, and keeping the screen awake.
+- **Free-form layout.** `tvml-react/layout` lays out full-screen
+  `divTemplate` screens in rows and cells that stay inside the TV-safe area.
 - **JavaScriptCore polyfills.** These cover what React and everyday code expect
   but TVJS lacks: `fetch`, `AbortController`, `queueMicrotask`,
   `performance.now`, `URL` and `URLSearchParams`.
@@ -257,6 +259,11 @@ handler returns.
 - `srcset` also takes an object, `{ "1x": url, "2x": url2x }`. It warns when a
   URL contains a comma: TVMLKit splits `srcset` on commas, and the image ends up
   blank.
+- In development, elements inside a `divTemplate` warn (once each) about
+  styles it ignores or that make content disappear: a `<stack>` without a
+  width or inside a `<row>`, `background-color` on rows and stacks, vertical
+  margins on a row's children, uncolored text (it's black whatever the theme),
+  and more. See [platform notes](docs/platform-notes.md#divtemplate-layout).
 
 ### Text fields and focus
 
@@ -307,6 +314,50 @@ export function Gauge(props: TVMLAttributes & { value: number }) {
 
 Props become attributes on the element, and the shared props (`style`,
 `onSelect`, `ref`, ...) work as they do on built-in tags.
+
+### Free-form layout
+
+`divTemplate` is TVML's only free-form template, and it isn't absolute
+positioning. It's nine regions whose children stack, with side columns that
+size to their content and shift the center, and many styles are silently
+ignored. What works predictably is full-width rows of fixed-width cells, which
+is what `tvml-react/layout` builds:
+
+```tsx
+import { Cell, Columns, Image, Row, Screen } from "tvml-react/layout";
+
+<Screen background={photo}>
+  <Row region="top" marginTop={40}>
+    <Cell size={120} weight="thin">{time}</Cell>
+    <Cell size={40} color="#aaa">{dayPeriod}</Cell>
+  </Row>
+  <Row region="top" align="right">
+    <Cell width={400} align="right" size={40}>{forecast}</Cell>
+  </Row>
+  <Row region="bottom" gap={24} marginBottom={40}>
+    <Image src={art} width={120} height={120} />
+    <Cell size={34}>{title}</Cell>
+  </Row>
+</Screen>
+```
+
+- **`<Screen>`** is the `divTemplate`. It gives cells a default text color
+  (white, or black with `theme="light"`) and takes a `background` image.
+- **`<Row>`** goes in a `region` (`header`, `top`, `center`, `bottom`,
+  `footer`); rows in a region stack. It aligns its cells `left` (default),
+  `center` or `right` within the safe area (90pt from the sides) by adding up
+  their widths. `gap`, `marginTop` and `marginBottom` space it. `bleed` uses
+  the full screen width, e.g. for an edge-to-edge image.
+- **`<Cell>`** is a text box with `size`, `weight`, `color`, `background`,
+  `height`, `lines` and `align`. Without a `width` it's sized to its text with
+  `measureText` (exact through the native bridge, estimated without it);
+  `cellWidth(props)` gives the same number for your own arithmetic.
+- **`<Image>`**, **`<Spacer>`** and **`<Columns>`**: an image cell sized with
+  style (`divTemplate` ignores `<img>`'s width and height attributes),
+  horizontal space, and column-shaped data (an hourly forecast strip) drawn as
+  rows, since a stack in a row never renders.
+- `SCREEN_WIDTH`, `SAFE_X`, `SAFE_Y` and `CONTENT_WIDTH` (1740pt) are
+  exported for planning widths. A row wider than the safe area warns.
 
 ## Hooks
 

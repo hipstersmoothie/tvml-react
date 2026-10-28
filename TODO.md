@@ -32,10 +32,9 @@ Known gaps and missing features, roughly in priority order within each section.
 
 ## Features
 
-- [ ] **Layout helpers.** `divTemplate` is a region flow layout with many
-      no-op styles (see docs/platform-notes.md). Ship `tvml-react/layout`
-      (`Row`, `Cell`, `Columns`, safe-area constants), starting from
-      `examples/dashboard/src/layout.tsx`.
+- [ ] **Layout for `organizer`.** `tvml-react/layout` covers `divTemplate`;
+      vinyl's now-playing screen also positions `organizer`s. Work out what
+      organizer reliably does and add helpers for it.
 - [ ] **`Slideshow` wrapper.** A typed `startSlideshow(images, options)`.
       Blank in the simulator; needs a hardware check.
 - [ ] **Keyboard suggestions.** Expose the Keyboard feature's `suggestions` on

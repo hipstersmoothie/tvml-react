@@ -1,10 +1,10 @@
 import { useMemo } from "react";
+import { Cell, cellWidth, CONTENT_WIDTH, Row, SAFE_Y, Spacer } from "tvml-react/layout";
 
 import type { Place } from "../hooks/useLocation";
 import type { Forecast } from "../hooks/useWeather";
 import { degrees, wallClock, type Locale } from "../lib/locale";
 import { condition } from "../lib/weather-codes";
-import { Cell, CONTENT_WIDTH, estimateDigitsWidth, Row, SAFE_Y, Spacer } from "../layout";
 import { usePalette } from "../theme";
 
 interface HeaderProps {
@@ -47,7 +47,8 @@ function useClockParts(language: string, now: Date) {
 export function Header({ now, locale, place, forecast, offline, fetchedAt }: HeaderProps) {
   const palette = usePalette();
   const { time, dayPeriod } = useClockParts(locale.language, now);
-  const digitsWidth = Math.min(CLOCK, estimateDigitsWidth(time, CLOCK_SIZE) + 50);
+  // Measured, so the day period sits right after the digits.
+  const digitsWidth = Math.min(CLOCK, cellWidth({ children: time, size: CLOCK_SIZE, weight: "thin" }) + 16);
   const date = useMemo(
     () => new Intl.DateTimeFormat(locale.language, { weekday: "long", month: "long", day: "numeric" }).format(now),
     [locale.language, now],

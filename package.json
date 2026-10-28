@@ -51,6 +51,10 @@
       "types": "./dist/native-elements.d.ts",
       "default": "./dist/native-elements.js"
     },
+    "./layout": {
+      "types": "./dist/layout.d.ts",
+      "default": "./dist/layout.js"
+    },
     "./testing": {
       "types": "./dist/testing.d.ts",
       "default": "./dist/testing.js"

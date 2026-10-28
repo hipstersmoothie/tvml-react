@@ -113,7 +113,9 @@ not absolute positioning.
 - **Columns size to content.** Left and right columns are as wide as their
   widest child, which shifts the centre column.
 - **A predictable recipe.** Full-width `<row>`s in the top, centre and bottom
-  regions, made of fixed-width `<text>` cells.
+  regions (or `header`/`footer`, outside them), made of fixed-width `<text>`
+  cells. A 1920pt row centers its cells, so cells adding up to 1740pt fill the
+  safe area exactly. `tvml-react/layout` builds this.
 - **`<stack>` is unreliable.** Without an explicit `width` it disappears.
   With several top-level stacks only the last renders. Its children can be
   reordered, a stack inside a `<row>` doesn't render, and its

@@ -6,6 +6,7 @@ import {
   useNavigation,
   useNetworkStatus,
 } from "tvml-react";
+import { Screen } from "tvml-react/layout";
 
 import { Credits } from "./components/Credits";
 import { Forecast } from "./components/Forecast";
@@ -88,10 +89,7 @@ function Dashboard({ photo }: { photo: number }) {
   const fetchedAt = weather.dataUpdatedAt || undefined;
 
   return (
-    <divTemplate theme={scheme}>
-      <background>
-        <img src={backdrop} />
-      </background>
+    <Screen theme={scheme} background={backdrop}>
       <Header
         now={now}
         locale={locale}
@@ -103,6 +101,6 @@ function Dashboard({ photo }: { photo: number }) {
       <OnThisDay event={events[event]} />
       <Forecast forecast={weather.data} locale={locale} now={now} />
       <Credits updated={fetchedAt ? locale.deviceTime.format(fetchedAt) : undefined} />
-    </divTemplate>
+    </Screen>
   );
 }

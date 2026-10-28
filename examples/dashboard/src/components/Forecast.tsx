@@ -1,7 +1,8 @@
+import { Cell, Columns, CONTENT_WIDTH, Row, Spacer, type Column } from "tvml-react/layout";
+
 import type { Forecast as ForecastData } from "../hooks/useWeather";
 import { degrees, wallClock, wallClockNow, type Locale } from "../lib/locale";
 import { condition } from "../lib/weather-codes";
-import { Cell, Columns, CONTENT_WIDTH, Row, Spacer, type Column } from "../layout";
 import { usePalette } from "../theme";
 
 const HOURS = 8;

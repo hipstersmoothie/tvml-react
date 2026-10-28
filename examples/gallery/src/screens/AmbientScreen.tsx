@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useIsScreenVisible, useKeepAwake } from "tvml-react";
+import { Cell, CONTENT_WIDTH, Image, Row, Screen, SCREEN_WIDTH } from "tvml-react/layout";
 
 import { imageUrl, type Artwork } from "../api";
 import { useScreenScale } from "../hooks";
@@ -30,41 +31,27 @@ export function AmbientScreen({ items, startIndex = 0 }: { items: Array<Artwork>
   const url = (a: Artwork) => imageUrl(a, 1920 * scale, IMAGE_HEIGHT * scale);
 
   return (
-    <divTemplate theme="dark">
-      {/* divTemplate ignores the width/height attributes and mis-centers
-          `tv-position: center`; a full-width box from the top-left works. */}
-      <img
-        src={url(current)}
-        style={{ width: 1920, height: IMAGE_HEIGHT, margin: "30 0 0 0", tvPosition: "top-left" }}
-        accessibilityText={`${current.title}, ${current.artist}`}
-      />
+    <Screen theme="dark">
+      <Row region="top" bleed marginTop={30}>
+        <Image
+          src={url(current)}
+          width={SCREEN_WIDTH}
+          height={IMAGE_HEIGHT}
+          accessibilityText={`${current.title}, ${current.artist}`}
+        />
+      </Row>
       {/* Fetch the next slide ahead of time. */}
       <img src={url(next)} style={{ width: 1, height: 1, tvPosition: "top-left" }} />
-      <text
-        style={{
-          tvPosition: "bottom-left",
-          margin: "0 0 82 90",
-          color: "rgba(255, 255, 255, 0.92)",
-          fontSize: 38,
-          fontWeight: "medium",
-          width: 1740,
-          tvTextMaxLines: 1,
-        }}
-      >
-        {current.title}
-      </text>
-      <text
-        style={{
-          tvPosition: "bottom-left",
-          margin: "0 0 40 90",
-          color: "rgba(255, 255, 255, 0.6)",
-          fontSize: 28,
-          width: 1740,
-          tvTextMaxLines: 1,
-        }}
-      >
-        {[current.artist, current.date].filter(Boolean).join(" · ")}
-      </text>
-    </divTemplate>
+      <Row region="bottom">
+        <Cell width={CONTENT_WIDTH} size={38} weight="medium" color="rgba(255, 255, 255, 0.92)">
+          {current.title}
+        </Cell>
+      </Row>
+      <Row region="bottom" marginBottom={40}>
+        <Cell width={CONTENT_WIDTH} size={28} color="rgba(255, 255, 255, 0.6)">
+          {[current.artist, current.date].filter(Boolean).join(" · ")}
+        </Cell>
+      </Row>
+    </Screen>
   );
 }

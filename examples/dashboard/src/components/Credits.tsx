@@ -1,4 +1,5 @@
-import { Cell, CONTENT_WIDTH, Row, SAFE_Y } from "../layout";
+import { Cell, CONTENT_WIDTH, Row, SAFE_Y } from "tvml-react/layout";
+
 import { usePalette } from "../theme";
 
 export function Credits({ updated }: { updated: string | undefined }) {

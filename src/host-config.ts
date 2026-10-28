@@ -5,6 +5,8 @@ import {
 } from "react-reconciler/constants.js";
 
 import type { TVMLElement } from "./dom.js";
+import { isDev } from "./dev.js";
+import { checkDivTemplateElement } from "./div-checks.js";
 import { clearEventHandlers, isEventProp, setEventHandler } from "./events.js";
 import {
   KEYBOARD_PROPS,
@@ -18,7 +20,14 @@ type Props = Record<string, unknown>;
 type Container = TVMLElement;
 type Instance = TVMLElement;
 type TextInstance = TVMLElement;
-type HostContext = Record<string, never>;
+// Whether an element is inside a divTemplate, and its parent's tag, for the
+// development checks in div-checks.ts.
+interface HostContext {
+  inDivTemplate: boolean;
+  parent: string | null;
+}
+
+const ROOT_CONTEXT: HostContext = { inDivTemplate: false, parent: null };
 type TimeoutHandle = ReturnType<typeof setTimeout>;
 
 const IGNORED_PROPS = new Set(["children", "key", "ref"]);
@@ -177,7 +186,10 @@ export const hostConfig = {
   isPrimaryRenderer: true,
   noTimeout: -1,
 
-  createInstance(type: string, props: Props, rootContainer: Container) {
+  createInstance(type: string, props: Props, rootContainer: Container, context: HostContext) {
+    if (isDev && context.inDivTemplate) {
+      checkDivTemplateElement(type, props, context.parent);
+    }
     const element = rootContainer.ownerDocument.createElement(type);
     for (const key in props) {
       applyProp(element, type, key, props[key], true);
@@ -290,8 +302,11 @@ export const hostConfig = {
     syncKeyboard(instance);
   },
   shouldSetTextContent: (_type: string, props: Props) => textContent(props.children) !== null,
-  getRootHostContext: (): HostContext => ({}),
-  getChildHostContext: (parentContext: HostContext) => parentContext,
+  getRootHostContext: (): HostContext => ROOT_CONTEXT,
+  getChildHostContext: (parentContext: HostContext, type: string): HostContext =>
+    isDev
+      ? { inDivTemplate: parentContext.inDivTemplate || type === "divTemplate", parent: type }
+      : parentContext,
   getPublicInstance: (instance: Instance) => instance,
   prepareForCommit: () => null,
   resetAfterCommit() {},
