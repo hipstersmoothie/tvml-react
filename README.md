@@ -58,7 +58,8 @@ The [example app](examples/hello) running in the tvOS 26 simulator.
 ## Getting started
 
 ```sh
-npm install tvml-react react
+# Not on npm yet: install a prerelease tarball from GitHub releases
+npm install https://github.com/hipstersmoothie/tvml-react/releases/download/v0.1.0-pre.1/tvml-react-0.1.0-pre.1.tgz react
 npm install -D esbuild typescript @types/react
 ```
 
