@@ -12,12 +12,11 @@ Known gaps and missing features, roughly in priority order within each section.
 - [ ] **Typing.** `onTextChange` was verified by setting the keyboard's text
       from JS; real typing on the on-screen keyboard is untested.
 
-- [ ] **Remote interactions in an automated test.** Synthetic events
-      (`tvml-react/testing`) exercise the handlers, but not TVMLKit's own focus
-      and press handling. Add an XCUITest target to `examples/shell` that drives
-      `XCUIRemote` (select, swipe, long press, Menu) and run it in CI. Open
-      questions: does focusing a `menuItem` fire `select`, and what does Menu do
-      from the player and from tabs?
+- [ ] **More remote-driven UI tests.** `examples/shell/ui-tests.sh` covers the
+      hello example (select, Menu, tab bar focus, native list rows, typing).
+      Add the menu-bar examples (does focusing a `menuItem` fire `select`?), the
+      player (Menu out of playback, `onPlay`) and long press (`onHoldSelect`),
+      and run them in CI once a tvOS simulator is available on the runners.
 - [ ] **tvOS 26 sweep of every template and element.** Only `<shelf>`/`<row>`
       were confirmed to hit the `UIScreen.focusedView` crash that
       `TVMLReact.install()` works around. Render each template (`catalogTemplate`,

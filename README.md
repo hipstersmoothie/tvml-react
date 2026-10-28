@@ -623,6 +623,15 @@ pnpm build
 cd examples/hello && pnpm dev   # serves on :9100; run examples/shell in Xcode
 ```
 
+Remote-driven UI tests run the hello example in a tvOS simulator, pressing
+the Siri Remote's buttons through Xcode's UI testing. They cover real select
+presses, Menu, focus moving across the tab bar, native list rows and typing on
+the system keyboard:
+
+```sh
+examples/shell/ui-tests.sh   # starts the hello dev server if needed
+```
+
 The shell's Xcode project is generated from `examples/shell/project.yml`
 with [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 

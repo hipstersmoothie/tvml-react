@@ -7,16 +7,29 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4FE062C3F5C783E8D6AA5D1E /* HelloTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6636F50E06BF62EA5EF1177E /* HelloTests.swift */; };
 		6206361F7F7F5B144310FBAE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B5B8F954158513C738EBC1DF /* LaunchScreen.storyboard */; };
 		81D6AB0488DDA69769AE1A48 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA13BB141EBB8F8C80A54A68 /* AppDelegate.swift */; };
 		D000BAFA6490FD8715F2ED3E /* TVMLReactExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 74497E6A50BB09FF99EA7F67 /* TVMLReactExtras */; };
 		F5132DDCF9840C738E9E5146 /* TVMLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7741B5EF6CC235BA752D965E /* TVMLKit.framework */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		EB20A072E7E945023B2491FA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4CF790A132BCD8A653E58432 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EB1B7098A61A3B02EFADA8C1;
+			remoteInfo = TVMLExamples;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		3EAA4F9188D87A264AC60D3D /* TVMLExamples.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TVMLExamples.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6636F50E06BF62EA5EF1177E /* HelloTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloTests.swift; sourceTree = "<group>"; };
 		7741B5EF6CC235BA752D965E /* TVMLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVMLKit.framework; path = System/Library/Frameworks/TVMLKit.framework; sourceTree = SDKROOT; };
 		8792BB94126ED96FEC658740 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		89DBB0C609E65364955210C8 /* TVMLExamplesUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TVMLExamplesUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B5B8F954158513C738EBC1DF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D991DD16A225EF7C9F7F5BA1 /* tvml-react */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "tvml-react"; path = ../..; sourceTree = SOURCE_ROOT; };
 		DA13BB141EBB8F8C80A54A68 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -39,6 +52,7 @@
 			isa = PBXGroup;
 			children = (
 				3EAA4F9188D87A264AC60D3D /* TVMLExamples.app */,
+				89DBB0C609E65364955210C8 /* TVMLExamplesUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -51,6 +65,14 @@
 				B5B8F954158513C738EBC1DF /* LaunchScreen.storyboard */,
 			);
 			path = TVMLExamples;
+			sourceTree = "<group>";
+		};
+		31A47D4C85831DC41DE0A00E /* TVMLExamplesUITests */ = {
+			isa = PBXGroup;
+			children = (
+				6636F50E06BF62EA5EF1177E /* HelloTests.swift */,
+			);
+			path = TVMLExamplesUITests;
 			sourceTree = "<group>";
 		};
 		363D9650FB28415B7BCCB9F2 /* Packages */ = {
@@ -66,6 +88,7 @@
 			children = (
 				363D9650FB28415B7BCCB9F2 /* Packages */,
 				1C3E110323FA65901B906BE5 /* TVMLExamples */,
+				31A47D4C85831DC41DE0A00E /* TVMLExamplesUITests */,
 				AE7E5CC09E1AE897D61E6209 /* Frameworks */,
 				0B0313372414DC587FA0C9A8 /* Products */,
 			);
@@ -82,6 +105,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		A590AEF88151F28AACCFD8F9 /* TVMLExamplesUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F035669DA99D009EB9857665 /* Build configuration list for PBXNativeTarget "TVMLExamplesUITests" */;
+			buildPhases = (
+				2CA89726C88E362A3D84C8B2 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				63489F737E9815F760EF1F59 /* PBXTargetDependency */,
+			);
+			name = TVMLExamplesUITests;
+			packageProductDependencies = (
+			);
+			productName = TVMLExamplesUITests;
+			productReference = 89DBB0C609E65364955210C8 /* TVMLExamplesUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		EB1B7098A61A3B02EFADA8C1 /* TVMLExamples */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DD1B83CEB4F5EB5B79A8118D /* Build configuration list for PBXNativeTarget "TVMLExamples" */;
@@ -111,6 +152,9 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					A590AEF88151F28AACCFD8F9 = {
+						TestTargetID = EB1B7098A61A3B02EFADA8C1;
+					};
 				};
 			};
 			buildConfigurationList = 4CC6BE170A2480FE450B7638 /* Build configuration list for PBXProject "TVMLExamples" */;
@@ -131,6 +175,7 @@
 			projectRoot = "";
 			targets = (
 				EB1B7098A61A3B02EFADA8C1 /* TVMLExamples */,
+				A590AEF88151F28AACCFD8F9 /* TVMLExamplesUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -147,6 +192,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		2CA89726C88E362A3D84C8B2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4FE062C3F5C783E8D6AA5D1E /* HelloTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		81FC13EB092F5A62ECC64EAD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -156,6 +209,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		63489F737E9815F760EF1F59 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EB1B7098A61A3B02EFADA8C1 /* TVMLExamples */;
+			targetProxy = EB20A072E7E945023B2491FA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		07E4F47418005F78EA3DA64F /* Release */ = {
@@ -214,6 +275,24 @@
 			};
 			name = Release;
 		};
+		1AA3FF5E357FF0E8E846384F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "dev.tvml-react.examples.uitests";
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_TARGET_NAME = TVMLExamples;
+			};
+			name = Debug;
+		};
 		49736DD77651DBAC60F5ED1E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -247,6 +326,24 @@
 				TARGETED_DEVICE_FAMILY = 3;
 			};
 			name = Debug;
+		};
+		98311790D5AF12FB52BF58A2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "dev.tvml-react.examples.uitests";
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_TARGET_NAME = TVMLExamples;
+			};
+			name = Release;
 		};
 		B15AE00867CC31F604337E03 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -328,6 +425,15 @@
 			buildConfigurations = (
 				76DE4032806F9A15EEBC7214 /* Debug */,
 				49736DD77651DBAC60F5ED1E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F035669DA99D009EB9857665 /* Build configuration list for PBXNativeTarget "TVMLExamplesUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1AA3FF5E357FF0E8E846384F /* Debug */,
+				98311790D5AF12FB52BF58A2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

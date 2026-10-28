@@ -81,6 +81,8 @@ final class SimplifiedListCell: UITableViewCell {
   func configure(with row: SimplifiedListRowModel) {
     titleLabel.text = row.title
     subtitleLabel.text = row.subtitle
+    accessibilityLabel = [row.title, row.subtitle, row.accessory]
+      .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ", ")
     subtitleLabel.isHidden = (row.subtitle?.isEmpty ?? true)
     accessoryLabelView.text = row.accessory
     loadArtwork(row.imageURL)

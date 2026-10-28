@@ -125,6 +125,20 @@ extension SimplifiedListView: UITableViewDataSource, UITableViewDelegate {
     }
   }
 
+  // TVMLKit handles the select press itself, so the table never calls
+  // didSelectRowAt. Catch it here, on the way up the responder chain from the
+  // focused cell.
+  override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+    if presses.contains(where: { $0.type == .select }),
+      let cell = UIFocusSystem.focusSystem(for: self)?.focusedItem as? UITableViewCell,
+      let indexPath = tableView.indexPath(for: cell)
+    {
+      dispatch(.select, at: indexPath)
+      return
+    }
+    super.pressesEnded(presses, with: event)
+  }
+
   private func dispatch(_ type: TVElementEventType, at indexPath: IndexPath) {
     guard rowElements.indices.contains(indexPath.row) else { return }
     rowElements[indexPath.row].dispatchEvent(

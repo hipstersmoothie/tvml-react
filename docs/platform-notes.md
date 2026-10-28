@@ -40,6 +40,13 @@ tvml-react bugs, but you'll run into them.
   `disappear` on the screen underneath, and `appear` when the player closes.
 - **Moving focus.** Re-setting `autoHighlight` moves focus (`focus(element)`),
   except in `formTemplate`.
+- **Focus callbacks.** On tvOS 26, `UIWindow.didUpdateFocus(in:with:)` isn't
+  called for focus changes inside TVMLKit's views. Observe
+  `UIFocusSystem.didUpdateNotification` instead; `FocusBridgeWindow` does.
+- **Select presses in native views.** TVMLKit handles the select press itself,
+  so a `UITableView` inside a custom element never gets `didSelectRowAt`.
+  Catch `pressesEnded` on the way up the responder chain; `SimplifiedList`
+  does.
 - **Where focus lands.** It returns to the opening row after `pop`, to where it
   was after a modal is dismissed, and to the first focusable element after the
   root template is swapped. Changing the focused row's content keeps focus on

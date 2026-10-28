@@ -35,3 +35,24 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: dev.tvml-react.examples
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "3"
+  TVMLExamplesUITests:
+    type: bundle.ui-testing
+    platform: tvOS
+    sources:
+      - TVMLExamplesUITests
+    dependencies:
+      - target: TVMLExamples
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.tvml-react.examples.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "3"
+schemes:
+  TVMLExamples:
+    build:
+      targets:
+        TVMLExamples: all
+    test:
+      targets:
+        - TVMLExamplesUITests

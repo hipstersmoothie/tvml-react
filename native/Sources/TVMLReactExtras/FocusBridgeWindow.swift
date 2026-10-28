@@ -11,8 +11,9 @@ import UIKit
 // *opposite* region from where focus currently is, bridging both directions:
 //   - focus in the body, press up     → guide → last focused header view
 //   - focus in the header, press down → guide → last focused body view
-// Until the other region has been focused once, the guide is inert and normal
-// geometric navigation applies.
+// Before the other region has been focused, it routes to the first focusable
+// view found there (e.g. the selected segment of a header segmentBar), so focus
+// that starts in the body can still reach the nav.
 //
 // Use it as the window you hand to TVApplicationController:
 //
@@ -46,6 +47,7 @@ open class FocusBridgeWindow: UIWindow {
   }
 
   private func setUpBridge() {
+    observeFocus()
     addLayoutGuide(bridge)
     let top = bridge.topAnchor.constraint(equalTo: topAnchor, constant: headerHeight)
     bridgeTop = top
@@ -57,13 +59,23 @@ open class FocusBridgeWindow: UIWindow {
     ])
   }
 
-  open override func didUpdateFocus(
-    in context: UIFocusUpdateContext,
-    with coordinator: UIFocusAnimationCoordinator
-  ) {
-    super.didUpdateFocus(in: context, with: coordinator)
+  // UIWindow.didUpdateFocus isn't called for focus changes inside TVMLKit's
+  // views on tvOS 26, so listen to the focus system's notification instead.
+  private var focusObserver: NSObjectProtocol?
 
-    guard let next = context.nextFocusedView else { return }
+  private func observeFocus() {
+    focusObserver = NotificationCenter.default.addObserver(
+      forName: UIFocusSystem.didUpdateNotification, object: nil, queue: .main
+    ) { [weak self] notification in
+      guard let context = notification.userInfo?[UIFocusSystem.focusUpdateContextUserInfoKey]
+        as? UIFocusUpdateContext
+      else { return }
+      MainActor.assumeIsolated { self?.focusDidUpdate(context) }
+    }
+  }
+
+  private func focusDidUpdate(_ context: UIFocusUpdateContext) {
+    guard let next = context.nextFocusedView, next.window === self else { return }
     let frame = next.convert(next.bounds, to: self)
     let inHeader = frame.midY < headerHeight
 
@@ -73,7 +85,28 @@ open class FocusBridgeWindow: UIWindow {
       bodyView = next
     }
 
-    let target = inHeader ? bodyView : headerView
+    // The last view focused in the other region, if it's still on screen
+    // (switching tabs replaces the body), else the first one found there.
+    let remembered = (inHeader ? bodyView : headerView).flatMap { $0.window === self ? $0 : nil }
+    let target = remembered ?? firstFocusableView(inHeader: !inHeader)
     bridge.preferredFocusEnvironments = [target].compactMap { $0 }
+  }
+
+  // The outermost visible, focusable view whose center is in the header band
+  // (or below it).
+  private func firstFocusableView(inHeader: Bool) -> UIView? {
+    var candidates: [UIView] = []
+    func visit(_ view: UIView) {
+      guard !view.isHidden, view.alpha > 0.01 else { return }
+      if view.canBecomeFocused {
+        let midY = view.convert(view.bounds, to: self).midY
+        if (midY < headerHeight) == inHeader { candidates.append(view) }
+      }
+      view.subviews.forEach(visit)
+    }
+    visit(self)
+    // Outermost first: e.g. a UISegmentedControl rather than one of its
+    // segments, which then puts focus on its selected segment itself.
+    return candidates.first
   }
 }
