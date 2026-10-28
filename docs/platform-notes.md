@@ -67,7 +67,11 @@ tvml-react bugs, but you'll run into them.
   it.
 - **Menu bars.** The first `menuItem` gets focus at load unless another has
   `autoHighlight`. Calling `setSelectedItem` before the document is presented
-  doesn't stick. A menu item with no document shows a spinner.
+  doesn't stick. A menu item with no document shows a spinner. Focusing a
+  menu item switches tabs (no select needed); down moves focus geometrically
+  into the tab, and Menu from there returns to the bar before popping.
+- **Remote events.** Real presses reach `onSelect`, `onHighlight`, `onPlay`
+  (the play/pause button) and `onHoldSelect` (a long press) on a lockup.
 
 ## Templates
 
@@ -170,6 +174,20 @@ actually play wasn't checked.
   Beginning" prompt and waits; use `startTime`.
 - **Audio needs an overlay.** Audio plays over a black screen unless you set an
   overlay (`<PlayerOverlay>`).
+- **Menu doesn't stop audio.** Menu during audio playback returns to the app
+  while the audio keeps playing, like the Music app, and TVJS fires no event
+  for it. `usePlayer()` still reports `playing`; `present()` shows the player
+  again and `stop()` ends the item. Menu during video ends it
+  (`itemEnd` with reason `userInitiated`).
+- **Background audio** needs `UIBackgroundModes: [audio]` in the app's
+  Info.plist; then it keeps playing from the Home screen. No audio session
+  setup is needed.
+- **Now Playing comes from the media item.** AVKit publishes the `MediaItem`'s
+  `title`, `subtitle` and artwork to Now Playing and handles the remote's
+  commands itself; don't use `MPNowPlayingInfoCenter`/`MPNowPlayingSession`
+  alongside it. An app that isn't playing anything can't be the Now Playing
+  app. tvOS 26's Control Center has no Now Playing tile; it shows on a paired
+  iPhone (untested here).
 - **`Slideshow`** is a singleton: `start(images, options?, themeOptions?)`,
   `append(images)`, `dismiss()`. In the tvOS 26.5 simulator it shows a blank
   screen; it's untested on hardware.

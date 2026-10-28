@@ -12,12 +12,13 @@ Known gaps and missing features, roughly in priority order within each section.
 - [ ] **Typing.** `onTextChange` was verified by setting the keyboard's text
       from JS; real typing on the on-screen keyboard is untested.
 
-- [ ] **More remote-driven UI tests.** `examples/shell/ui-tests.sh` covers the
-      hello example (select, Menu, tab bar focus, native list rows, typing).
-      `KitchenSinkTests` opens every template. Add the menu-bar examples (does
-      focusing a `menuItem` fire `select`?), the
-      player (Menu out of playback, `onPlay`) and long press (`onHoldSelect`),
-      and run them in CI once a tvOS simulator is available on the runners.
+- [ ] **UI tests in CI.** `examples/shell/ui-tests.sh` covers the hello
+      example, every template (`KitchenSinkTests`) and remote input: menu bar
+      focus, `onPlay`, `onHoldSelect`, Menu out of audio and video, background
+      audio (`InteractionTests`). Run them in CI once a tvOS simulator is
+      available on the runners.
+- [ ] **Now Playing on a paired iPhone.** AVKit publishes item metadata; the
+      simulator can't show where it appears. Check on hardware.
 - [ ] **Elements the template sweep didn't cover.** `examples/kitchen-sink`
       renders every template (see docs/platform-notes.md). Not yet: whether
       `mediaContent` previews play, `rules`/`specialize` focus styling,
@@ -46,8 +47,6 @@ Known gaps and missing features, roughly in priority order within each section.
       buttons TVML doesn't surface.
 - [ ] **Deep links.** Forward `application(_:open:options:)` from Swift into a
       `useOpenURL()` hook.
-- [ ] **Now Playing.** Publish what's playing to Control Center through
-      `MPNowPlayingInfoCenter` (`useNowPlaying()`).
 - [ ] **Current user.** Per-profile data on multi-user Apple TVs.
 - [ ] **Focus helpers.** `useFocusedElement()` built on `highlight`, and a way
       to focus inside `formTemplate`.

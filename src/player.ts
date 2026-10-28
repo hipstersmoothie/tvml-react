@@ -151,6 +151,11 @@ export interface PlayerActions {
   resume(): void;
   stop(): void;
   seek(seconds: number): void;
+  /**
+   * Show the fullscreen player again. Menu during audio playback returns to
+   * the app while the audio keeps playing; this brings the player UI back.
+   */
+  present(): void;
   /** The TVJS Player itself, created on first use. */
   nativePlayer(): NativePlayer;
   /** @internal Used by PlayerOverlay. */
@@ -362,7 +367,11 @@ export class PlayerStore {
     this.emitEnd("stopped");
     this.active = false;
     this.native?.stop();
+    // The player's own state change is ignored once inactive.
+    this.set({ state: "end" });
   };
+
+  present = () => this.native?.present();
 
   setOverlay = (kind: OverlayKind, doc: TVMLDocument | undefined) => {
     this.overlays[kind] = doc;
@@ -382,6 +391,7 @@ export class PlayerStore {
     resume: () => this.resume(),
     stop: () => this.stop(),
     seek: (seconds) => this.seek(seconds),
+    present: () => this.present(),
     nativePlayer: () => this.nativePlayer(),
     setOverlay: (kind, doc) => this.setOverlay(kind, doc),
   };

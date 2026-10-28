@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { MenuBar, MenuBarItem, useNavigation } from "tvml-react";
 
 import { hero, poster, range, square, wide } from "./art";
+import { EventsScreen, PlayerScreen } from "./interactive";
 
 // One minimal but realistic screen per TVML template, plus screens for the
 // main container elements. Each shows its name so the UI tests can tell it
@@ -221,6 +222,9 @@ function MenuBarScreen() {
           <stackTemplate>
             <collectionList>
               <grid>
+                <header>
+                  <title>Second tab</title>
+                </header>
                 <section>
                   <Posters seed="mb2" count={12} />
                 </section>
@@ -618,4 +622,6 @@ export const SCREENS: Array<{ name: string; description: string; Screen: Compone
   { name: "stackTemplate", description: "Carousel, shelf and grid.", Screen: StackScreen },
   { name: "Lockups", description: "Overlays, badges, monograms, cards.", Screen: LockupsScreen },
   { name: "mediaContent", description: "Auto-playing previews.", Screen: MediaContentScreen },
+  { name: "Events", description: "Select, play, long press, highlight.", Screen: EventsScreen },
+  { name: "Player", description: "Audio and video with metadata.", Screen: PlayerScreen },
 ];

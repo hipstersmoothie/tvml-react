@@ -3,12 +3,9 @@ import XCTest
 // Opens every screen of the kitchen-sink example with the Siri Remote and
 // checks that it renders without crashing TVMLKit. One screenshot per screen
 // is attached to the test results, and written to a folder on the Mac if
-// TEST_RUNNER_KITCHEN_SINK_SCREENSHOTS is set (xcodebuild passes TEST_RUNNER_*
-// variables to the test runner without the prefix).
-//
-// Needs the kitchen-sink dev server: `cd examples/kitchen-sink && pnpm dev`
-// (port 9108). Override with TEST_RUNNER_KITCHEN_SINK_URL.
-final class KitchenSinkTests: XCTestCase {
+// TEST_RUNNER_KITCHEN_SINK_SCREENSHOTS is set.
+
+final class KitchenSinkTests: KitchenSinkTestCase {
   // In the order of the index list (examples/kitchen-sink/src/screens.tsx).
   // `marker` is text the screen shows (nil if it shows none until you
   // interact); `row` is the index row's description, which goes away once the
@@ -33,47 +30,9 @@ final class KitchenSinkTests: XCTestCase {
     ("stackTemplate", "A shelf", "Carousel, shelf and grid."),
     ("Lockups", "monogramLockup", "Overlays, badges, monograms, cards."),
     ("mediaContent", "playbackMode", "Auto-playing previews."),
+    ("Events", "Last event", "Select, play, long press, highlight."),
+    ("Player", "Last ended", "Audio and video with metadata."),
   ]
-
-  private var app: XCUIApplication!
-  private let remote = XCUIRemote.shared
-
-  private func launch() {
-    app = XCUIApplication()
-    let server = ProcessInfo.processInfo.environment["KITCHEN_SINK_URL"] ?? "http://localhost:9108/"
-    app.launchArguments = ["-TVMLServerURL", server]
-    app.launch()
-    XCTAssert(element("Kitchen sink").waitForExistence(timeout: 20), "index list")
-  }
-
-  private func element(_ text: String) -> XCUIElement {
-    app.descendants(matching: .any)
-      .matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-  }
-
-  private func focused(_ text: String) -> XCUIElement {
-    app.descendants(matching: .any)
-      .matching(NSPredicate(format: "hasFocus == true AND label CONTAINS %@", text)).firstMatch
-  }
-
-  private func press(_ button: XCUIRemote.Button, times: Int = 1) {
-    for _ in 0..<times {
-      remote.press(button)
-      usleep(400_000)
-    }
-  }
-
-  private func screenshot(_ name: String) {
-    guard app.state == .runningForeground else { return }
-    let shot = app.screenshot()
-    let attachment = XCTAttachment(screenshot: shot)
-    attachment.name = name
-    attachment.lifetime = .keepAlways
-    add(attachment)
-    if let dir = ProcessInfo.processInfo.environment["KITCHEN_SINK_SCREENSHOTS"] {
-      try? shot.pngRepresentation.write(to: URL(fileURLWithPath: dir).appendingPathComponent("\(name).png"))
-    }
-  }
 
   func testEveryScreenRenders() {
     continueAfterFailure = true

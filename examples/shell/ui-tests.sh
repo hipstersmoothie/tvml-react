@@ -41,9 +41,10 @@ xcrun simctl boot "$SIMULATOR_ID" 2>/dev/null || true
 xcrun simctl bootstatus "$SIMULATOR_ID" -b > /dev/null
 
 # One simulator, no clones: tests drive the remote and assert on focus.
-xcodebuild test \
+xcodebuild \
   -project TVMLExamples.xcodeproj \
   -scheme TVMLExamples \
   -destination "platform=tvOS Simulator,id=$SIMULATOR_ID" \
   -parallel-testing-enabled NO \
-  "$@"
+  "$@" \
+  test

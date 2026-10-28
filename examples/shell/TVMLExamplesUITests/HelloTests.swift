@@ -53,7 +53,9 @@ final class HelloTests: XCTestCase {
   // segmentBarItem onHighlight switches tabs as focus moves; a SimplifiedList
   // row's onSelect (dispatched from the native table) opens the album.
   func testTabsAndNativeListRowSelect() {
+    // Right after launch the first press up is occasionally dropped.
     press(.up)
+    if !waitForFocus("Albums", timeout: 3) { press(.up) }
     XCTAssert(waitForFocus("Albums"), "focus on the tab bar")
     press(.right)
     XCTAssert(waitForFocus("Native list"))

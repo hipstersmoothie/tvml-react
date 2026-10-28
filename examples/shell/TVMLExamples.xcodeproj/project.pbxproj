@@ -7,9 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		34CFCCA672A573FAAB5AE0F5 /* InteractionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE4B35CF4221D04ECD4E998 /* InteractionTests.swift */; };
 		4FE062C3F5C783E8D6AA5D1E /* HelloTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6636F50E06BF62EA5EF1177E /* HelloTests.swift */; };
 		6206361F7F7F5B144310FBAE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B5B8F954158513C738EBC1DF /* LaunchScreen.storyboard */; };
 		81D6AB0488DDA69769AE1A48 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA13BB141EBB8F8C80A54A68 /* AppDelegate.swift */; };
+		B35D82525913BF1272F89970 /* KitchenSinkTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F18CC565F9CF5DAF965DA32 /* KitchenSinkTestCase.swift */; };
 		D000BAFA6490FD8715F2ED3E /* TVMLReactExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 74497E6A50BB09FF99EA7F67 /* TVMLReactExtras */; };
 		F5132DDCF9840C738E9E5146 /* TVMLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7741B5EF6CC235BA752D965E /* TVMLKit.framework */; };
 		F7273B042BE30F3A9A9D459F /* KitchenSinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0E6319131C7204F27EDD62 /* KitchenSinkTests.swift */; };
@@ -27,7 +29,9 @@
 
 /* Begin PBXFileReference section */
 		3EAA4F9188D87A264AC60D3D /* TVMLExamples.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TVMLExamples.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4FE4B35CF4221D04ECD4E998 /* InteractionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionTests.swift; sourceTree = "<group>"; };
 		6636F50E06BF62EA5EF1177E /* HelloTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloTests.swift; sourceTree = "<group>"; };
+		6F18CC565F9CF5DAF965DA32 /* KitchenSinkTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KitchenSinkTestCase.swift; sourceTree = "<group>"; };
 		7741B5EF6CC235BA752D965E /* TVMLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVMLKit.framework; path = System/Library/Frameworks/TVMLKit.framework; sourceTree = SDKROOT; };
 		8792BB94126ED96FEC658740 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		89DBB0C609E65364955210C8 /* TVMLExamplesUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TVMLExamplesUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -73,6 +77,8 @@
 			isa = PBXGroup;
 			children = (
 				6636F50E06BF62EA5EF1177E /* HelloTests.swift */,
+				4FE4B35CF4221D04ECD4E998 /* InteractionTests.swift */,
+				6F18CC565F9CF5DAF965DA32 /* KitchenSinkTestCase.swift */,
 				8E0E6319131C7204F27EDD62 /* KitchenSinkTests.swift */,
 			);
 			path = TVMLExamplesUITests;
@@ -200,6 +206,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				4FE062C3F5C783E8D6AA5D1E /* HelloTests.swift in Sources */,
+				34CFCCA672A573FAAB5AE0F5 /* InteractionTests.swift in Sources */,
+				B35D82525913BF1272F89970 /* KitchenSinkTestCase.swift in Sources */,
 				F7273B042BE30F3A9A9D459F /* KitchenSinkTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

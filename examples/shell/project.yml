@@ -23,6 +23,9 @@ targets:
         UILaunchStoryboardName: LaunchScreen
         UIUserInterfaceStyle: Dark
         UIRequiredDeviceCapabilities: [arm64]
+        # Keep audio playing in the background (the podcasts example), which
+        # is also what puts it in Now Playing.
+        UIBackgroundModes: [audio]
         # Default server: the folder serving Application.js and app.js. Override per
         # launch with `-TVMLServerURL http://host:port/` (e.g. simctl launch args).
         # The simulator can use localhost; a real Apple TV needs your Mac's LAN IP.

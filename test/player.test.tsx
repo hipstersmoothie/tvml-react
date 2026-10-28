@@ -153,8 +153,10 @@ describe("PlayerProvider", () => {
     const fromHook: Array<ItemEndEvent> = [];
     let controls!: PlayerActions;
 
+    let state = "";
     function Screen() {
       controls = usePlayerControls();
+      state = usePlayerState((s) => s.state);
       usePlayerEvent("itemEnd", (event) => fromHook.push(event));
       return <stackTemplate />;
     }
@@ -178,6 +180,11 @@ describe("PlayerProvider", () => {
     player.emit("timeDidChange", { time: 7 });
     controls.stop();
     expect(ends.at(-1)).toMatchObject({ time: 7, reason: "stopped" });
+    await flush();
+    expect(state).toBe("end");
+
+    controls.present();
+    expect(player.present).toHaveBeenCalledTimes(3);
   });
 
   it("flags live streams and finds the shared player for overlays", async () => {

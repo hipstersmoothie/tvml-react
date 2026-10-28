@@ -389,7 +389,8 @@ usePlayerEvent("itemEnd", ({ item, time, duration, reason }) => save(item, time)
   `currentItem`, `error`, `isLive` (playing with no known duration) and
   `endReason`. Pass a selector that returns a primitive or a stable value, so
   the caller doesn't re-render once a second during playback.
-- **`itemEnd` reasons.** `"playedToEnd"`, `"stopped"`, `"userInitiated"` (Menu),
+- **`itemEnd` reasons.** `"playedToEnd"`, `"stopped"`, `"userInitiated"` (Menu
+  during video),
   `"error"`, `"forwardedToEnd"`, `"playlistChanged"`. The event carries the last
   real position and is reported once per item. `PlayerProvider` also takes an
   `onItemEnd` prop.
@@ -403,6 +404,14 @@ usePlayerEvent("itemEnd", ({ item, time, duration, reason }) => save(item, time)
   provider, each call owns a player that stops when the component unmounts.
   That's fine for a single screen; pass the result to `<PlayerOverlay player>`.
 - **Escape hatch.** `nativePlayer()` returns the TVJS `Player` itself.
+- **Audio keeps going after Menu.** Menu during audio returns to the app with
+  the audio still playing (state stays `"playing"`, no `itemEnd`). Call
+  `present()` to show the player again, e.g. from a "Now Playing" button, and
+  `stop()` to end it. For playback from the Home screen, add
+  `UIBackgroundModes: [audio]` to your Info.plist.
+- **Now Playing.** AVKit publishes each item's `title`, `subtitle` and
+  `artworkImageURL` to Now Playing and handles the remote's media commands, so
+  set those and there's nothing else to do.
 - **Covered screens.** Presenting the player fires `disappear` on the screen
   underneath, so screen queries pause while the video is up. Pass
   `refreshWhileHidden` for data drawn in an overlay.
@@ -627,7 +636,9 @@ Remote-driven UI tests run in a tvOS simulator, pressing the Siri Remote's
 buttons through Xcode's UI testing. Against the hello example they cover real
 select presses, Menu, focus moving across the tab bar, native list rows and
 typing on the system keyboard. Against the kitchen-sink example they open
-every TVML template and check it renders without crashing:
+every TVML template and check it renders without crashing, and cover menu bar
+focus, the play/pause button, long presses, leaving the player and background
+audio:
 
 ```sh
 examples/shell/ui-tests.sh   # starts the example dev servers if needed
