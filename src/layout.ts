@@ -19,6 +19,14 @@
 //   <Spacer>    horizontal space.
 //   <Columns>   column-major data rendered as rows, since a stack inside a
 //               row never renders.
+//
+// For content that a row of single lines can't hold, an <organizer> works
+// where <stack> doesn't:
+//
+//   <Stack>     a vertical run of cells and images that can go in a row,
+//               e.g. a title and subtitle beside artwork.
+//   <Box>       a fixed-size area whose children are placed with `position`
+//               (corners, edges, center).
 
 import {
   Children,
@@ -44,6 +52,17 @@ export const CONTENT_WIDTH = SCREEN_WIDTH - 2 * SAFE_X;
 /** Where a row goes. `header` and `footer` sit outside the top and bottom regions. */
 export type Region = "header" | "top" | "center" | "bottom" | "footer";
 export type Align = "left" | "center" | "right";
+/** Where a child goes inside a <Box>. */
+export type Position =
+  | "top-left"
+  | "top"
+  | "top-right"
+  | "left"
+  | "center"
+  | "right"
+  | "bottom-left"
+  | "bottom"
+  | "bottom-right";
 export type FontWeight =
   | "ultralight"
   | "thin"
@@ -68,6 +87,19 @@ interface ScreenContextValue {
 }
 
 const LayoutContext = createContext<ScreenContextValue>({ color: "white" });
+
+// tv-position alone doesn't center a child horizontally in an organizer
+// (it sits at the left of its region), so the horizontal part of a position
+// is also given as tv-align.
+function placement(position: Position | undefined) {
+  if (!position) return {};
+  const tvAlign = position.endsWith("left") ? "left" : position.endsWith("right") ? "right" : "center";
+  return { tvPosition: position, tvAlign };
+}
+
+// Cells in a Stack default to its width and alignment, which is how a stack
+// aligns its text (tv-align inside an organizer isn't reliable).
+const StackContext = createContext<{ width: number; align: Align } | null>(null);
 
 export interface ScreenProps {
   theme?: "light" | "dark";
@@ -117,6 +149,8 @@ export interface CellProps extends TextStyle {
   align?: Align;
   /** Extra space before this cell, on top of the row's gap. */
   offset?: number;
+  /** Where the cell goes inside a <Box>. */
+  position?: Position;
   children: string | number;
 }
 
@@ -130,16 +164,18 @@ export function cellWidth({ width, children, size, weight }: CellProps): number 
 
 /** A text box in a row. */
 export function Cell(props: CellProps) {
-  const { align = "left", offset, children, size, weight, background, height, lines } = props;
+  const { offset, position, children, size, weight, background, height, lines } = props;
   const screen = useContext(LayoutContext);
+  const stack = useContext(StackContext);
   const text = String(children);
   return createElement(
     "text",
     {
       style: {
-        width: cellWidth(props),
+        width: props.width ?? stack?.width ?? cellWidth(props),
         height,
-        textAlign: align,
+        textAlign: props.align ?? stack?.align ?? "left",
+        ...placement(position),
         fontSize: size,
         fontWeight: weight,
         color: props.color ?? screen.color,
@@ -168,16 +204,116 @@ export interface ImageProps {
   height: number;
   /** Extra space before the image, on top of the row's gap. */
   offset?: number;
+  /** Where the image goes inside a <Box>. */
+  position?: Position;
   accessibilityText?: string;
 }
 
 /** An image in a row. divTemplate ignores `<img>`'s width/height attributes; this sizes it with style. */
-export function Image({ src, width, height, offset, accessibilityText }: ImageProps) {
+export function Image({ src, width, height, offset, position, accessibilityText }: ImageProps) {
   return createElement("img", {
     src,
     accessibilityText,
-    style: { width, height, margin: offset ? `0 0 0 ${offset}` : undefined },
+    style: { width, height, ...placement(position), margin: offset ? `0 0 0 ${offset}` : undefined },
   });
+}
+
+// --- Stacks and boxes -----------------------------------------------------------
+
+export interface StackProps {
+  /** Defaults to the widest child. Cells without their own width take this one. */
+  width?: number;
+  /** Text alignment for the stack's cells. Defaults to "left". Images stay left. */
+  align?: Align;
+  /** Vertical space between children. */
+  gap?: number;
+  /** Extra space before the stack in a row. */
+  offset?: number;
+  /** Where the stack goes inside a <Box>. */
+  position?: Position;
+  children?: ReactNode;
+}
+
+/** The width a stack takes up in its row (not counting `offset`). */
+export function stackWidth({ width, children }: StackProps): number {
+  if (width !== undefined) return width;
+  let widest = 0;
+  for (const child of Children.toArray(children)) {
+    if (!isValidElement(child)) continue;
+    widest = Math.max(widest, childWidth(child, false) ?? 0);
+  }
+  return widest;
+}
+
+/**
+ * Cells and images stacked vertically, as one cell of a row: a title and
+ * subtitle beside artwork, or a column of a forecast. Renders an
+ * `<organizer>`, which (unlike `<stack>`) works inside a `<row>`. It's
+ * vertically centered in its row.
+ */
+export function Stack(props: StackProps) {
+  const { align = "left", gap = 0, offset, position, children } = props;
+  const width = stackWidth(props);
+  const items = Children.toArray(children);
+  const spaced: Array<ReactNode> = [];
+  items.forEach((item, index) => {
+    if (index > 0 && gap > 0) {
+      spaced.push(
+        createElement(
+          "text",
+          { key: `tvml-react-gap-${index}`, style: { width: 1, height: gap, fontSize: 1 } },
+          " ",
+        ),
+      );
+    }
+    spaced.push(item);
+  });
+  return createElement(
+    StackContext.Provider,
+    { value: { width, align } },
+    createElement(
+      "organizer",
+      {
+        style: {
+          width,
+          ...placement(position),
+          margin: offset ? `0 0 0 ${offset}` : undefined,
+        },
+      },
+      spaced,
+    ),
+  );
+}
+
+export interface BoxProps {
+  width: number;
+  height: number;
+  /** Extra space before the box in a row. */
+  offset?: number;
+  /** Where the box goes inside another <Box>. */
+  position?: Position;
+  /** Cells, Images and Stacks, each placed with its `position` (default center). */
+  children?: ReactNode;
+}
+
+/**
+ * A fixed-size area whose children are placed by `position`: a caption in
+ * a corner, a badge at the top right. Renders an `<organizer>`. TVML draws no
+ * background color or background image for it; put an Image in it instead.
+ */
+export function Box({ width, height, offset, position, children }: BoxProps) {
+  return createElement(
+    "organizer",
+    {
+      style: {
+        width,
+        height,
+        ...placement(position),
+        margin: offset ? `0 0 0 ${offset}` : undefined,
+      },
+    },
+    children,
+  );
 }
 
 // --- Rows -----------------------------------------------------------------------
@@ -197,13 +333,16 @@ export interface RowProps {
   children?: ReactNode;
 }
 
-// Width of one child of a row, or undefined if it isn't a layout component.
-function childWidth(child: ReactElement): number | undefined {
+// Width of one child of a row or stack, or undefined if it isn't a layout
+// component.
+function childWidth(child: ReactElement, withOffset = true): number | undefined {
   const props = child.props as Record<string, unknown>;
-  const offset = typeof props.offset === "number" ? props.offset : 0;
+  const offset = withOffset && typeof props.offset === "number" ? props.offset : 0;
   if (child.type === Cell) return cellWidth(props as unknown as CellProps) + offset;
   if (child.type === Spacer) return (props as unknown as SpacerProps).width;
   if (child.type === Image) return (props as unknown as ImageProps).width + offset;
+  if (child.type === Stack) return stackWidth(props as StackProps) + offset;
+  if (child.type === Box) return (props as unknown as BoxProps).width + offset;
   return undefined;
 }
 
@@ -249,7 +388,7 @@ export function Row({
     }
   } else if (align !== "center") {
     warnOnce(
-      "a row with left or right alignment can only measure Cell, Spacer and Image children; " +
+      "a row with left or right alignment can only measure Cell, Spacer, Image, Stack and Box children; " +
         "it's centered instead.",
     );
   }

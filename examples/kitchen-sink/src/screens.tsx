@@ -4,6 +4,7 @@ import { MenuBar, MenuBarItem, useNavigation } from "tvml-react";
 import { hero, poster, range, square, wide } from "./art";
 import { EventsScreen, PlayerScreen } from "./interactive";
 import { LayoutScreen } from "./layout";
+import { OrganizerScreen } from "./organizer";
 
 // One minimal but realistic screen per TVML template, plus screens for the
 // main container elements. Each shows its name so the UI tests can tell it
@@ -624,6 +625,7 @@ export const SCREENS: Array<{ name: string; description: string; Screen: Compone
   { name: "Lockups", description: "Overlays, badges, monograms, cards.", Screen: LockupsScreen },
   { name: "mediaContent", description: "Auto-playing previews.", Screen: MediaContentScreen },
   { name: "Layout", description: "tvml-react/layout rows and cells.", Screen: LayoutScreen },
+  { name: "Stacks and boxes", description: "tvml-react/layout organizers.", Screen: OrganizerScreen },
   { name: "Events", description: "Select, play, long press, highlight.", Screen: EventsScreen },
   { name: "Player", description: "Audio and video with metadata.", Screen: PlayerScreen },
 ];

@@ -32,9 +32,9 @@ Known gaps and missing features, roughly in priority order within each section.
 
 ## Features
 
-- [ ] **Layout for `organizer`.** `tvml-react/layout` covers `divTemplate`;
-      vinyl's now-playing screen also positions `organizer`s. Work out what
-      organizer reliably does and add helpers for it.
+- [ ] **vinyl on `tvml-react/layout`.** vinyl's now-playing screen hand-rolls
+      the patterns `Stack`/`Box`/`Row` now cover (artwork beside a title stack,
+      centered lyric lines, the playback footer).
 - [ ] **`Slideshow` wrapper.** A typed `startSlideshow(images, options)`.
       Blank in the simulator; needs a hardware check.
 - [ ] **Keyboard suggestions.** Expose the Keyboard feature's `suggestions` on

@@ -121,6 +121,25 @@ not absolute positioning.
   reordered, a stack inside a `<row>` doesn't render, and its
   `background-color` and `padding` are ignored.
 
+**`<organizer>`** is the reliable container where `<stack>` isn't:
+
+- **In a row** it works as a column: its children stack top to bottom,
+  left-aligned (not centered, as Apple's docs say), and it's vertically
+  centered in the row. Vertical margins between its children work. Without a
+  width it sizes to its content.
+- **With a width and height**, children placed with `tv-position` go to that
+  part of the box, and children at different positions can overlap (a caption
+  over an image). `tv-position` alone leaves a child at the left of its
+  region, though; add the matching `tv-align` (`center` for `top`, `center`
+  and `bottom`).
+- **`tv-align` on its own** is unreliable: `right` is ignored and `center`
+  moves the child to a separate vertical slot.
+- **No fill.** `background-color` and a `<background>` image are ignored in a
+  `divTemplate`; put an image in it instead.
+- **In a lockup** it lays out below the image, not over it.
+
+`tvml-react/layout`'s `<Stack>` and `<Box>` are built on these.
+
 **Styles in `divTemplate`:**
 
 | Works | Doesn't |

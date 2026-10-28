@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createRoot, type TVMLRoot } from "../src/index.js";
-import { Cell, Columns, CONTENT_WIDTH, Image, Row, Screen, Spacer } from "../src/layout.js";
+import { Box, Cell, Columns, CONTENT_WIDTH, Image, Row, Screen, Spacer, Stack } from "../src/layout.js";
 import { FakeDocument } from "./fake-dom.js";
 
 const roots: Array<TVMLRoot> = [];
@@ -125,6 +125,54 @@ describe("layout", () => {
   });
 });
 
+describe("stacks and boxes", () => {
+  it("stacks cells in an organizer as wide as the widest, aligned and spaced", () => {
+    const xml = render(
+      <Stack align="right" gap={8}>
+        <Cell width={300}>title</Cell>
+        <Cell>sub</Cell>
+      </Stack>,
+    );
+    expect(xml).toBe(
+      '<organizer style="width: 300;">' +
+        '<text style="width: 300; text-align: right; color: white; tv-text-max-lines: 1;">title</text>' +
+        '<text style="width: 1; height: 8; font-size: 1;"> </text>' +
+        '<text style="width: 300; text-align: right; color: white; tv-text-max-lines: 1;">sub</text>' +
+        "</organizer>",
+    );
+  });
+
+  it("counts stacks and boxes in a row's width", () => {
+    const xml = render(
+      <Row gap={10}>
+        <Stack width={200}>
+          <Cell>a</Cell>
+        </Stack>
+        <Box width={300} height={100} />
+      </Row>,
+    );
+    expect(xml).toContain(`<text style="width: ${CONTENT_WIDTH - 510 - 10};"> </text></row>`);
+  });
+
+  it("places box children with tv-position and the matching tv-align", () => {
+    const xml = render(
+      <Box width={400} height={200}>
+        <Image src="x" width={400} height={200} position="top-left" />
+        <Cell width={100} position="bottom">
+          caption
+        </Cell>
+        <Stack width={80} position="right">
+          <Cell>a</Cell>
+        </Stack>
+      </Box>,
+    );
+    expect(xml).toContain('<organizer style="width: 400; height: 200;">');
+    expect(xml).toContain('style="width: 400; height: 200; tv-position: top-left; tv-align: left;"');
+    expect(xml).toContain("tv-position: bottom; tv-align: center;");
+    expect(xml).toContain('<organizer style="width: 80; tv-position: right; tv-align: right;">');
+  });
+});
+
 describe("divTemplate checks", () => {
   it("warns about styles divTemplate ignores", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -137,6 +185,11 @@ describe("divTemplate checks", () => {
         </row>
         <img src="x" width={10} />
         <title>untitled</title>
+        <organizer style={{ backgroundColor: "blue" }}>
+          <background>
+            <img src="y" />
+          </background>
+        </organizer>
       </divTemplate>,
     );
     const messages = warn.mock.calls.map(([message]) => String(message));
@@ -146,6 +199,8 @@ describe("divTemplate checks", () => {
       "a <stack> inside a <row>",
       "<img>'s width and height attributes",
       "<title> without a color",
+      "background-color on <organizer>",
+      "an <organizer>'s <background> is ignored",
     ]) {
       expect(messages.some((message) => message.includes(expected))).toBe(true);
     }

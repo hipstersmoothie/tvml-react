@@ -37,8 +37,11 @@ export function checkDivTemplateElement(
     if (style.width === undefined) warn("a <stack> without a style width doesn't render");
     if (parent === "row") warn("a <stack> inside a <row> doesn't render");
   }
-  if ((type === "row" || type === "stack") && style.backgroundColor !== undefined) {
-    warn(`background-color on <${type}> is ignored; put it on the cells`);
+  if ((type === "row" || type === "stack" || type === "organizer") && style.backgroundColor !== undefined) {
+    warn(`background-color on <${type}> is ignored; put it on the text`);
+  }
+  if (type === "background" && parent === "organizer") {
+    warn("an <organizer>'s <background> is ignored; put an <img> in it instead");
   }
   if (parent === "row" && hasVerticalMargin(style.margin)) {
     warn("vertical margins on a <row>'s children are ignored; use the row's margin");

@@ -31,6 +31,7 @@ final class KitchenSinkTests: KitchenSinkTestCase {
     ("Lockups", "monogramLockup", "Overlays, badges, monograms, cards."),
     ("mediaContent", "playbackMode", "Auto-playing previews."),
     ("Layout", "sized to its text", "tvml-react/layout rows and cells."),
+    ("Stacks and boxes", "A Stack is a column", "tvml-react/layout organizers."),
     ("Events", "Last event", "Select, play, long press, highlight."),
     ("Player", "Last ended", "Audio and video with metadata."),
   ]

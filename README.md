@@ -356,8 +356,35 @@ import { Cell, Columns, Image, Row, Screen } from "tvml-react/layout";
   style (`divTemplate` ignores `<img>`'s width and height attributes),
   horizontal space, and column-shaped data (an hourly forecast strip) drawn as
   rows, since a stack in a row never renders.
+- **`<Stack>`** is a column that can sit in a row (a `<stack>` there never
+  renders): a title and subtitle beside artwork, or one day of a forecast. Its
+  cells take its width (default: the widest child) and `align`; `gap` spaces
+  them. It's vertically centered in its row.
+- **`<Box width height>`** places its children by `position` (`top-left`,
+  `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`,
+  `bottom-right`), and they can overlap: an image filling the box with a
+  caption and a badge over it. Cells, Images and Stacks take `position`.
 - `SCREEN_WIDTH`, `SAFE_X`, `SAFE_Y` and `CONTENT_WIDTH` (1740pt) are
   exported for planning widths. A row wider than the safe area warns.
+
+```tsx
+<Row region="top" gap={40}>
+  <Image src={artwork} width={160} height={160} />
+  <Stack gap={10} width={1000}>
+    <Cell size={56} weight="semibold">{title}</Cell>
+    <Cell size={34} color="#999">{artist}</Cell>
+  </Stack>
+  <Stack align="right" width={500}>
+    <Cell size={30}>{elapsed}</Cell>
+  </Stack>
+</Row>
+
+<Box width={640} height={360}>
+  <Image src={still} width={640} height={360} position="top-left" />
+  <Cell size={32} position="bottom-left">{caption}</Cell>
+  <Cell size={22} position="top-right" background="red">LIVE</Cell>
+</Box>
+```
 
 ## Hooks
 
