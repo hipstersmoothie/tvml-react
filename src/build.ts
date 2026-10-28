@@ -11,10 +11,12 @@ import type { BuildOptions } from "esbuild";
 /** Global the bundle is published under; the bootstrap looks for it. */
 export const GLOBAL_NAME = "TVMLReactApp";
 
+/** Path to tvml-react's polyfills module, for bundlers other than esbuild. */
 export const polyfillsPath = fileURLToPath(
   new URL("./polyfills.js", import.meta.url),
 );
 
+/** Path to the bootstrap `Application.js` that loads your bundle. */
 export const bootstrapPath = fileURLToPath(
   new URL("../bootstrap/Application.js", import.meta.url),
 );
@@ -30,6 +32,7 @@ export interface TVMLBuildOptions {
   esbuild?: BuildOptions;
 }
 
+/** esbuild options for a TVJS bundle: an IIFE exposing your entry's exports, with tvml-react's polyfills injected and syntax for TVMLKit's JavaScriptCore. */
 export function tvmlBuildOptions({
   entry,
   outdir,

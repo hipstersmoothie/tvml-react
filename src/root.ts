@@ -56,7 +56,9 @@ export interface RootOptions {
 export interface TVMLRoot {
   /** The document React renders into. Present it with `presentDocument`. */
   readonly document: TVMLDocument;
+  /** Render (or update) the root's content. */
   render(children: ReactNode): void;
+  /** Unmount everything rendered into the root. */
   unmount(): void;
 }
 

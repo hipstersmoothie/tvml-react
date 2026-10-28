@@ -1,17 +1,14 @@
 ---
-title: Stack
+title: "Stack"
 section: reference
-kind: component
-module: tvml-react/layout
 group: Layout
 order: 7
-abstract: A column of cells and images that can sit in a row.
-declaration: "function Stack(props: StackProps): JSX.Element"
+abstract: "A column of cells and images that can sit in a row."
+symbols: [Stack, StackProps, stackWidth]
 ---
 
 import Example from "../../../components/Example.astro";
 import Note from "../../../components/Note.astro";
-import Prop from "../../../components/Prop.astro";
 
 ## Overview
 
@@ -36,11 +33,3 @@ their row.
 TVMLKit draws no background for an organizer, so a stack can't have a fill. Give its cells a
 background, or use [`Columns`](/reference/columns/).
 </Note>
-
-## Properties
-
-<Prop name="width" type="number">The stack's width. Defaults to its widest child; cells without their own width take this one.</Prop>
-<Prop name="align" type={`"left" | "center" | "right"`} default={`"left"`}>Text alignment for the stack's cells. Images stay on the left.</Prop>
-<Prop name="gap" type="number" default="0">Vertical space between children.</Prop>
-<Prop name="offset" type="number">Extra space before the stack in a row.</Prop>
-<Prop name="position" type="Position">Where the stack goes inside a `Box`.</Prop>

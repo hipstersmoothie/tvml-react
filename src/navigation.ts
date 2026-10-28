@@ -46,6 +46,7 @@ interface Entry {
 
 const NavigationContext = createContext<Navigation | null>(null);
 
+/** Push screens, present modals and go back. Screens render from the app's one React tree. */
 export function useNavigation(): Navigation {
   const navigation = useContext(NavigationContext);
   if (!navigation) {

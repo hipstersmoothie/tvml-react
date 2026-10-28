@@ -1,0 +1,22 @@
+---
+title: "TVMLQueryProvider"
+section: reference
+group: Data
+order: 2
+abstract: "TanStack Query's provider, connected to tvOS app state and the network."
+symbols: [TVMLQueryProvider, TVMLQueryProviderProps, installQueryIntegration]
+---
+
+## Overview
+
+```tsx
+import { TVMLQueryProvider } from "tvml-react/query";
+
+launch(<App />, { wrapper: TVMLQueryProvider });
+```
+
+It installs the TVJS integration (queries refetch when the app resumes and when the network
+returns) and provides a client that retries once and keeps data fresh for 30 seconds. Pass your
+own `client` to change that.
+
+With your own `QueryClientProvider`, call `installQueryIntegration()` once before rendering.

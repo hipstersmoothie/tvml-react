@@ -1,17 +1,14 @@
 ---
-title: Box
+title: "Box"
 section: reference
-kind: component
-module: tvml-react/layout
 group: Layout
 order: 8
-abstract: A fixed-size area whose children are placed by position, and can overlap.
-declaration: "function Box(props: BoxProps): JSX.Element"
+abstract: "A fixed-size area whose children are placed by position, and can overlap."
+symbols: [Box, BoxProps, Position]
 ---
 
 import Example from "../../../components/Example.astro";
 import Note from "../../../components/Note.astro";
-import Prop from "../../../components/Prop.astro";
 
 ## Overview
 
@@ -31,11 +28,3 @@ can sit over an image that fills the box.
 `tv-align`; with `tv-position` alone, children at the top, center and bottom sit at the left
 of their region.
 </Note>
-
-## Properties
-
-<Prop name="width" type="number">Width in points.</Prop>
-<Prop name="height" type="number">Height in points.</Prop>
-<Prop name="offset" type="number">Extra space before the box in a row.</Prop>
-<Prop name="position" type="Position">Where the box goes inside another `Box`.</Prop>
-<Prop name="children" type="ReactNode">`Cell`s, `Image`s and `Stack`s, each with a `position` (default center).</Prop>

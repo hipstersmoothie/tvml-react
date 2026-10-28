@@ -5,8 +5,9 @@
   "scripts": {
     "sync": "node scripts/sync-notes.mjs",
     "dev": "node scripts/sync-notes.mjs && astro dev --port 4321",
-    "build": "node scripts/sync-notes.mjs && astro build",
-    "preview": "astro preview"
+    "build": "node scripts/sync-notes.mjs && node scripts/check-reference.mjs && astro build",
+    "preview": "astro preview",
+    "check": "node scripts/check-reference.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.1.1",
@@ -15,6 +16,7 @@
     "tvml-react": "link:.."
   },
   "devDependencies": {
-    "esbuild": "^0.28.0"
+    "esbuild": "^0.28.0",
+    "typescript": "^6.0.3"
   }
 }

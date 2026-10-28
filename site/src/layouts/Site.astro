@@ -3,7 +3,7 @@
 // and table of contents around the page's content.
 import "../styles/site.css";
 
-import { hrefOf, navFor, type Section } from "../lib/nav";
+import { hrefOf, kindOf, navFor, type Section } from "../lib/nav";
 
 interface Props {
   title: string;
@@ -35,7 +35,7 @@ const tocItems = toc.filter((heading) => heading.depth === 2);
       <a class="logo" href="/">tvml-react</a>
       <nav class="segments">
         <a href="/learn/introduction/" class:list={[{ on: active === "learn" }]}>Learn</a>
-        <a href="/reference/stack/" class:list={[{ on: active === "reference" }]}>Reference</a>
+        <a href="/reference/launch/" class:list={[{ on: active === "reference" }]}>Reference</a>
         <a href="/examples/" class:list={[{ on: active === "examples" }]}>Examples</a>
       </nav>
       <div class="header-links">
@@ -52,7 +52,7 @@ const tocItems = toc.filter((heading) => heading.depth === 2);
                 <h4>{group.title}</h4>
                 {group.entries.map((entry) => (
                   <a href={hrefOf(entry)} class:list={[{ current: hrefOf(entry) === currentHref }]}>
-                    <i class:list={["dot", entry.data.kind ?? "article"]} />
+                    <i class:list={["dot", kindOf(entry)]} />
                     {entry.data.title}
                   </a>
                 ))}

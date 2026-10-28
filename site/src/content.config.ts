@@ -10,10 +10,13 @@ const docs = defineCollection({
     section: z.enum(["learn", "reference"]),
     abstract: z.string(),
     order: z.number().default(100),
-    // Reference pages only.
-    kind: z.enum(["component", "hook", "function", "type", "constant"]).optional(),
-    module: z.string().optional(),
     group: z.string().optional(),
+    // Reference pages: the exports the page documents, its own symbol first.
+    // Module, kind and declarations come from the library's source.
+    symbols: z.array(z.string()).default([]),
+    // Overrides, for pages about things that aren't TypeScript exports.
+    kind: z.enum(["component", "hook", "function", "type", "constant", "article"]).optional(),
+    module: z.string().optional(),
     declaration: z.string().optional(),
   }),
 });

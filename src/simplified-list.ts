@@ -11,7 +11,9 @@ export interface SimplifiedListProps extends TVMLAttributes {
 }
 
 export interface SimplifiedListRowProps extends TVMLAttributes {
+  /** The row's main text. */
   title?: string;
+  /** Secondary text under the title. */
   subtitle?: string;
   /** Right-aligned trailing label. */
   accessory?: string;

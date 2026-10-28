@@ -51,6 +51,7 @@ export function QRCode(props: QRCodeProps) {
 }
 
 export interface AvatarProps extends Omit<TVMLAttributes, "children"> {
+  /** Image URL. The initials show while it loads, or if it fails. */
   src?: string;
   /** Initials are shown while the image loads, or when there isn't one. */
   name?: string;
@@ -64,8 +65,11 @@ export function Avatar(props: AvatarProps) {
 }
 
 export interface CardProps extends Omit<TVMLAttributes, "children"> {
+  /** Bold first line. */
   title?: string;
+  /** Second line, dimmed. */
   subtitle?: string;
+  /** Body text. */
   body?: string;
   /** Square image on the left. */
   image?: string;

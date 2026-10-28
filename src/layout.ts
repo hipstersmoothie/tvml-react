@@ -41,7 +41,9 @@ import {
 import { warnOnce as warn } from "./dev.js";
 import { measureText } from "./native.js";
 
+/** The screen's width in points. */
 export const SCREEN_WIDTH = 1920;
+/** The screen's height in points. */
 export const SCREEN_HEIGHT = 1080;
 /** Apple's TV-safe insets: 90pt left and right, 60pt top and bottom. */
 export const SAFE_X = 90;
@@ -102,11 +104,13 @@ function placement(position: Position | undefined) {
 const StackContext = createContext<{ width: number; align: Align } | null>(null);
 
 export interface ScreenProps {
+  /** The template's theme. Also sets the default text color. */
   theme?: "light" | "dark";
   /** Default text color for cells. Defaults to white, or black with the light theme. */
   color?: string;
   /** A full-screen background image. Fixed once the screen is presented. */
   background?: string;
+  /** Rows, and any other divTemplate content. */
   children?: ReactNode;
 }
 
@@ -132,6 +136,7 @@ export function Screen({ theme, color, background, children }: ScreenProps) {
 export interface TextStyle {
   /** Font size in points. */
   size?: number;
+  /** Font weight. */
   weight?: FontWeight;
   /** Defaults to the Screen's text color. */
   color?: string;
@@ -146,11 +151,13 @@ export interface TextStyle {
 export interface CellProps extends TextStyle {
   /** Width in points. Without one, the cell is sized to its text. */
   width?: number;
+  /** Text alignment in the cell. Defaults to left, or the Stack's alignment. */
   align?: Align;
   /** Extra space before this cell, on top of the row's gap. */
   offset?: number;
   /** Where the cell goes inside a <Box>. */
   position?: Position;
+  /** The text. */
   children: string | number;
 }
 
@@ -190,6 +197,7 @@ export function Cell(props: CellProps) {
 }
 
 export interface SpacerProps {
+  /** Width in points. */
   width: number;
 }
 
@@ -199,13 +207,17 @@ export function Spacer({ width }: SpacerProps) {
 }
 
 export interface ImageProps {
+  /** Image URL, or a `resource://` or `symbol://` name. */
   src: string;
+  /** Width in points. */
   width: number;
+  /** Height in points. */
   height: number;
   /** Extra space before the image, on top of the row's gap. */
   offset?: number;
   /** Where the image goes inside a <Box>. */
   position?: Position;
+  /** What VoiceOver reads. */
   accessibilityText?: string;
 }
 
@@ -231,6 +243,7 @@ export interface StackProps {
   offset?: number;
   /** Where the stack goes inside a <Box>. */
   position?: Position;
+  /** Cells and images, top to bottom. */
   children?: ReactNode;
 }
 
@@ -286,7 +299,9 @@ export function Stack(props: StackProps) {
 }
 
 export interface BoxProps {
+  /** Width in points. */
   width: number;
+  /** Height in points. */
   height: number;
   /** Extra space before the box in a row. */
   offset?: number;
@@ -329,7 +344,9 @@ export interface RowProps {
   bleed?: boolean;
   /** Vertical space above and below (margins on cells are ignored). */
   marginTop?: number;
+  /** Space below the row. */
   marginBottom?: number;
+  /** Cells, Spacers, Images, Stacks and Boxes. */
   children?: ReactNode;
 }
 
@@ -412,17 +429,22 @@ export function Row({
 // --- Columns --------------------------------------------------------------------
 
 export interface Column {
+  /** React key for the column. */
   key: string;
+  /** Width in points. */
   width: number;
+  /** Text alignment. Defaults to center. */
   align?: Align;
   /** Extra space before this column. */
   offset?: number;
+  /** Fill for the column's cells. */
   background?: string;
   /** One string per line, top to bottom. */
   lines: Array<string>;
 }
 
 export interface ColumnsProps extends Omit<RowProps, "children"> {
+  /** The columns, left to right. */
   columns: Array<Column>;
   /** The style of each line, shared across columns. */
   lineStyles: Array<TextStyle>;

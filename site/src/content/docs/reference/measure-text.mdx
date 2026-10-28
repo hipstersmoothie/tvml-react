@@ -1,0 +1,18 @@
+---
+title: "measureText"
+section: reference
+group: Platform
+order: 10
+abstract: "The size text will take on screen, measured by tvOS."
+symbols: [measureText, TextMeasurement, hasNativeBridge]
+---
+
+## Overview
+
+```tsx
+const { width } = measureText("12:41", { fontSize: 120, fontWeight: "thin" });
+```
+
+With `TVMLReact.launch`, the measurement comes from the system's text layout and is exact; without
+it, it's an estimate. `hasNativeBridge` tells you which. `tvml-react/layout`'s cells use it to size
+themselves to their text.

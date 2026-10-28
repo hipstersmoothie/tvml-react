@@ -1,0 +1,18 @@
+---
+title: "useDisplay"
+section: reference
+group: Platform
+order: 5
+abstract: "The display: size, scale, refresh rate and HDR support."
+symbols: [useDisplay, DisplayInfo]
+---
+
+## Overview
+
+```tsx
+const { scale, hdr } = useDisplay();
+const stream = hdr ? item.hdrUrl : item.sdrUrl;
+const art = scale > 1 ? item.art2x : item.art;
+```
+
+Needs an app launched with `TVMLReact.launch`.

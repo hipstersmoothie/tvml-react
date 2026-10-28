@@ -1,0 +1,25 @@
+---
+title: "focus"
+section: reference
+group: Essentials
+order: 8
+abstract: "Move focus to an element from code."
+symbols: [focus]
+---
+
+## Overview
+
+TVJS has no focus API; `focus` moves focus by re-setting the element's `autoHighlight`, which
+TVMLKit follows in a presented template.
+
+```tsx
+const button = useRef<TVMLElement>(null);
+// …
+<buttonLockup ref={button}>…</buttonLockup>
+// …
+focus(button.current!);
+```
+
+It doesn't work in a `formTemplate`, where the keyboard keeps focus. To choose where focus
+starts, set `autoHighlight` on the element instead. See
+[Handling the remote](/learn/handling-the-remote/#focus).

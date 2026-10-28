@@ -1,0 +1,28 @@
+---
+title: "DocumentPortal"
+section: reference
+group: Essentials
+order: 3
+abstract: "Render part of your tree into its own TVML document, like a screen of its own."
+symbols: [DocumentPortal, DocumentPortalProps, createPortal]
+---
+
+## Overview
+
+Screens, tabs and player overlays are each a TVML document, and tvml-react renders all of them
+through `DocumentPortal` from your one React tree. Reach for it when you need a document of your
+own, for a TVMLKit API that takes one.
+
+```tsx
+<DocumentPortal onReady={(doc) => getNavigationDocument().presentModal(doc)}>
+  <alertTemplate>
+    <title>Signed out</title>
+  </alertTemplate>
+</DocumentPortal>
+```
+
+The portal's content gets the screen hooks (`useIsScreenVisible`, `useScreenEvent`), event
+handlers and an error boundary, like any screen. `onReady` is called once, after the content
+first renders.
+
+`createPortal` is the lower-level piece: React's portal for TVML containers.

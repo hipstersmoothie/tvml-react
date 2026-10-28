@@ -56,9 +56,13 @@ export function fireEvent(element: TVMLElement, type: string): void {
   element.dispatchEvent(new globals.Event(type, { bubbles: true }));
 }
 
+/** Fire `select` on an element, like a remote press. */
 export const fireSelect = (element: TVMLElement) => fireEvent(element, "select");
+/** Fire `highlight` on an element, as if it got focus. */
 export const fireHighlight = (element: TVMLElement) => fireEvent(element, "highlight");
+/** Fire `holdselect` on an element, like a long press. */
 export const fireHoldSelect = (element: TVMLElement) => fireEvent(element, "holdselect");
+/** Fire `play` on an element, like the play/pause button. */
 export const firePlay = (element: TVMLElement) => fireEvent(element, "play");
 
 /** Set a searchField/textField's text and notify `onTextChange`, like typing. */

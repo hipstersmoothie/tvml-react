@@ -1,0 +1,54 @@
+---
+title: "TVMLReact (Swift)"
+section: reference
+group: Swift
+order: 1
+abstract: "Launch your app from Swift, and register native elements."
+kind: article
+module: "TVMLReactExtras"
+---
+
+## Overview
+
+`TVMLReact` is in the `TVMLReactExtras` Swift package (`https://github.com/hipstersmoothie/tvml-react`).
+
+```swift
+import TVMLReactExtras
+
+func application(_ application: UIApplication, didFinishLaunchingWithOptions …) -> Bool {
+  let window = UIWindow(frame: UIScreen.main.bounds)
+  self.window = window
+  appController = TVMLReact.launch(serverURL: serverURL, window: window, delegate: self)
+  return true
+}
+```
+
+### `launch(serverURL:window:delegate:)`
+
+Installs everything below, starts the native bridge that the platform hooks and `WebSocket` use,
+and creates a `TVApplicationController` that loads `Application.js` from `serverURL`. Returns the
+controller; keep a reference to it.
+
+### `install()`
+
+Installs the TVMLKit workarounds and native elements without launching, if you create the
+`TVApplicationController` yourself. `launch` calls it. Safe to call more than once.
+
+It works around a TVMLKit crash in apps built with the tvOS 26 SDK, where shelves, grids and rows
+crash looking up focus through `UIScreen`.
+
+### `register(_:childElements:makeView:)`
+
+Registers a custom element rendered by a UIKit view:
+
+```swift
+TVMLReact.register("gauge") { element, existingView in
+  let view = existingView as? GaugeView ?? GaugeView()
+  view.value = Double(element.attributes?["value"] ?? "") ?? 0
+  return view
+}
+```
+
+`makeView` runs when TVMLKit lays the element out and again when it changes; reuse `existingView`.
+Tags in `childElements` are registered too, so TVMLKit keeps them as children. Call it before
+`launch`. See [Native views](/learn/native-views/#your-own-views).

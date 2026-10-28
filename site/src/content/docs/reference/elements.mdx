@@ -1,0 +1,25 @@
+---
+title: "TVML elements"
+section: reference
+group: Essentials
+order: 4
+abstract: "Every TVML element as a typed JSX tag, and the attributes they take."
+symbols: [TVMLIntrinsicElements, TVMLAttributes, TemplateAttributes, FocusableAttributes, ImageAttributes, LongTextAttributes, TextFieldAttributes]
+---
+
+## Overview
+
+TVMLKit's built-in elements are lowercase JSX tags, typed by `TVMLIntrinsicElements`. Each tag
+takes the attributes in its entry, so `<div>`, an attribute an element doesn't take, or a
+misspelled tag won't compile.
+
+```tsx
+<lockup onSelect={open} autoHighlight>
+  <img src={poster} width={250} height={375} />
+  <title>{movie.title}</title>
+</lockup>
+```
+
+To use them, set your `tsconfig.json`'s `jsxImportSource` to `tvml-react`. The
+[Templates and elements](/learn/templates-and-elements/) guide covers what each is for, and the
+[Examples](/examples/) show them on tvOS.

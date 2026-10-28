@@ -1,0 +1,18 @@
+---
+title: "useAccessibility"
+section: reference
+group: Platform
+order: 3
+abstract: "The user's accessibility settings, updated as they change."
+symbols: [useAccessibility, AccessibilitySettings]
+---
+
+## Overview
+
+```tsx
+const { reduceMotion, voiceOver } = useAccessibility();
+const rotate = !reduceMotion;
+```
+
+Respect `reduceMotion` in anything that moves on its own and `reduceTransparency` in translucent
+panels. Needs an app launched with `TVMLReact.launch`.

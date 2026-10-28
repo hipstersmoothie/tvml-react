@@ -9,15 +9,22 @@ import { onAppStateChange } from "./platform.js";
 export type ColorScheme = "light" | "dark";
 
 export interface AccessibilitySettings {
+  /** Settings → Accessibility → Motion → Reduce Motion. */
   reduceMotion: boolean;
+  /** VoiceOver is running. */
   voiceOver: boolean;
+  /** Bold Text is on. */
   boldText: boolean;
+  /** Reduce Transparency is on. */
   reduceTransparency: boolean;
+  /** Closed captions and SDH are on. */
   closedCaptioning: boolean;
+  /** Increase Contrast is on. */
   darkerSystemColors: boolean;
 }
 
 export interface NetworkStatus {
+  /** The Apple TV has a network connection. */
   online: boolean;
   /** Cellular or personal hotspot. */
   expensive: boolean;
@@ -28,9 +35,13 @@ export interface NetworkStatus {
 export interface DisplayInfo {
   /** Points. */
   width: number;
+  /** Points. */
   height: number;
+  /** Points to pixels: 1 on HD, 2 on 4K. */
   scale: number;
+  /** The physical display's scale. */
   nativeScale: number;
+  /** The display's refresh rate. */
   maximumFramesPerSecond: number;
   /** Whether this TV and Apple TV can play HDR content. */
   hdr: boolean;
@@ -225,6 +236,7 @@ export function useKeepAwake(enabled = true): void {
 export interface TextMeasurement {
   /** Points. */
   width: number;
+  /** Points. */
   height: number;
 }
 

@@ -1,0 +1,20 @@
+---
+title: "useKeepAwake"
+section: reference
+group: Platform
+order: 6
+abstract: "Keep the screensaver away while a component is on screen."
+symbols: [useKeepAwake]
+---
+
+## Overview
+
+For slideshows, dashboards and live games that people watch without touching the remote:
+
+```tsx
+useKeepAwake();          // while mounted
+useKeepAwake(visible);   // while a condition holds
+```
+
+Several components can ask at once; the screen sleeps again when none do. It's re-applied when the
+app resumes. Needs an app launched with `TVMLReact.launch`.

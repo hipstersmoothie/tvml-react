@@ -72,6 +72,7 @@ export interface MenuBarProps {
   defaultSelected?: string;
   /** Called when the selected tab changes. */
   onChange?: (id: string) => void;
+  /** `<MenuBarItem>`s. */
   children?: ReactNode;
 }
 
@@ -129,12 +130,15 @@ export function useMenuBar(): { selected: string; select(id: string): void } {
 }
 
 export interface MenuBarItemProps {
+  /** Identifies the tab, for `defaultSelected`, `onChange` and `useMenuBar().select`. */
   id: string;
+  /** The tab's label in the bar. */
   title: ReactNode;
   /** The tab's screen: a template element (`stackTemplate`, `searchTemplate`, ...). */
   children?: ReactNode;
 }
 
+/** A tab in a `<MenuBar>`: its title in the bar, and its screen as children. */
 export function MenuBarItem({ id, title, children }: MenuBarItemProps) {
   const menuBar = useContext(MenuBarContext);
   if (!menuBar) {

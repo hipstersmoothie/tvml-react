@@ -1,0 +1,25 @@
+---
+title: "createRoot"
+section: reference
+group: Essentials
+order: 2
+abstract: "A React root that renders into a TVML document you present yourself."
+symbols: [createRoot, RootOptions, TVMLRoot, RenderError]
+---
+
+## Overview
+
+`launch` is `createRoot` plus presenting the document. Use `createRoot` directly when you want to
+present the document yourself, or render into one TVMLKit gave you.
+
+```tsx
+import { createRoot, presentDocument } from "tvml-react";
+
+const root = createRoot();
+root.render(<App />);
+presentDocument(root.document);
+```
+
+Without a document, it creates an empty one. Render a single template element into it; TVMLKit
+shows an empty template as a blank screen, so the first render is synchronous and the document is
+complete before you present it.

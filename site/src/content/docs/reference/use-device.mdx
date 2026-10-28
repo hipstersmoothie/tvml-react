@@ -1,0 +1,20 @@
+---
+title: "useDevice"
+section: reference
+group: Platform
+order: 7
+abstract: "The Apple TV model, tvOS version, your app's version, and the user's region and restrictions."
+symbols: [useDevice, DeviceInfo, usePlatformSettings, PlatformSettings, Restrictions]
+---
+
+## Overview
+
+```tsx
+const { model, systemVersion, appVersion } = useDevice();
+const { language, storefrontCountryCode, restrictions } = usePlatformSettings();
+
+const allowed = movies.filter((movie) => restrictions.allowsExplicit !== false || !movie.explicit);
+```
+
+`restrictions` reflects Settings → General → Restrictions, for hiding content a household has
+restricted.

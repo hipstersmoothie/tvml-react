@@ -75,6 +75,7 @@ export function installQueryIntegration(): void {
 export interface TVMLQueryProviderProps {
   /** Defaults to a QueryClient with `retry: 1` and `staleTime: 30s`. */
   client?: QueryClient;
+  /** The app. */
   children?: ReactNode;
 }
 

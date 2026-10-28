@@ -1,8 +1,11 @@
 ---
+import { Code } from "astro:components";
 import { render } from "astro:content";
 
+import ApiSymbol from "../../components/ApiSymbol.astro";
 import Site from "../../layouts/Site.astro";
-import { entries, hrefOf, slugOf, type DocEntry } from "../../lib/nav";
+import { loadApi } from "../../lib/api-extract.mjs";
+import { entries, hrefOf, kindOf, slugOf, type DocEntry } from "../../lib/nav";
 
 export async function getStaticPaths() {
   return (await entries("reference")).map((entry) => ({ params: { slug: slugOf(entry) }, props: { entry } }));
@@ -10,7 +13,23 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props as { entry: DocEntry };
 const { Content, headings } = await render(entry);
-const kinds = { component: "Component", hook: "Hook", function: "Function", type: "Type", constant: "Constant" };
+const api = loadApi();
+const [first, ...related] = entry.data.symbols;
+const primary = first ? api.get(first) : undefined;
+const module = entry.data.module ?? primary?.module ?? "tvml-react";
+const kind = kindOf(entry);
+const declaration = entry.data.declaration ?? primary?.declaration;
+const kinds: Record<string, string> = {
+  component: "Component",
+  hook: "Hook",
+  function: "Function",
+  type: "Type",
+  constant: "Constant",
+  article: "Article",
+};
+const toc = entry.data.symbols.length
+  ? [...headings, { depth: 2, slug: "api", text: "API" }]
+  : headings;
 ---
 
 <Site
@@ -19,14 +38,39 @@ const kinds = { component: "Component", hook: "Hook", function: "Function", type
   active="reference"
   sidebar="reference"
   currentHref={hrefOf(entry)}
-  toc={headings}
+  toc={toc}
 >
   <p class="eyebrow">
-    {entry.data.module ?? "tvml-react"}
-    {entry.data.kind && <span class="kind"> · {kinds[entry.data.kind]}</span>}
+    {module}
+    <span class="kind"> · {kinds[kind]}</span>
   </p>
   <h1>{entry.data.title}</h1>
   <p class="abstract">{entry.data.abstract}</p>
-  {entry.data.declaration && <pre class="declaration"><code>{entry.data.declaration}</code></pre>}
-  <article class="prose"><Content /></article>
+  {declaration && <div class="declaration-code"><Code code={declaration} lang="tsx" theme="github-dark-default" /></div>}
+  <article class="prose">
+    <Content />
+    {
+      entry.data.symbols.length > 0 && (
+        <>
+          <h2 id="api">API</h2>
+          <ApiSymbol name={first} primary />
+          {related.map((name) => (
+            <ApiSymbol name={name} />
+          ))}
+        </>
+      )
+    }
+  </article>
 </Site>
+
+<style>
+  .declaration-code :global(pre) {
+    margin: 0 0 8px;
+    padding: 16px 20px;
+    background: var(--glass) !important;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    font: 15px/1.5 var(--mono);
+    white-space: pre-wrap;
+  }
+</style>

@@ -1,0 +1,22 @@
+---
+title: "Events"
+section: reference
+group: Essentials
+order: 5
+abstract: "The event props elements take, and the event they're called with."
+symbols: [TVMLEventProp, TVMLEventHandler, TVMLEvent]
+---
+
+## Overview
+
+| Prop | TVML event | When |
+| --- | --- | --- |
+| `onSelect` | `select` | The user selects the element. |
+| `onHighlight` | `highlight` | The element gets focus. |
+| `onPlay` | `play` | Play/pause pressed while it has focus. |
+| `onHoldSelect` | `holdselect` | A long press on the element. |
+| `onChange` | `change` | A value changed, like a `ratingBadge`'s. |
+
+tvml-react listens once per document and calls the nearest element's handler, so a handler on a
+`section` serves every lockup in it. Handlers run as discrete React updates, so state set in them
+renders before the next event. See [Handling the remote](/learn/handling-the-remote/).

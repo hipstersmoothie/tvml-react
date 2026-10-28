@@ -26,9 +26,11 @@ export interface DocumentPortalProps {
    * empty when presented as a blank screen.
    */
   onReady?: (document: TVMLDocument) => void;
+  /** The document's content: a template element. */
   children?: ReactNode;
 }
 
+/** Render `children` into their own TVML document, as one more screen in the app's React tree. `onReady` gets the document once its content has rendered, to present it however you like (e.g. as a player overlay). */
 export function DocumentPortal({ document, onReady, children }: DocumentPortalProps) {
   const [ownDocument] = useState<TVMLDocument | null>(() =>
     document ? null : createDocument(),

@@ -1,0 +1,18 @@
+---
+title: "QRCode"
+section: reference
+group: Native elements
+order: 2
+abstract: "A QR code, for signing in or opening a link on a phone."
+symbols: [QRCode, QRCodeProps]
+---
+
+## Overview
+
+```tsx
+import { QRCode } from "tvml-react/native";
+
+<QRCode value={signInUrl} style={{ width: 300, height: 300 }} />
+```
+
+Size it with `style`. `foreground` and `background` take `#rrggbb` or `#rrggbbaa` colors. Needs an app launched with `TVMLReact.launch`, which registers it.

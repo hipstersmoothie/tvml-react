@@ -1,0 +1,27 @@
+---
+title: "Globals"
+section: reference
+group: Essentials
+order: 10
+abstract: "The web APIs tvml-react adds to TVJS: fetch, WebSocket, URL and more."
+kind: article
+module: "tvml-react/polyfills"
+---
+
+## Overview
+
+TVMLKit's JavaScript engine has timers, `XMLHttpRequest`, `Promise`, `Intl` and `localStorage`, but
+not much of the rest of the web platform. tvml-react's bundle adds:
+
+| Global | Notes |
+| --- | --- |
+| `fetch`, `Headers`, `Response` | Over `XMLHttpRequest`. HTTP errors resolve with `ok: false`, as in browsers. Takes a `timeout` option in milliseconds. No streaming bodies. |
+| `AbortController`, `AbortSignal` | Including `AbortSignal.timeout()` and `AbortSignal.any()`. |
+| `WebSocket` | The standard API, over the Apple TV's native networking. Needs an app launched with `TVMLReact.launch`. Binary messages are `ArrayBuffer`s. |
+| `URL`, `URLSearchParams` | Absolute URLs. |
+| `queueMicrotask`, `performance.now` | |
+
+They're installed by `tvml-react build` and `dev`, before your code runs. With your own bundler,
+import `tvml-react/polyfills` first.
+
+Not provided: `TextEncoder`, `structuredClone`, `requestAnimationFrame` and `EventSource`.

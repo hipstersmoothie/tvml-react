@@ -1,0 +1,19 @@
+---
+title: "useNetworkStatus"
+section: reference
+group: Platform
+order: 4
+abstract: "Whether the Apple TV is online, and on an expensive or constrained connection."
+symbols: [useNetworkStatus, getNetworkStatus, onNetworkStatusChange, NetworkStatus]
+---
+
+## Overview
+
+```tsx
+const { online, constrained } = useNetworkStatus();
+const autoplayPreviews = online && !constrained;
+```
+
+With `TVMLReact.launch`, updates come from the system as the network changes. Without it,
+`online` is polled from TVJS and the other fields are `false`. `getNetworkStatus` and
+`onNetworkStatusChange` are the same outside React.

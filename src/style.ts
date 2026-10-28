@@ -43,6 +43,7 @@ function toKebabCase(key: string): string {
   return key.replace(UPPERCASE, (char) => "-" + char.toLowerCase());
 }
 
+/** Turn a style object into a TVML style string: `{ tvAlign: "center", fontSize: 40 }` becomes `tv-align: center; font-size: 40;`. */
 export function serializeStyle(style: TVMLStyle): string {
   const declarations: Array<string> = [];
 

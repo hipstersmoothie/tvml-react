@@ -11,10 +11,15 @@ interface TVJSApp {
 }
 
 export interface TVMLTraitCollection {
+  /** Points. */
   screenWidth: number;
+  /** Points. */
   screenHeight: number;
+  /** Points to pixels. */
   displayScale: number;
+  /** Text direction for the user's language. */
   layoutDirection: "ltr" | "rtl";
+  /** Always "tv" on Apple TV. */
   userInterfaceIdiom: string;
 }
 
@@ -25,17 +30,24 @@ export interface DeviceInfo {
   productType: string;
   /** tvOS version, e.g. "26.5" */
   systemVersion: string;
+  /** The app's bundle identifier. */
   appIdentifier: string;
+  /** The app's version (`CFBundleShortVersionString`). */
   appVersion: string;
   /** Stable per vendor; resets if all of the vendor's apps are removed. */
   vendorIdentifier: string;
 }
 
 export interface Restrictions {
+  /** Explicit content is allowed. */
   allowsExplicit: boolean;
+  /** Music videos are allowed. */
   allowsMusicVideos: boolean;
+  /** Erotica (books) is allowed. */
   allowsErotica: boolean;
+  /** Highest movie rating allowed, as a rank in the storefront's rating system. */
   maxMovieRank: number;
+  /** Highest TV show rating allowed, as a rank. */
   maxTVShowRank: number;
 }
 

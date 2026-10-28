@@ -1,0 +1,21 @@
+---
+title: "Styles"
+section: reference
+group: Essentials
+order: 6
+abstract: "Style objects, and how they become TVML style strings."
+symbols: [TVMLStyle, TVMLStyleValue, serializeStyle]
+---
+
+## Overview
+
+`style` takes an object with camelCase keys. Numbers are written without units, and `null`,
+`undefined` and `false` drop the property:
+
+```tsx
+<title style={{ fontSize: 48, tvTextMaxLines: 2, color: isLive && "red" }} />
+// style="font-size: 48; tv-text-max-lines: 2;"
+```
+
+`TVMLStyle` lists the well-known properties for completion, and accepts any other key. See
+[Styling](/learn/styling/).

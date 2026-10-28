@@ -1,16 +1,13 @@
 ---
-title: Image
+title: "Image"
 section: reference
-kind: component
-module: tvml-react/layout
 group: Layout
 order: 4
-abstract: An image in a row, a stack or a box, sized with style.
-declaration: "function Image(props: ImageProps): JSX.Element"
+abstract: "An image in a row, a stack or a box, sized with style."
+symbols: [Image, ImageProps]
 ---
 
 import Example from "../../../components/Example.astro";
-import Prop from "../../../components/Prop.astro";
 
 ## Overview
 
@@ -18,12 +15,3 @@ A `divTemplate` ignores `<img>`'s `width` and `height` attributes, so `Image` si
 with style. In a row it counts toward the width the row aligns.
 
 <Example name="image-cell" props={{ artwork: "https://example.com/art.jpg" }} />
-
-## Properties
-
-<Prop name="src" type="string">The image URL, or `resource://` / `symbol://` names.</Prop>
-<Prop name="width" type="number">Width in points.</Prop>
-<Prop name="height" type="number">Height in points.</Prop>
-<Prop name="offset" type="number">Extra space before the image, on top of the row's gap.</Prop>
-<Prop name="position" type="Position">Where the image goes inside a `Box`.</Prop>
-<Prop name="accessibilityText" type="string">What VoiceOver reads.</Prop>

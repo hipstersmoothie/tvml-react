@@ -1,16 +1,13 @@
 ---
-title: Cell
+title: "Cell"
 section: reference
-kind: component
-module: tvml-react/layout
 group: Layout
 order: 3
-abstract: A text box in a row, at a fixed width or sized to its text.
-declaration: "function Cell(props: CellProps): JSX.Element"
+abstract: "A text box in a row, at a fixed width or sized to its text."
+symbols: [Cell, CellProps, TextStyle, FontWeight, cellWidth]
 ---
 
 import Example from "../../../components/Example.astro";
-import Prop from "../../../components/Prop.astro";
 
 ## Overview
 
@@ -22,17 +19,3 @@ A cell is a `<text>` with a width. Without a `width`, it's sized to its text wit
 
 Inside a [`Stack`](/reference/stack/), cells take the stack's width and alignment. Inside a
 [`Box`](/reference/box/), give them a `position`.
-
-## Properties
-
-<Prop name="children" type="string | number">The text. `\n` starts a new line.</Prop>
-<Prop name="width" type="number">Width in points. Defaults to the text's width.</Prop>
-<Prop name="align" type={`"left" | "center" | "right"`} default={`"left"`}>Text alignment within the cell.</Prop>
-<Prop name="size" type="number">Font size in points.</Prop>
-<Prop name="weight" type={`"ultralight" | "thin" | "light" | "regular" | "medium" | "semibold" | "bold" | "heavy"`}>Font weight.</Prop>
-<Prop name="color" type="string">Text color. Defaults to the `Screen`'s.</Prop>
-<Prop name="background" type="string">A fill behind the text. Corners can't be rounded.</Prop>
-<Prop name="height" type="number">A fixed height; the text is vertically centered.</Prop>
-<Prop name="lines" type="number" default="1">Lines before truncating with an ellipsis.</Prop>
-<Prop name="offset" type="number">Extra space before the cell, on top of the row's gap.</Prop>
-<Prop name="position" type="Position">Where the cell goes inside a `Box`.</Prop>

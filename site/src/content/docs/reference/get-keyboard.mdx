@@ -1,0 +1,22 @@
+---
+title: "getKeyboard"
+section: reference
+group: Essentials
+order: 9
+abstract: "The on-screen keyboard behind a text field, for reading and setting its text directly."
+symbols: [getKeyboard, TVMLKeyboard]
+---
+
+## Overview
+
+`searchField` and `textField` already take `value`, `defaultValue` and `onTextChange`, which
+cover most needs. `getKeyboard` is the escape hatch: the TVML Keyboard feature itself.
+
+```tsx
+const field = useRef<TVMLElement>(null);
+// …
+const keyboard = getKeyboard(field.current!);
+if (keyboard) keyboard.text = "";
+```
+
+It returns `undefined` until the field is in a presented document.

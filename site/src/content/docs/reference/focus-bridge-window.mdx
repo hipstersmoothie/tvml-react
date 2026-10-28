@@ -1,0 +1,24 @@
+---
+title: "FocusBridgeWindow (Swift)"
+section: reference
+group: Swift
+order: 2
+abstract: "A window that lets focus move between a header nav and the content below it."
+kind: article
+module: "TVMLReactExtras"
+---
+
+## Overview
+
+TVML's focus engine moves strictly by position, and TVJS can't move focus, so a control with
+nothing directly above it can't reach a `segmentBar` in the template's header. `FocusBridgeWindow`
+adds a focus guide between the header and the body that leads to the last focused view on the
+other side, or the first one there.
+
+```swift
+let window = FocusBridgeWindow(frame: UIScreen.main.bounds, headerHeight: 130)
+self.window = window
+appController = TVMLReact.launch(serverURL: serverURL, window: window, delegate: self)
+```
+
+`headerHeight` is where the header ends, in points; views centered above it count as the header.

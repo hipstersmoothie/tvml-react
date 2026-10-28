@@ -1,0 +1,26 @@
+---
+title: "Documents and elements"
+section: reference
+group: Essentials
+order: 7
+abstract: "The TVJS DOM: documents, elements and the navigation stack, with helpers for working with them directly."
+symbols: [TVMLDocument, TVMLElement, TVMLNodeList, TVMLNavigationDocument, createDocument, parseDocument, presentDocument, presentMessage, getNavigationDocument, escapeXml]
+---
+
+## Overview
+
+Under React, a TVMLKit app is DOM documents and elements. You rarely need them, but they're
+there: refs give you a `TVMLElement`, and `useScreenDocument` gives you the screen's
+`TVMLDocument`.
+
+`parseDocument` parses any XML string, which makes it a handy RSS or Atom parser too:
+
+```ts
+const feed = parseDocument(await (await fetch(rssUrl)).text());
+const items = feed.getElementsByTagName("item");
+```
+
+`presentMessage` shows a plain alert without React, for errors before your app has rendered.
+
+The TVJS DOM is a subset of the browser's: no `querySelector`, `classList` or `innerHTML`, and
+`getElementsByTagName` returns a live list with `.length` and `.item(i)`.

@@ -8,6 +8,7 @@ import { runDiscrete } from "./sync.js";
 export interface TVMLKeyboard {
   /** `null` until something is typed. */
   text: string | null;
+  /** Called when the text changes. */
   onTextChange?: () => void;
 }
 

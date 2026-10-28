@@ -31,12 +31,17 @@ export type PlaybackState =
   | "end";
 
 export interface MediaItemInput {
+  /** The media's URL: HLS, MP4, MP3 and other formats AVFoundation plays. */
   url: string;
   /** Defaults to "video". */
   type?: "video" | "audio";
+  /** Shown in the player and Now Playing. */
   title?: string;
+  /** Shown under the title. */
   subtitle?: string;
+  /** Shown in the player's info panel. */
   description?: string;
+  /** Artwork for the player's info panel and Now Playing. */
   artworkImageURL?: string;
   /** Seconds to start from, without asking. */
   startTime?: number;
@@ -74,10 +79,15 @@ export interface NativePlayer {
   playlist?: TVJSPlaylist;
   currentMediaItem?: TVJSMediaItem;
   currentMediaItemDuration?: number;
+  /** Show the fullscreen player. */
   present(): void;
+  /** Start or resume playback. */
   play(): void;
+  /** Pause playback. */
   pause(): void;
+  /** Stop and dismiss the player. */
   stop(): void;
+  /** Seek to a position in seconds. */
   seekToTime(seconds: number): void;
   changeToMediaAtIndex(index: number): void;
   addEventListener(
@@ -118,6 +128,7 @@ export type EndReason =
   | "unknown";
 
 export interface PlayerState {
+  /** Playback state, as TVJS reports it. */
   state: PlaybackState;
   /** Seconds into the current item, updated about once a second. */
   currentTime: number;
@@ -135,10 +146,13 @@ export interface PlayerState {
 
 /** Passed to `itemEnd` listeners, e.g. to save where the user stopped. */
 export interface ItemEndEvent {
+  /** The item that ended. */
   item: MediaItemInput;
   /** The last position reached, in seconds. */
   time: number;
+  /** The item's duration in seconds, or NaN for live streams. */
   duration: number;
+  /** Why it ended. */
   reason: EndReason;
 }
 
@@ -147,9 +161,13 @@ type OverlayKind = "overlayDocument" | "interactiveOverlayDocument";
 export interface PlayerActions {
   /** Present the fullscreen player and start playing `items`. */
   play(items: MediaItemInput | Array<MediaItemInput>, options?: { startIndex?: number }): void;
+  /** Pause playback. */
   pause(): void;
+  /** Resume playback. */
   resume(): void;
+  /** Stop, dismiss the player, and report `itemEnd` with reason `"stopped"`. */
   stop(): void;
+  /** Seek to a position in seconds. */
   seek(seconds: number): void;
   /**
    * Show the fullscreen player again. Menu during audio playback returns to
@@ -402,6 +420,7 @@ const PlayerContext = createContext<PlayerStore | null>(null);
 export interface PlayerProviderProps {
   /** Called whenever an item stops: played to the end, stopped, errored, or the user left. */
   onItemEnd?: (event: ItemEndEvent) => void;
+  /** The app. */
   children?: ReactNode;
 }
 

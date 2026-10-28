@@ -1,0 +1,21 @@
+---
+title: "useColorScheme"
+section: reference
+group: Platform
+order: 2
+abstract: "The Apple TV's light or dark appearance, and its trait collection."
+symbols: [useColorScheme, ColorScheme, useTraitCollection, TVMLTraitCollection]
+---
+
+## Overview
+
+```tsx
+const scheme = useColorScheme(); // "light" | "dark"
+```
+
+Templates follow the appearance on their own; use this for colors you set yourself. It updates
+when the user changes Settings → General → Appearance, and needs an app launched with
+`TVMLReact.launch`.
+
+`useTraitCollection` gives TVJS's trait collection: screen size in points, scale and layout
+direction.

@@ -1,0 +1,27 @@
+---
+title: "PlayerOverlay"
+section: reference
+group: Media
+order: 3
+abstract: "React drawn over the fullscreen player: artwork for audio, a live chat, a next-episode card."
+symbols: [PlayerOverlay, PlayerOverlayProps]
+---
+
+## Overview
+
+```tsx
+<PlayerOverlay>
+  <divTemplate>
+    <Backdrop src={episode.artwork} dim={0.4} />
+  </divTemplate>
+</PlayerOverlay>
+```
+
+The overlay's child is a template, usually a free-form `divTemplate`, rendered into its own
+document from your app's tree, so it can use your state and hooks. Mount it before or during
+playback.
+
+A plain overlay is drawn over the video and doesn't take input. With `interactive`, it takes focus
+when the user swipes down, for controls of your own.
+
+Without a `PlayerProvider`, pass the player from `usePlayer` as `player`.

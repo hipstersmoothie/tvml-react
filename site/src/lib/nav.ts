@@ -1,5 +1,7 @@
 import { getCollection, type CollectionEntry } from "astro:content";
 
+import { loadApi } from "./api-extract.mjs";
+
 export type Section = "learn" | "reference";
 export type DocEntry = CollectionEntry<"docs">;
 
@@ -11,12 +13,29 @@ export interface NavGroup {
 // Sidebar groups, in order.
 const GROUPS: Record<Section, Array<string>> = {
   learn: ["Start here", "Essentials", "Building features", "Shipping", "Appendix"],
-  reference: ["Essentials", "Navigation", "Layout", "Media", "Data"],
+  reference: [
+    "Essentials",
+    "Navigation",
+    "Layout",
+    "Media",
+    "Data",
+    "Platform",
+    "Native elements",
+    "Testing",
+    "Tooling",
+    "Swift",
+  ],
 };
 
 /** The page's URL path segment within its section, e.g. "getting-started". */
 export function slugOf(entry: DocEntry): string {
   return entry.id.replace(/^(learn|reference)\//, "");
+}
+
+/** The page's kind: set in frontmatter, or its first symbol's. */
+export function kindOf(entry: DocEntry): string {
+  const symbol = entry.data.symbols[0];
+  return entry.data.kind ?? (symbol ? loadApi().get(symbol)?.kind : undefined) ?? "article";
 }
 
 export function hrefOf(entry: DocEntry): string {

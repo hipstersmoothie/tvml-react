@@ -1,0 +1,24 @@
+---
+title: "tvml-react/testing"
+section: reference
+group: Testing
+order: 1
+abstract: "Drive a running app from JavaScript: fire remote events, find elements, type."
+symbols: [fireEvent, fireSelect, fireHighlight, fireHoldSelect, firePlay, typeText, queryAll, queryByText]
+module: "tvml-react/testing"
+---
+
+## Overview
+
+TVJS accepts synthetic events, so a dispatched `select` reaches the same handlers a remote press
+does. Call these from Safari's Web Inspector, or a debug-only code path:
+
+```ts
+import { fireSelect, queryAll, queryByText, typeText } from "tvml-react/testing";
+
+fireSelect(queryByText("Settings")!);
+typeText(queryAll("searchField")[0], "miles");
+```
+
+Queries search the visible screens. The `fire` helpers throw for disabled elements, which a real
+remote can't reach. For tests with the real remote, see [Testing](/learn/testing/).

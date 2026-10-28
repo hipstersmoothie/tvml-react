@@ -1,0 +1,24 @@
+---
+title: "Screen hooks"
+section: reference
+group: Navigation
+order: 3
+abstract: "Know which screen a component is on, whether it's visible, and when it appears and leaves."
+symbols: [useIsScreenVisible, useScreenEvent, useScreenDocument, ScreenEvent]
+---
+
+## Overview
+
+Every component belongs to a screen: the root, a pushed screen, a modal, a tab or a player
+overlay. These hooks tell you about yours.
+
+```tsx
+const visible = useIsScreenVisible();
+useKeepAwake(visible);
+
+useScreenEvent("appear", () => analytics.screen("live"));
+```
+
+A screen is hidden when another is pushed over it, its tab isn't selected, or the player covers
+it. Suspending the app doesn't count; use [`useAppState`](/reference/use-app-state/) for that.
+See [Screens and navigation](/learn/screens-and-navigation/#screen-lifecycle).

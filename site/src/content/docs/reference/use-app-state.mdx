@@ -1,0 +1,20 @@
+---
+title: "useAppState"
+section: reference
+group: Platform
+order: 1
+abstract: "Whether the app is in the foreground, and events for leaving and coming back."
+symbols: [useAppState, useAppEvent, getAppState, onAppStateChange, reloadApp, AppState]
+---
+
+## Overview
+
+```tsx
+const state = useAppState(); // "active" | "background"
+
+useAppEvent("resume", () => refetchScores());
+useAppEvent("suspend", () => saveProgress());
+```
+
+`getAppState` and `onAppStateChange` are the same outside React. `reloadApp` restarts your
+JavaScript app by re-running the bootstrap, now or the next time the app resumes.

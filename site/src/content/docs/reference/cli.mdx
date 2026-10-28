@@ -1,0 +1,32 @@
+---
+title: "tvml-react CLI"
+section: reference
+group: Tooling
+order: 1
+abstract: "Bundle your app for TVJS, and serve it with live reload while you develop."
+kind: article
+module: "tvml-react (CLI)"
+---
+
+## Overview
+
+```sh
+tvml-react dev   <entry> [--outdir dist] [--port 9001] [--host 0.0.0.0]
+tvml-react build <entry> [--outdir dist] [--dev]
+```
+
+`<entry>` is your app's entry file, which must export `start(options)`.
+
+### `dev`
+
+Bundles your app, serves the output folder on your network, and rebuilds when files change. The
+app on the Apple TV reloads after every successful build, and its `console` output is printed in
+the terminal. It prints the URLs to set as `TVMLServerURL`.
+
+### `build`
+
+Writes a minified `app.js` and the bootstrap `Application.js` to the output folder, ready to
+host. `--dev` keeps development warnings and skips minifying.
+
+Both inject tvml-react's [globals](/reference/globals/) and target the JavaScript engine in
+TVMLKit.

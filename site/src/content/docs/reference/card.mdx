@@ -1,0 +1,25 @@
+---
+title: "Card"
+section: reference
+group: Native elements
+order: 4
+abstract: "A blurred, rounded panel with an image, title and text."
+symbols: [Card, CardProps]
+---
+
+## Overview
+
+```tsx
+import { Card } from "tvml-react/native";
+
+<Card
+  title="Up next"
+  subtitle="Episode 4"
+  body={episode.summary}
+  image={episode.thumbnail}
+  style={{ width: 640, height: 200 }}
+/>
+```
+
+Native elements can't contain TVML, so the content comes from props. It renders as
+`<materialCard>`, since `card` is a built-in TVML element. Needs an app launched with `TVMLReact.launch`, which registers it.

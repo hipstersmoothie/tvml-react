@@ -1,0 +1,26 @@
+---
+title: "PlayerProvider"
+section: reference
+group: Media
+order: 2
+abstract: "One player shared by every screen, with hooks to control it and follow it."
+symbols: [PlayerProvider, PlayerProviderProps, usePlayerState, usePlayerControls, usePlayerEvent, ItemEndEvent]
+---
+
+## Overview
+
+Put `PlayerProvider` in `launch`'s `wrapper`, and every screen and tab shares one player: any screen
+can start playback, and any can show what's playing.
+
+```tsx
+launch(<App />, { wrapper: PlayerProvider });
+
+// anywhere:
+const { play } = usePlayerControls();
+const nowPlaying = usePlayerState((s) => s.currentItem?.title);
+usePlayerEvent("itemEnd", ({ item, time }) => saveProgress(item, time));
+```
+
+`usePlayerControls` returns the actions without subscribing to state, so it never re-renders.
+`usePlayerState` re-renders only when its selector's result changes; select primitives or stable
+values to avoid re-rendering every second during playback.

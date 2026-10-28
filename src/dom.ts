@@ -4,7 +4,9 @@
 
 /** TVJS returns live lists rather than arrays. */
 export interface TVMLNodeList<T = TVMLElement> {
+  /** Number of nodes. */
   readonly length: number;
+  /** The node at `index`. */
   item(index: number): T | null;
 }
 
@@ -37,7 +39,9 @@ export interface TVMLElement {
 }
 
 export interface TVMLEvent {
+  /** The event name: `select`, `highlight`, `play`, `holdselect`, `change`, … */
   readonly type: string;
+  /** The element the user acted on. */
   readonly target: TVMLElement | null;
   /** Set on some events, e.g. a ratingBadge's `change`. */
   readonly value?: unknown;
@@ -54,6 +58,7 @@ export interface TVMLDocument {
 }
 
 export interface TVMLNavigationDocument {
+  /** The navigation stack, bottom first. */
   readonly documents: Array<TVMLDocument>;
   pushDocument(doc: TVMLDocument): void;
   replaceDocument(doc: TVMLDocument, existing: TVMLDocument): void;
@@ -123,6 +128,7 @@ export function presentDocument(doc: TVMLDocument): void {
   }
 }
 
+/** Escape `&`, `<`, `>` and `"` for use in TVML markup strings. */
 export function escapeXml(value: string): string {
   return value
     .replace(/&/g, "&amp;")

@@ -1,17 +1,14 @@
 ---
-title: Row
+title: "Row"
 section: reference
-kind: component
-module: tvml-react/layout
 group: Layout
 order: 2
-abstract: A horizontal run of cells, aligned left, center or right inside the TV-safe area.
-declaration: "function Row(props: RowProps): JSX.Element"
+abstract: "A horizontal run of cells, aligned left, center or right inside the TV-safe area."
+symbols: [Row, RowProps, Region, Align]
 ---
 
 import Example from "../../../components/Example.astro";
 import Note from "../../../components/Note.astro";
-import Prop from "../../../components/Prop.astro";
 
 ## Overview
 
@@ -34,15 +31,3 @@ warns too; pass `bleed` to use the whole screen.
 Vertical margins on a row's children are ignored. Space rows with `marginTop` and
 `marginBottom`.
 </Note>
-
-## Properties
-
-<Prop name="region" type={`"header" | "top" | "center" | "bottom" | "footer"`} default={`"center"`}>
-Where the row goes. Rows in the same region stack top to bottom. `header` and `footer` sit
-outside the top and bottom regions.
-</Prop>
-<Prop name="align" type={`"left" | "center" | "right"`} default={`"left"`}>Where the cells sit within the safe area.</Prop>
-<Prop name="gap" type="number" default="0">Horizontal space between children.</Prop>
-<Prop name="bleed" type="boolean" default="false">Lay out across the whole screen instead of the safe area.</Prop>
-<Prop name="marginTop" type="number">Space above the row.</Prop>
-<Prop name="marginBottom" type="number">Space below the row.</Prop>

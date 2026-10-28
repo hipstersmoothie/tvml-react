@@ -1,0 +1,126 @@
+---
+// One exported symbol, from the library's source: heading, doc comment,
+// declaration and members.
+import { Code } from "astro:components";
+
+import { loadApi } from "../lib/api-extract.mjs";
+import { docToHtml } from "../lib/doc-format";
+
+interface Props {
+  name: string;
+  /** The page's own symbol: its heading, doc and declaration are in the page header. */
+  primary?: boolean;
+}
+
+const { name, primary = false } = Astro.props;
+const symbol = loadApi().get(name);
+if (!symbol) throw new Error(`No export named ${name}`);
+const kinds: Record<string, string> = {
+  component: "Component",
+  hook: "Hook",
+  function: "Function",
+  type: "Type",
+  constant: "Constant",
+};
+---
+
+<section class="api-symbol" id={primary ? undefined : name}>
+  {
+    !primary && (
+      <>
+        <h3>
+          <i class:list={["dot", symbol.kind]} />
+          <code>{name}</code>
+          <span class="kind">{kinds[symbol.kind]}</span>
+        </h3>
+        {symbol.doc && <div class="doc" set:html={docToHtml(symbol.doc)} />}
+        <Code code={symbol.declaration} lang="tsx" theme="github-dark-default" />
+      </>
+    )
+  }
+  {
+    symbol.members.length > 0 && (
+      <div class="members">
+        {symbol.members.map((member) => (
+          <div class="member" id={`${name}.${member.name}`}>
+            <div class="signature">
+              <code class="name">
+                {member.name}
+                {member.optional ? "?" : ""}
+              </code>
+              <code class="type">{member.type}</code>
+            </div>
+            {member.doc && <div class="doc" set:html={docToHtml(member.doc)} />}
+          </div>
+        ))}
+      </div>
+    )
+  }
+</section>
+
+<style>
+  .api-symbol {
+    margin: 28px 0 40px;
+  }
+  h3 {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 0 0 8px !important;
+  }
+  h3 code {
+    font: 600 20px var(--mono) !important;
+    background: none !important;
+    padding: 0 !important;
+  }
+  .kind {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tertiary);
+  }
+  .doc :global(p) {
+    margin: 0 0 10px;
+  }
+  .doc :global(pre) {
+    margin: 8px 0 !important;
+  }
+  .members {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .member {
+    padding: 12px 16px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  .signature {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    align-items: baseline;
+  }
+  .member .name {
+    font: 600 15px var(--mono);
+    color: var(--text);
+    background: none !important;
+    padding: 0 !important;
+  }
+  .member .type {
+    font: 13px var(--mono);
+    color: var(--accent);
+    background: none !important;
+    padding: 0 !important;
+    word-break: break-word;
+  }
+  .member .doc {
+    margin-top: 4px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--secondary);
+  }
+  .member .doc :global(p:last-child) {
+    margin-bottom: 0;
+  }
+</style>

@@ -1,0 +1,19 @@
+---
+title: "Avatar"
+section: reference
+group: Native elements
+order: 3
+abstract: "A round image of a person, with their initials as the fallback."
+symbols: [Avatar, AvatarProps]
+---
+
+## Overview
+
+```tsx
+import { Avatar } from "tvml-react/native";
+
+<Avatar src={user.photo} name={user.name} style={{ width: 120, height: 120 }} />
+```
+
+TVML's own images can't have rounded corners; `Avatar` draws a circle, or rounds by `radius`. The
+initials show while the image loads, or if there isn't one. Needs an app launched with `TVMLReact.launch`, which registers it.

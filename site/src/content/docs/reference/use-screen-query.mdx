@@ -1,15 +1,11 @@
 ---
-title: useScreenQuery
+title: "useScreenQuery"
 section: reference
-kind: hook
-module: tvml-react/query
 group: Data
 order: 1
-abstract: TanStack Query's useQuery, paused while its screen is hidden.
-declaration: "function useScreenQuery(options: UseQueryOptions & ScreenQueryOptions): UseQueryResult"
+abstract: "TanStack Query's useQuery, paused while its screen is hidden."
+symbols: [useScreenQuery, useScreenInfiniteQuery, useScreenQueries, ScreenQueryOptions]
 ---
-
-import Prop from "../../../components/Prop.astro";
 
 ## Overview
 
@@ -31,11 +27,5 @@ Wrap the app in `TVMLQueryProvider` (in `launch`'s `wrapper`), which connects Ta
 app resume and network changes. `useScreenInfiniteQuery` and `useScreenQueries` work the same
 way.
 
-## Options
-
-Everything `useQuery` takes, plus:
-
-<Prop name="refreshWhileHidden" type="boolean" default="false">
-Keep refreshing while the screen is hidden, for data drawn in a player overlay, whose screen is
-covered while the video plays.
-</Prop>
+It takes everything `useQuery` does, plus `refreshWhileHidden` to keep refreshing while hidden, for
+data drawn in a player overlay, whose screen is covered while the video plays.

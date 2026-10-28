@@ -1,0 +1,18 @@
+---
+title: "useLocalStorage"
+section: reference
+group: Platform
+order: 8
+abstract: "State saved on the Apple TV, shared by every component that uses the same key."
+symbols: [useLocalStorage]
+---
+
+## Overview
+
+```tsx
+const [favorites, setFavorites] = useLocalStorage<Array<string>>("favorites", []);
+setFavorites((current) => [...current, id]);
+```
+
+Values are stored as JSON in TVJS's `localStorage` and survive relaunches. Every component using
+the same key updates together. Keep it to settings and small lists.

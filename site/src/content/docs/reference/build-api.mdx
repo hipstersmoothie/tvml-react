@@ -1,0 +1,25 @@
+---
+title: "Build API"
+section: reference
+group: Tooling
+order: 2
+abstract: "tvml-react's build and dev server as functions, and esbuild options for your own build."
+symbols: [build, serve, tvmlBuildOptions, copyBootstrap, TVMLBuildOptions, DevServerOptions, bootstrapPath, polyfillsPath, GLOBAL_NAME, DEV_ENDPOINT]
+module: "tvml-react/build"
+---
+
+## Overview
+
+The CLI is a thin wrapper around these. Use them from your own scripts, or put
+`tvmlBuildOptions` into an existing esbuild setup:
+
+```ts
+import * as esbuild from "esbuild";
+import { copyBootstrap, tvmlBuildOptions } from "tvml-react/build";
+
+await esbuild.build(tvmlBuildOptions({ entry: "src/main.tsx", outdir: "public/tv" }));
+await copyBootstrap("public/tv");
+```
+
+The bundle is an IIFE that publishes your entry's exports as `GLOBAL_NAME`, which the bootstrap
+calls `start` on.
