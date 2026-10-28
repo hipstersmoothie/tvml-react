@@ -1,0 +1,25 @@
+{
+  "name": "create-tvml-react",
+  "version": "0.1.0",
+  "description": "Create an Apple TV app with tvml-react",
+  "keywords": ["tvml", "tvos", "apple-tv", "react", "create"],
+  "license": "MIT",
+  "author": "Andrew Lisowski <lisowski54@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hipstersmoothie/tvml-react.git",
+    "directory": "create"
+  },
+  "homepage": "https://github.com/hipstersmoothie/tvml-react#readme",
+  "type": "module",
+  "bin": {
+    "create-tvml-react": "./index.js"
+  },
+  "files": ["index.js", "template"],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "xcode": "cp xcode/project.yml template/tvos/ && cd template/tvos && rm -rf TVMLApp.xcodeproj && xcodegen && rm project.yml"
+  }
+}

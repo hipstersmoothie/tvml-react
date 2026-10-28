@@ -1,0 +1,38 @@
+# Source for create-tvml-react's tvOS project template. Regenerate with
+# `pnpm --filter create-tvml-react xcode`, which runs XcodeGen into
+# template/tvos. "TVMLApp" is replaced with the app's name when scaffolding.
+name: TVMLApp
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    tvOS: "17.0"
+packages:
+  TVMLReactExtras:
+    url: https://github.com/hipstersmoothie/tvml-react
+    from: 0.1.0
+targets:
+  TVMLApp:
+    type: application
+    platform: tvOS
+    sources:
+      - TVMLApp
+    scheme: {}
+    dependencies:
+      - package: TVMLReactExtras
+      - sdk: TVMLKit.framework
+    info:
+      path: TVMLApp/Info.plist
+      properties:
+        CFBundleDisplayName: TVMLApp
+        UILaunchStoryboardName: LaunchScreen
+        UIUserInterfaceStyle: Automatic
+        UIRequiredDeviceCapabilities: [arm64]
+        # Where Application.js and app.js are served from.
+        TVMLServerURL: http://localhost:9001/
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.tvmlapp
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "3"

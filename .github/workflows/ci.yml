@@ -24,6 +24,13 @@ jobs:
           for example in hello kitchen-sink; do
             (cd examples/$example && pnpm typecheck && pnpm build)
           done
+      - name: Starter (create-tvml-react)
+        run: |
+          node create/index.js "$RUNNER_TEMP/smoke-app"
+          cd "$RUNNER_TEMP/smoke-app"
+          sed -i "s#\"tvml-react\": \"[^\"]*\"#\"tvml-react\": \"link:$GITHUB_WORKSPACE\"#" package.json
+          pnpm install --ignore-workspace
+          pnpm typecheck && pnpm build
 
   swift:
     runs-on: macos-latest

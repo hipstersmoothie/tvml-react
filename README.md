@@ -61,11 +61,21 @@ The [example app](examples/hello) running in the tvOS 26 simulator.
 
 ## Getting started
 
+Start a new app, with the React app and a tvOS Xcode project ready to run:
+
 ```sh
-# Not on npm yet: install a prerelease tarball from GitHub releases
-npm install https://github.com/hipstersmoothie/tvml-react/releases/download/v0.1.0-pre.2/tvml-react-0.1.0-pre.2.tgz react
+npm create tvml-react my-app
+```
+
+Or add tvml-react to an existing project and follow the steps below:
+
+```sh
+npm install tvml-react react
 npm install -D esbuild typescript @types/react
 ```
+
+tvml-react is 0.x, so minor versions can change APIs; the
+[changelog](CHANGELOG.md) lists what changed in each release.
 
 ### 1. Point JSX at tvml-react
 

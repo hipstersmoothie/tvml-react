@@ -1,6 +1,6 @@
 {
   "name": "tvml-react",
-  "version": "0.1.0-pre.3",
+  "version": "0.1.0",
   "description": "A React renderer for Apple TV's TVML / TVMLKit",
   "keywords": [
     "react",
@@ -76,6 +76,7 @@
   "files": [
     "bin",
     "dist",
+    "src",
     "bootstrap"
   ],
   "scripts": {
@@ -83,7 +84,9 @@
     "dev": "tsc -p tsconfig.build.json --watch",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "prepare": "tsc -p tsconfig.build.json"
+    "prepare": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "react-reconciler": "^0.33.0"
