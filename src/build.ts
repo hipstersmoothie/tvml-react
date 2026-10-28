@@ -2,7 +2,7 @@
 // JavaScriptCore context, so the app has to be a single classic script that
 // publishes a `start()` function for the bootstrap `Application.js` to call.
 
-import { copyFile, mkdir } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -76,10 +76,24 @@ async function loadEsbuild(): Promise<typeof import("esbuild")> {
   }
 }
 
-/** Copy the bootstrap `Application.js` into the output directory. */
-export async function copyBootstrap(outdir: string): Promise<void> {
+/**
+ * Copy the bootstrap `Application.js` into the output directory. With
+ * `devServer`, it checks for `tvml-react dev` at launch (live reload, console
+ * relay); otherwise it makes no extra request.
+ */
+export async function copyBootstrap(
+  outdir: string,
+  { devServer = false }: { devServer?: boolean } = {},
+): Promise<void> {
   await mkdir(outdir, { recursive: true });
-  await copyFile(bootstrapPath, path.join(outdir, "Application.js"));
+  let source = await readFile(bootstrapPath, "utf8");
+  if (devServer) {
+    source = source.replace(
+      "var CHECK_FOR_DEV_SERVER = false;",
+      "var CHECK_FOR_DEV_SERVER = true;",
+    );
+  }
+  await writeFile(path.join(outdir, "Application.js"), source);
 }
 
 /** Build `app.js` and copy `Application.js` next to it. */
@@ -118,9 +132,8 @@ const CONTENT_TYPES: Record<string, string> = {
 export async function serve(options: DevServerOptions) {
   const esbuild = await loadEsbuild();
   const http = await import("node:http");
-  const { readFile } = await import("node:fs/promises");
 
-  await copyBootstrap(options.outdir);
+  await copyBootstrap(options.outdir, { devServer: true });
 
   let build = 0;
   const base = tvmlBuildOptions({ ...options, dev: true });

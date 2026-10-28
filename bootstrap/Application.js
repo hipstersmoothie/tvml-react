@@ -52,6 +52,9 @@ function loadScript(url, callback) {
   xhr.send();
 }
 
+// `tvml-react dev` writes `true` here; other builds leave it off, so production
+// launches don't make the extra request.
+var CHECK_FOR_DEV_SERVER = false;
 var DEV_ENDPOINT = "__tvml-react/dev";
 var LOG_ENDPOINT = "__tvml-react/log";
 
@@ -136,6 +139,10 @@ function watchForRebuilds(baseUrl, build) {
 // Calls back with the dev server's current build, or null when not under
 // `tvml-react dev`.
 function detectDevServer(baseUrl, callback) {
+  if (!CHECK_FOR_DEV_SERVER) {
+    callback(null);
+    return;
+  }
   request("GET", baseUrl + DEV_ENDPOINT, null, function (status, text) {
     if (status !== 200) {
       callback(null);
