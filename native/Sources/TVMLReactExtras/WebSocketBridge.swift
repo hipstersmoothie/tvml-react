@@ -20,7 +20,9 @@ final class WebSocketBridge: NSObject, URLSessionWebSocketDelegate, @unchecked S
   private let lock = NSLock()
   private var sockets: [Int: URLSessionWebSocketTask] = [:]
   private var idsByTask: [Int: Int] = [:]
-  private var closed = Set<Int>()
+  // Bumped for every new JS context, so events queued for an old context are
+  // dropped instead of reaching new sockets that reuse the same ids.
+  private var generation = 0
   private weak var _controller: TVApplicationController?
   private lazy var session = URLSession(
     configuration: .default, delegate: self, delegateQueue: nil)
@@ -31,7 +33,23 @@ final class WebSocketBridge: NSObject, URLSessionWebSocketDelegate, @unchecked S
   }
 
   /// Adds the webSocket* functions to the bridge object. JavaScript thread.
+  ///
+  /// Runs again for every new JS context (live reload, App.reload). The JS
+  /// side starts its socket ids over, so sockets from the previous context
+  /// are cancelled and forgotten: otherwise they'd keep running and deliver
+  /// into new sockets that reuse their ids.
   func install(on bridge: JSValue) {
+    let previous = lock.withLock { () -> [URLSessionWebSocketTask] in
+      let tasks = Array(sockets.values)
+      sockets.removeAll()
+      idsByTask.removeAll()
+      generation += 1
+      return tasks
+    }
+    for task in previous {
+      task.cancel(with: .goingAway, reason: nil)
+    }
+
     let open: @convention(block) (Int, String, JSValue) -> Void = { [weak self] id, url, protocols in
       let list = (protocols.toArray() as? [String]) ?? []
       self?.open(id: id, url: url, protocols: list)
@@ -50,7 +68,7 @@ final class WebSocketBridge: NSObject, URLSessionWebSocketDelegate, @unchecked S
   private func open(id: Int, url: String, protocols: [String]) {
     guard let parsed = URL(string: url), ["ws", "wss"].contains(parsed.scheme ?? "") else {
       emit(id, "error")
-      finish(id, code: 1006, reason: "Invalid WebSocket URL")
+      emit(id, "close", 1006, "Invalid WebSocket URL")
       return
     }
     let task =
@@ -67,7 +85,8 @@ final class WebSocketBridge: NSObject, URLSessionWebSocketDelegate, @unchecked S
 
   private func receive(_ task: URLSessionWebSocketTask, id: Int) {
     task.receive { [weak self] result in
-      guard let self else { return }
+      // Drop messages from sockets that were closed or replaced (JS reload).
+      guard let self, self.isCurrent(task, id: id) else { return }
       switch result {
       case .success(.string(let text)):
         self.emit(id, "message", text, false)
@@ -108,17 +127,20 @@ final class WebSocketBridge: NSObject, URLSessionWebSocketDelegate, @unchecked S
     task.cancel(with: closeCode, reason: reason.data(using: .utf8))
   }
 
-  // Reports "close" once per socket and forgets it.
-  private func finish(_ id: Int, code: Int, reason: String) {
-    let first = lock.withLock { () -> Bool in
-      guard !closed.contains(id) else { return false }
-      closed.insert(id)
-      if let task = sockets.removeValue(forKey: id) {
-        idsByTask.removeValue(forKey: task.taskIdentifier)
-      }
-      return true
+  private func isCurrent(_ task: URLSessionTask, id: Int) -> Bool {
+    lock.withLock { sockets[id] === task }
+  }
+
+  // Reports "close" once per socket and forgets it. Later callbacks for the
+  // same task (didClose then didComplete) find nothing and do nothing.
+  private func finish(_ task: URLSessionTask, code: Int, reason: String) {
+    let id = lock.withLock { () -> Int? in
+      guard let id = idsByTask[task.taskIdentifier], sockets[id] === task else { return nil }
+      sockets.removeValue(forKey: id)
+      idsByTask.removeValue(forKey: task.taskIdentifier)
+      return id
     }
-    if first { emit(id, "close", code, reason) }
+    if let id { emit(id, "close", code, reason) }
   }
 
   private func id(for task: URLSessionTask) -> Int? {
@@ -126,7 +148,9 @@ final class WebSocketBridge: NSObject, URLSessionWebSocketDelegate, @unchecked S
   }
 
   private func emit(_ id: Int, _ type: String, _ a: Any = NSNull(), _ b: Any = NSNull()) {
-    controller?.evaluate(inJavaScriptContext: { context in
+    let sentIn = lock.withLock { generation }
+    controller?.evaluate(inJavaScriptContext: { [weak self] context in
+      guard let self, self.lock.withLock({ self.generation }) == sentIn else { return }
       guard let bridge = context.objectForKeyedSubscript("TVMLReactNative"),
         let handler = bridge.objectForKeyedSubscript("onWebSocketEvent"),
         !handler.isUndefined, !handler.isNull
@@ -149,15 +173,14 @@ final class WebSocketBridge: NSObject, URLSessionWebSocketDelegate, @unchecked S
     _ session: URLSession, webSocketTask: URLSessionWebSocketTask,
     didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?
   ) {
-    guard let id = id(for: webSocketTask) else { return }
     let text = reason.flatMap { String(data: $0, encoding: .utf8) } ?? ""
-    finish(id, code: closeCode.rawValue, reason: text)
+    finish(webSocketTask, code: closeCode.rawValue, reason: text)
   }
 
   func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-    guard let id = id(for: task) else { return }
+    guard let id = id(for: task), isCurrent(task, id: id) else { return }
     if error != nil { emit(id, "error") }
     // 1006: closed without a close frame (network error, server went away).
-    finish(id, code: 1006, reason: error?.localizedDescription ?? "")
+    finish(task, code: 1006, reason: error?.localizedDescription ?? "")
   }
 }

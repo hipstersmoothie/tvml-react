@@ -1,12 +1,8 @@
-// stream.place (and friends) over plain HTTP, with tvml-react's fetch.
+// stream.place and the Bluesky AppView over plain HTTP, with tvml-react's
+// fetch. (Chat comes over a WebSocket: see chat.ts.)
 
 export const STREAMPLACE = "https://stream.place";
 const BSKY_APPVIEW = "https://public.api.bsky.app";
-// Microcosm's AT Protocol indexes: Constellation answers "which records link
-// to X", Slingshot serves any record and resolves identities. Together they
-// make stream.place chat readable without its WebSocket.
-const CONSTELLATION = "https://constellation.microcosm.blue";
-const SLINGSHOT = "https://slingshot.microcosm.blue";
 const TIMEOUT_MS = 15_000;
 
 export class HttpError extends Error {
@@ -172,59 +168,4 @@ export async function getProfiles(dids: Array<string>, signal?: AbortSignal): Pr
   return results
     .flatMap((r) => r.profiles)
     .map((p) => ({ ...p, avatar: jpeg(p.avatar), banner: jpeg(p.banner) }));
-}
-
-// ---------------------------------------------------------------------------
-// Chat
-//
-// stream.place only pushes chat (`place.stream.chat.message`) over its
-// WebSocket, which TVJS doesn't have. Chat messages are ordinary records in
-// each chatter's repo with a `streamer` field, so Constellation can list the
-// newest ones by backlink and Slingshot can fetch each record. `queries.ts`
-// puts the pieces together and caches the records.
-
-export interface ChatMessage {
-  uri: string;
-  did: string;
-  handle: string;
-  text: string;
-  createdAt: string;
-}
-
-export interface Backlink {
-  did: string;
-  collection: string;
-  rkey: string;
-}
-
-/** The newest chat messages linking to a streamer, newest first. */
-export async function getChatBacklinks(
-  streamerDid: string,
-  signal?: AbortSignal,
-  limit = 12,
-): Promise<Array<Backlink>> {
-  const { linking_records } = await getJSON<{ linking_records: Array<Backlink> }>(
-    `${CONSTELLATION}/links?${query({
-      target: streamerDid,
-      collection: "place.stream.chat.message",
-      path: ".streamer",
-      limit,
-    })}`,
-    signal,
-  );
-  return linking_records;
-}
-
-export async function getChatRecord({ did, collection, rkey }: Backlink): Promise<{ text: string; createdAt: string }> {
-  const { value } = await getJSON<{ value: { text: string; createdAt: string } }>(
-    `${SLINGSHOT}/xrpc/com.atproto.repo.getRecord?${query({ repo: did, collection, rkey })}`,
-  );
-  return { text: value.text, createdAt: value.createdAt };
-}
-
-export async function resolveHandle(did: string): Promise<string> {
-  const { handle } = await getJSON<{ handle: string }>(
-    `${SLINGSHOT}/xrpc/com.bad-example.identity.resolveMiniDoc?${query({ identifier: did })}`,
-  );
-  return handle;
 }

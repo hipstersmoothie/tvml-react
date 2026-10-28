@@ -1,4 +1,4 @@
-import { useQuery, type UseQueryResult } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { PlayerOverlay, useKeepAwake, useNavigation, usePlayer } from "tvml-react";
 import { useScreenQuery } from "tvml-react/query";
@@ -8,13 +8,13 @@ import {
   checkPlayable,
   playlistUrl,
   thumbnailUrl,
-  type ChatMessage,
   type Livestream,
   type Profile,
 } from "./api";
+import { useStreamChat, type ChatMessage, type ChatStatus } from "./chat";
 import { ago, oneLine, uptime, viewers } from "./format";
 import { useNow } from "./hooks";
-import { chatQuery, livestreamQuery, profileQuery, STREAM_REFRESH_MS } from "./queries";
+import { livestreamQuery, profileQuery, STREAM_REFRESH_MS } from "./queries";
 
 export function StreamScreen({ did }: { did: string }) {
   const navigation = useNavigation();
@@ -22,14 +22,16 @@ export function StreamScreen({ did }: { did: string }) {
   const { data: profile } = useQuery(profileQuery(did));
 
   // The fullscreen player covers this screen, which pauses screen queries, but
-  // the chat overlay drawn over the video still needs fresh chat and viewer
-  // counts: keep them refreshing while watching.
+  // the chat overlay drawn over the video still shows the viewer count: keep
+  // it refreshing while watching.
   const watching = player.state !== "idle" && player.state !== "end";
   useKeepAwake(watching);
 
   const stream = useScreenQuery({ ...livestreamQuery(did), refreshWhileHidden: watching });
   const live = stream.data;
-  const chat = useScreenQuery({ ...chatQuery(did), enabled: !!live, refreshWhileHidden: watching });
+  // One chat socket for the page and the overlay, open while the stream is
+  // live (covered by the player or not).
+  const chat = useStreamChat(did, !!live);
 
   let content: ReactNode;
   if (live === undefined) {
@@ -111,7 +113,7 @@ export function StreamScreen({ did }: { did: string }) {
       {watching && (
         <PlayerOverlay player={player}>
           <ChatOverlay
-            messages={chat.data ?? []}
+            messages={chat.messages}
             heading={live === null ? "This stream has ended" : `Chat · ${viewers(live?.viewerCount?.count)}`}
           />
         </PlayerOverlay>
@@ -156,7 +158,7 @@ function LiveStream({
   title: string;
   thumb: string;
   profile?: Profile;
-  chat: UseQueryResult<Array<ChatMessage>>;
+  chat: { messages: Array<ChatMessage>; status: ChatStatus };
   onPlay(): void;
   onCantPlay(error: Error): void;
 }) {
@@ -164,7 +166,7 @@ function LiveStream({
   const [connecting, setConnecting] = useState(false);
   const activity = activityName(live.record.activity);
   const tags = (live.record.tags ?? []).filter((t) => !t.startsWith("lang:"));
-  const messages = chat.data ?? [];
+  const messages = chat.messages;
 
   // Check the playlist first: a stream that just ended is a friendly alert
   // here rather than a player error.
@@ -224,7 +226,7 @@ function LiveStream({
       </banner>
       <shelf>
         <header>
-          <title>{chatHeading(chat, messages.length)}</title>
+          <title>{chatHeading(chat.status, messages.length)}</title>
         </header>
         <section>
           {messages.map((m) => (
@@ -240,10 +242,11 @@ function LiveStream({
   );
 }
 
-function chatHeading(chat: UseQueryResult<unknown>, count: number): string {
-  if (chat.isPending) return "Loading chat…";
-  if (chat.isLoadingError) return "Chat is unavailable right now";
-  return count === 0 ? "No chat messages yet" : "Recent chat";
+function chatHeading(status: ChatStatus, count: number): string {
+  if (status === "unavailable") return "Chat is unavailable";
+  if (status === "reconnecting") return count === 0 ? "Reconnecting to chat…" : "Recent chat · reconnecting…";
+  if (count > 0) return "Recent chat";
+  return status === "connecting" ? "Loading chat…" : "No chat messages yet";
 }
 
 function OfflineStreamer({
