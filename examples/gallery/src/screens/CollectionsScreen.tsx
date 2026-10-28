@@ -1,21 +1,19 @@
 import { useState } from "react";
 import { useNavigation } from "tvml-react";
+import { useScreenInfiniteQuery } from "tvml-react/query";
 
 import { DEPARTMENTS, type Department } from "../api";
 import { ArtworkGrid } from "../components/ArtworkGrid";
-import { usePagedArtworks } from "../hooks";
+import { artworkPagesQuery, loadNextPage } from "../queries";
 import { BrowseScreen } from "./BrowseScreen";
 
 /**
  * Museum departments in a `catalogTemplate`: the list on the left, a preview
  * grid of the highlighted department on the right. A department's artworks
- * are only fetched once it has been highlighted.
+ * are only fetched once it has been highlighted. The preview shares its cache
+ * entry with the department's own screen, which opens with it already loaded.
  */
 export function CollectionsScreen() {
-  const [visited, setVisited] = useState(() => new Set([DEPARTMENTS[0].id]));
-  const visit = (id: string) =>
-    setVisited((current) => (current.has(id) ? current : new Set(current).add(id)));
-
   return (
     <catalogTemplate theme="dark">
       <banner>
@@ -23,13 +21,8 @@ export function CollectionsScreen() {
       </banner>
       <list>
         <section>
-          {DEPARTMENTS.map((department) => (
-            <DepartmentItem
-              key={department.id}
-              department={department}
-              enabled={visited.has(department.id)}
-              onHighlight={() => visit(department.id)}
-            />
+          {DEPARTMENTS.map((department, index) => (
+            <DepartmentItem key={department.id} department={department} first={index === 0} />
           ))}
         </section>
       </list>
@@ -37,36 +30,29 @@ export function CollectionsScreen() {
   );
 }
 
-function DepartmentItem({
-  department,
-  enabled,
-  onHighlight,
-}: {
-  department: Department;
-  enabled: boolean;
-  onHighlight: () => void;
-}) {
+function DepartmentItem({ department, first }: { department: Department; first: boolean }) {
   const navigation = useNavigation();
-  const paged = usePagedArtworks({ departmentId: department.id }, { enabled });
+  // The first department is highlighted when the tab opens.
+  const [highlighted, setHighlighted] = useState(first);
+  const query = { departmentId: department.id };
+  const pages = useScreenInfiniteQuery({ ...artworkPagesQuery(query), enabled: highlighted });
 
   return (
     <listItemLockup
-      onHighlight={onHighlight}
-      onSelect={() =>
-        navigation.push(<BrowseScreen title={department.title} query={{ departmentId: department.id }} />)
-      }
+      onHighlight={() => setHighlighted(true)}
+      onSelect={() => navigation.push(<BrowseScreen title={department.title} query={query} />)}
     >
       <title>{department.title}</title>
       <decorationLabel>
-        {paged.total ? new Intl.NumberFormat("en-US").format(paged.total) : ""}
+        {pages.data ? new Intl.NumberFormat("en-US").format(pages.data.total) : ""}
       </decorationLabel>
       <relatedContent>
-        {paged.items.length > 0 ? (
-          <ArtworkGrid items={paged.items} onEndReached={paged.loadMore} />
+        {pages.data?.items.length ? (
+          <ArtworkGrid items={pages.data.items} onEndReached={() => loadNextPage(pages)} />
         ) : (
           <grid>
             <header>
-              <title>{paged.status === "error" ? (paged.error ?? "Error") : "Loading…"}</title>
+              <title>{pages.isError ? pages.error.message : "Loading…"}</title>
             </header>
             <section />
           </grid>

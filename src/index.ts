@@ -30,7 +30,9 @@ export type { TVMLEventHandler, TVMLEventProp } from "./events.js";
 export { getKeyboard } from "./keyboard.js";
 export type { TVMLKeyboard } from "./keyboard.js";
 export {
+  getNetworkStatus,
   hasNativeBridge,
+  onNetworkStatusChange,
   useAccessibility,
   useColorScheme,
   useDisplay,
@@ -53,6 +55,8 @@ export { useNavigation } from "./navigation.js";
 export type { Navigation } from "./navigation.js";
 export {
   canOpenURL,
+  getAppState,
+  onAppStateChange,
   openURL,
   reloadApp,
   useAppEvent,

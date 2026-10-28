@@ -1,5 +1,7 @@
+import { useScreenQuery } from "tvml-react/query";
+
 import { getJSON } from "../lib/http";
-import { useLiveResource } from "./useLiveResource";
+import { persisted } from "../lib/persist";
 
 export interface Place {
   latitude: number;
@@ -30,13 +32,17 @@ interface GeoJS {
 }
 
 const DAY = 24 * 60 * 60_000;
+const QUERY_KEY = ["location"];
 
-export function useLocation(region: string): Place {
-  const { data } = useLiveResource<Place>(
-    "dashboard.location",
-    "geojs",
-    async () => {
-      const geo = await getJSON<GeoJS>("https://get.geojs.io/v1/ip/geo.json");
+/**
+ * Where the forecast is for, or `undefined` while geolocation is still in
+ * flight (so the forecast doesn't first load for the fallback city).
+ */
+export function useLocation(region: string): Place | undefined {
+  const { data, isError } = useScreenQuery<Place>({
+    queryKey: QUERY_KEY,
+    queryFn: async ({ signal }) => {
+      const geo = await getJSON<GeoJS>("https://get.geojs.io/v1/ip/geo.json", signal);
       const latitude = Number(geo.latitude);
       const longitude = Number(geo.longitude);
       if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
@@ -44,7 +50,12 @@ export function useLocation(region: string): Place {
       }
       return { latitude, longitude, city: geo.city ?? "", approximate: false };
     },
-    { refreshEvery: DAY },
-  );
-  return data ?? { ...(CAPITALS[region] ?? CAPITALS.US), approximate: true };
+    staleTime: DAY,
+    refetchInterval: DAY,
+    // Fall back to the capital after one retry rather than three backoffs.
+    retry: 1,
+    ...persisted<Place>("dashboard.location", QUERY_KEY),
+  });
+  if (data) return data;
+  return isError ? { ...(CAPITALS[region] ?? CAPITALS.US), approximate: true } : undefined;
 }

@@ -1,7 +1,10 @@
+import { skipToken, type UseQueryResult } from "@tanstack/react-query";
+import { useScreenQuery } from "tvml-react/query";
+
 import { getJSON } from "../lib/http";
 import type { TemperatureUnit } from "../lib/locale";
+import { persisted } from "../lib/persist";
 import type { Place } from "./useLocation";
-import { useLiveResource, type LiveResource } from "./useLiveResource";
 
 /** The subset of Open-Meteo's /v1/forecast response this app asks for. */
 export interface Forecast {
@@ -51,10 +54,15 @@ export function forecastURL(place: Place, unit: TemperatureUnit): string {
   return `https://api.open-meteo.com/v1/forecast?${params.toString()}`;
 }
 
-export function useWeather(place: Place, unit: TemperatureUnit): LiveResource<Forecast> {
-  const url = forecastURL(place, unit);
-  return useLiveResource<Forecast>("dashboard.forecast", url, () => getJSON<Forecast>(url), {
-    refreshEvery: 15 * MINUTE,
-    staleAfter: 10 * MINUTE,
+/** The forecast for `place`; waits (dependent query) until there is one. */
+export function useWeather(place: Place | undefined, unit: TemperatureUnit): UseQueryResult<Forecast> {
+  // Rounded like the request, so a location that moves a few metres reuses the cache.
+  const queryKey = ["forecast", place?.latitude.toFixed(2), place?.longitude.toFixed(2), unit];
+  return useScreenQuery<Forecast>({
+    queryKey,
+    queryFn: place ? ({ signal }) => getJSON<Forecast>(forecastURL(place, unit), signal) : skipToken,
+    staleTime: 10 * MINUTE,
+    refetchInterval: 15 * MINUTE,
+    ...persisted<Forecast>("dashboard.forecast", queryKey),
   });
 }

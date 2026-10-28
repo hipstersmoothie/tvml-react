@@ -1,19 +1,18 @@
 import { useNavigation } from "tvml-react";
+import { useScreenQuery } from "tvml-react/query";
 
-import { airDate, endpoints, formatDay, plainText, poster, type Episode, type Season } from "./api";
-import { ErrorScreen, Loading, type ShowSummary } from "./components";
+import { airDate, formatDay, plainText, poster, tvmaze, type Season } from "./api";
+import { QueryFallback, type ShowSummary } from "./components";
 import { EpisodeDetail } from "./EpisodeDetail";
-import { useApi } from "./useApi";
 
 // Level 2: a season's episodes. Highlighting a row previews the episode on the
 // right (relatedContent); selecting it pushes the episode screen.
 export function SeasonScreen({ show, season }: { show: ShowSummary; season: Season }) {
   const navigation = useNavigation();
-  const episodes = useApi<Array<Episode>>(endpoints.episodes(season.id));
+  const episodes = useScreenQuery(tvmaze.episodes(season.id));
   const seasonTitle = season.name || `Season ${season.number}`;
 
-  if (episodes.status === "loading") return <Loading title={`${show.name} · ${seasonTitle}`} />;
-  if (episodes.status === "error") return <ErrorScreen {...episodes} />;
+  if (episodes.data === undefined) return <QueryFallback query={episodes} title={`${show.name} · ${seasonTitle}`} />;
 
   const list = episodes.data;
   if (list.length === 0) {

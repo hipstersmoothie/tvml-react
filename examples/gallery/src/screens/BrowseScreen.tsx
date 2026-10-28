@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
+import { useScreenInfiniteQuery } from "tvml-react/query";
 
 import type { ArtworkQuery } from "../api";
 import { ArtworkGrid } from "../components/ArtworkGrid";
 import { ErrorMessage, Loading } from "../components/Status";
-import { usePagedArtworks } from "../hooks";
+import { artworkPagesQuery, loadNextPage } from "../queries";
 
 const formatCount = (n: number) => new Intl.NumberFormat("en-US").format(n);
 
@@ -21,20 +22,25 @@ export function BrowseScreen({
   /** Buttons for the banner. */
   actions?: ReactNode;
 }) {
-  const paged = usePagedArtworks(query);
+  // Paused while another tab or screen covers this one, like useScreenQuery.
+  const pages = useScreenInfiniteQuery(artworkPagesQuery(query));
 
-  if (paged.items.length === 0) {
-    if (paged.status === "loading") return <Loading title={title} />;
-    if (paged.status === "error") return <ErrorMessage message={paged.error} onRetry={paged.retry} />;
+  if (!pages.data) {
+    if (pages.isError) {
+      return <ErrorMessage message={pages.error.message} onRetry={() => void pages.refetch()} />;
+    }
+    return <Loading title={title} />;
+  }
+  const { items, total } = pages.data;
+  if (items.length === 0) {
     return <ErrorMessage title="Nothing here yet" message="No artworks with images matched." />;
   }
 
-  const footer =
-    paged.status === "error"
-      ? `Couldn't load more: ${paged.error}`
-      : paged.hasMore
-        ? `${formatCount(paged.items.length)} of ${formatCount(paged.total)}`
-        : `All ${formatCount(paged.items.length)} works`;
+  const footer = pages.isFetchNextPageError
+    ? `Couldn't load more: ${pages.error?.message}`
+    : pages.hasNextPage
+      ? `${formatCount(items.length)} of ${formatCount(total)}`
+      : `All ${formatCount(items.length)} works`;
 
   return (
     <stackTemplate theme="dark">
@@ -45,8 +51,8 @@ export function BrowseScreen({
       </banner>
       <collectionList>
         <ArtworkGrid
-          items={paged.items}
-          onEndReached={paged.loadMore}
+          items={items}
+          onEndReached={() => loadNextPage(pages)}
           title={showTitle ? undefined : footer}
         />
       </collectionList>

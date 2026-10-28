@@ -1,22 +1,23 @@
 import { useNavigation } from "tvml-react";
+import { useScreenQuery } from "tvml-react/query";
 
-import { channel, endpoints, plainText, poster, year, years, type Season, type ShowDetails } from "./api";
-import { ErrorScreen, useWatchlist, type ShowSummary } from "./components";
+import { channel, plainText, poster, tvmaze, year, years, type Season } from "./api";
+import { QueryFallback, useWatchlist, type ShowSummary } from "./components";
 import { SeasonScreen } from "./SeasonScreen";
-import { useApi } from "./useApi";
 
 // Level 1: pushed from any poster. Renders straight away from the summary it was
-// opened with, then fills in cast and seasons when the full show arrives.
+// opened with, then fills in cast and seasons when the full show arrives (often
+// already cached: highlighting the poster prefetched it).
 export function ShowDetail({ show: summary }: { show: ShowSummary }) {
   const navigation = useNavigation();
   const watchlist = useWatchlist();
-  const details = useApi<ShowDetails>(endpoints.show(summary.id));
+  const details = useScreenQuery(tvmaze.show(summary.id));
 
-  if (details.status === "error") return <ErrorScreen {...details} />;
+  if (details.data === undefined && details.isError) return <QueryFallback query={details} />;
 
-  const show: ShowSummary = details.status === "ready" ? details.data : summary;
-  const cast = details.status === "ready" ? details.data._embedded.cast : [];
-  const seasons = details.status === "ready" ? details.data._embedded.seasons : [];
+  const show: ShowSummary = details.data ?? summary;
+  const cast = details.data?._embedded.cast ?? [];
+  const seasons = details.data?._embedded.seasons ?? [];
   const rating = show.rating?.average;
   const saved = watchlist.has(show.id);
   const facts = [years(show), show.runtime ? `${show.runtime} min` : "", show.language ?? ""].filter(Boolean);

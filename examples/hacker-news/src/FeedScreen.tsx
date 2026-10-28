@@ -1,42 +1,48 @@
 import { useNavigation } from "tvml-react";
+import { useScreenInfiniteQuery } from "tvml-react/query";
 
 import { PAGE_SIZE, type FeedId, type Story } from "./hn";
+import { feedQuery } from "./queries";
 import { ErrorScreen, Loading } from "./Status";
 import { StoryScreen } from "./StoryScreen";
 import { domain, excerpt, plural, timeAgo } from "./text";
-import { useFeed } from "./useFeed";
 
 export function FeedScreen({ feed, title }: { feed: FeedId; title: string }) {
   const navigation = useNavigation();
   const {
-    status,
+    data: stories,
     error,
+    fetchStatus,
     isFetching,
-    updatedAt,
+    isRefetching,
+    isRefetchError,
+    dataUpdatedAt,
     refetch,
-    stories,
-    hasMore,
-    loadMore,
-    loadingMore,
-    loadMoreError,
-  } = useFeed(feed);
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useScreenInfiniteQuery({
+    ...feedQuery(feed),
+    // What useScreenQuery does: only observe the feed while this tab is the
+    // one on screen, so it refetches stale stories when the tab reappears.
+  });
 
-  if (status === "loading") return <Loading title={`Loading ${title}…`} />;
-  if (status === "error") {
-    return (
-      <ErrorScreen
-        title={`Couldn't load ${title}`}
-        error={error}
-        onRetry={() => void refetch()}
-      />
-    );
+  if (!stories) {
+    if (error) return <ErrorScreen title={`Couldn't load ${title}`} error={error} onRetry={() => void refetch()} />;
+    return <Loading title={fetchStatus === "paused" ? "Waiting for a network connection…" : `Loading ${title}…`} />;
   }
 
-  const age = Date.now() - updatedAt < 60_000 ? "just now" : timeAgo(updatedAt / 1000);
-  const header = isFetching
+  // One request at a time: a refresh refetches every loaded page anyway.
+  const loadMore = () => {
+    if (hasNextPage && !isFetching) void fetchNextPage();
+  };
+
+  const age = Date.now() - dataUpdatedAt < 60_000 ? "just now" : timeAgo(dataUpdatedAt / 1000);
+  const header = isRefetching
     ? "Refreshing…"
-    : error
-      ? `Couldn't refresh (${error.message}) · from ${age}`
+    : isRefetchError
+      ? `Couldn't refresh (${error?.message}) · from ${age}`
       : `Updated ${age}`;
 
   return (
@@ -56,26 +62,28 @@ export function FeedScreen({ feed, title }: { feed: FeedId; title: string }) {
               rank={index + 1}
               onSelect={() => navigation.push(<StoryScreen story={story} />)}
               // Infinite scroll: start loading the next page a few rows early.
-              onHighlight={
-                hasMore && index >= stories.length - 5 && !loadMoreError ? () => void loadMore() : undefined
-              }
+              onHighlight={index >= stories.length - 5 && !isFetchNextPageError ? loadMore : undefined}
             />
           ))}
-          {hasMore && (
-            <listItemLockup onSelect={() => void loadMore()} disabled={loadingMore}>
+          {hasNextPage && (
+            <listItemLockup onSelect={loadMore} disabled={isFetching}>
               <title>
-                {loadingMore ? "Loading more…" : loadMoreError ? "Couldn't load more. Try again" : `Load ${PAGE_SIZE} more`}
+                {isFetchingNextPage
+                  ? "Loading more…"
+                  : isFetchNextPageError
+                    ? "Couldn't load more. Try again"
+                    : `Load ${PAGE_SIZE} more`}
               </title>
               <relatedContent>
                 <lockup>
                   <title>{`${stories.length} stories loaded`}</title>
-                  <description>{loadMoreError?.message ?? ""}</description>
+                  <description>{isFetchNextPageError ? (error?.message ?? "") : ""}</description>
                 </lockup>
               </relatedContent>
             </listItemLockup>
           )}
           <listItemLockup onSelect={() => void refetch()} disabled={isFetching}>
-            <title>{isFetching ? "Refreshing…" : "Refresh"}</title>
+            <title>{isRefetching ? "Refreshing…" : "Refresh"}</title>
           </listItemLockup>
         </section>
       </list>

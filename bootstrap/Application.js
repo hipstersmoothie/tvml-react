@@ -57,10 +57,22 @@ var LOG_ENDPOINT = "__tvml-react/log";
 
 function request(method, url, body, callback) {
   var xhr = new XMLHttpRequest();
+  var done = false;
+  function finish(status, text) {
+    if (done) return;
+    done = true;
+    if (callback) callback(status, text);
+  }
   xhr.open(method, url);
+  // A request cut off by suspending the app never calls back; time out so
+  // live-reload polling keeps going after resume.
+  xhr.timeout = 5000;
   // TVJS fires onerror (not onload) for HTTP errors; status tells them apart.
   xhr.onload = xhr.onerror = function () {
-    if (callback) callback(xhr.status, xhr.responseText);
+    finish(xhr.status, xhr.responseText);
+  };
+  xhr.ontimeout = xhr.onabort = function () {
+    finish(0, "");
   };
   xhr.send(body || null);
 }

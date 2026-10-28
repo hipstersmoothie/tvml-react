@@ -10,19 +10,26 @@ A Hacker News reader for Apple TV, built with tvml-react.
   system tab bar, built with `<MenuBar>` and `<MenuBarItem>` (`src/App.tsx`).
   Each tab mounts the first time it's selected and stays mounted, so switching
   back keeps its stories and scroll position.
-- **Data fetching.** TVJS only has `XMLHttpRequest`; tvml-react polyfills
-  `fetch` and `AbortController` on top of it. `src/lib/http.ts` adds a timeout,
-  typed JSON and error messages worth showing on screen. `src/lib/query.ts` is a
-  small `useQuery`: results are cached per key and shared between screens,
-  duplicate requests are merged, a request is cancelled when its last screen
-  unmounts, and stale data is refetched when the screen appears again
-  (`useScreenEvent("appear")`) or the app comes back from the background
-  (`useAppEvent("resume")`, visible screens only).
+- **Data fetching with TanStack Query** (`tvml-react/query`). `src/main.tsx`
+  puts `TVMLQueryProvider` in `launch`'s `wrapper`, so the tabs and every pushed
+  screen share one `QueryClient`. That provider also tells TanStack Query that
+  TVJS isn't a server, that the app coming back from the background counts as
+  "window focus", and when the Apple TV is online. The query options live in
+  `src/queries.ts`. Queries pause while their screen isn't on the TV
+  (`useScreenQuery`, `useScreenInfiniteQuery`): hidden tabs and covered screens
+  don't refetch but keep their data. When they appear again, or the app
+  resumes, they refetch any data that's gone stale.
+  tvml-react polyfills `fetch` and `AbortController` on top of TVJS's
+  `XMLHttpRequest`. `src/lib/http.ts` adds a timeout, typed JSON and error
+  messages worth showing on screen.
 - **Story lists** in a `listTemplate`: rank, title and score in each
   `listItemLockup`, with a `relatedContent` preview of the highlighted story
   (domain, points, comments, author, relative age via `Intl.RelativeTimeFormat`,
-  and the text of Ask HN posts). It loads 30 stories at a time from the Firebase API, and
-  the next page starts loading when focus gets within five rows of the end.
+  and the text of Ask HN posts). Each feed is a `useInfiniteQuery` that loads 30
+  stories at a time from the Firebase API (10 requests at once), and
+  `fetchNextPage` runs when focus gets within five rows of the end. The first
+  page fetches the feed's ids and later pages carry them along, so Refresh
+  reloads every page that's on screen from the same list.
 - **Story detail** with the whole comment tree from one Algolia request,
   flattened and indented by depth. The highlighted comment's full text shows in
   `relatedContent` (`tv-text-max-lines: 16`). Selecting a comment opens it in a
@@ -32,8 +39,11 @@ A Hacker News reader for Apple TV, built with tvml-react.
   `<p>` becomes a blank line, links become their full URL, and entities are
   decoded.
 - **Loading, error and retry.** Screens swap between `loadingTemplate`,
-  `alertTemplate` (with a Try Again button) and the list. If a background
-  refresh fails, the old data stays on screen and the header says the refresh failed.
+  `alertTemplate` (with a Try Again button) and the list. Failed requests are
+  retried once, unless the server answered with a 4xx. If a background refresh
+  fails, TanStack Query keeps the old data (`isRefetchError`), so it stays on
+  screen and the header says the refresh failed. A failed page load shows on the
+  Load More row (`isFetchNextPageError`) instead.
 
 ## Run it
 

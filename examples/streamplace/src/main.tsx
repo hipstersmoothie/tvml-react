@@ -1,9 +1,17 @@
+import type { ReactNode } from "react";
 import { launch, type StartOptions } from "tvml-react";
+import { TVMLQueryProvider } from "tvml-react/query";
 
 import { App } from "./App";
-import { StoreProvider } from "./store";
+import { queryClient } from "./queries";
+
+// The wrapper is shared by the home screen and every pushed screen, so they
+// all read the same query cache.
+const Providers = ({ children }: { children?: ReactNode }) => (
+  <TVMLQueryProvider client={queryClient}>{children}</TVMLQueryProvider>
+);
 
 export function start(_options: StartOptions) {
-  // The wrapper is shared by the home screen and every pushed screen.
-  launch(<App />, { wrapper: StoreProvider, errorTitle: "stream.place crashed" });
+  launch(<App />, { wrapper: Providers, errorTitle: "stream.place crashed" });
+  void import("./driver").then((d) => d.runDriver()); // TEMP-DRIVER
 }

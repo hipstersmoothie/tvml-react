@@ -11,10 +11,13 @@ search the iTunes directory, read show feeds, subscribe, and listen with resume.
   `progressBar` overlay), *Your Shows*, then Apple Podcasts top charts overall
   and by genre. Each shelf loads on its own.
 - **Search** (`searchTemplate`): `<searchField onTextChange>` with a 400 ms
-  debounce, cancelled in-flight requests, and loading and empty states.
+  debounced query key. The previous results stay up while the next ones load
+  (`placeholderData: keepPreviousData`), a request for a term nobody's waiting
+  for is cancelled, and there are loading, empty and error states.
 - **Show detail** (`listTemplate`): a Resume / Play Latest row, a Subscribe
   toggle, and episode rows (`listItemLockup` with `subtitle`, `decorationLabel`
-  and per-row `relatedContent` show notes). Episodes load 40 at a time.
+  and per-row `relatedContent` show notes). The whole feed is cached; `select`
+  picks the rows on screen, 40 more at a time.
 - **Episode actions**: long press (`onHoldSelect`) opens a modal with
   *Play from Beginning*, *Mark as Played/Unplayed* and *Go to Show*.
 - **Playback**: one `usePlayer()` in a `PlayerProvider` passed as `launch`'s
@@ -25,9 +28,20 @@ search the iTunes directory, read show feeds, subscribe, and listen with resume.
 - **Persistence** with `useLocalStorage`: subscriptions, plus each episode's
   position and played state. The position is saved every 15 s of playback and
   on pause or stop.
-- **Data**: iTunes Search/Lookup and the `toppodcasts` RSS-JSON charts, loaded
-  with `fetch` (cancelled through `AbortController`, with a 20 s timeout). Show
-  feeds are parsed with `parseDocument` (TVJS's own `DOMParser`). Dates use
+- **Data** with [TanStack Query](https://tanstack.com/query) through
+  `tvml-react/query`: `TVMLQueryProvider` sits in `launch`'s `wrapper` (with the
+  player), so every screen shares one cache and going back is instant. Screens
+  read it with `useScreenQuery`, which pauses while a screen is covered and
+  refetches stale data when it reappears; returning to the app counts as
+  window focus. Keys, fetchers and freshness live in `src/queries.ts`: charts
+  stay fresh for an hour, searches for 10 minutes, feeds for 15. Chart entries
+  have no feed URL, so the feed query looks the show up first
+  (`ensureQueryData`).
+- **Requests**: iTunes Search/Lookup and the `toppodcasts` RSS-JSON charts over
+  `fetch`, with TanStack Query's `signal` for cancellation plus a 20 s timeout
+  (`AbortSignal.any`/`timeout`). Network errors, timeouts and 5xx are retried
+  twice; a 404 or a broken feed fails right away. Show feeds are parsed with
+  `parseDocument` (TVJS's own `DOMParser`). Dates use
   `Intl.DateTimeFormat`/`RelativeTimeFormat`.
 
 ## Run it

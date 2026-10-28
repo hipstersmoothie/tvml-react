@@ -24,12 +24,33 @@ what works in a `divTemplate` and the small set of primitives (`Row`, `Cell`,
 | Hook | Used for |
 | --- | --- |
 | `useKeepAwake()` | No screensaver while the dashboard is up |
-| `useAppState()` | Weather, "On this day" and backdrop timers stop while the app is in the background |
-| `useAppEvent("resume")` | Resyncs the clock, and refetches anything stale |
-| `useNetworkStatus()` | Shows an "Offline · as of 3:34 PM" badge and pauses fetching. Data is cached in `localStorage`, so it still launches with the last forecast when offline |
+| `useAppState()` | "On this day" and backdrop rotation stop while the app is in the background |
+| `useAppEvent("resume")` | Resyncs the clock |
+| `useNetworkStatus()` | Shows an "Offline · as of 3:34 PM" badge |
 | `useAccessibility().reduceMotion` | Keeps one backdrop instead of rotating |
 | `useColorScheme()` | Light or dark palette, template theme and backdrop treatment |
 | `useNavigation().replace()` | Swaps the backdrop. TVMLKit never re-reads a `<background>` once the document is up, so each new photo gets a new document |
+
+## Data
+
+Location, weather and "On this day" are [TanStack Query](https://tanstack.com/query)
+queries, through `tvml-react/query`:
+
+- `TVMLQueryProvider` sits in `launch`'s `wrapper` (`src/main.tsx`), so the
+  screens that `navigation.replace()` presents for each new backdrop share one
+  cache and render without refetching.
+- Each query is a `useScreenQuery` with its own `staleTime` and
+  `refetchInterval` (weather: stale after 10 minutes, polled every 15; "On
+  this day": 6 hours; location: a day). tvml-react/query maps TanStack's
+  "window focus" to the app being in the foreground and "online" to the
+  Apple TV's connectivity, so polling stops in the background, stale data is
+  refetched on resume, and fetching pauses offline and resumes on reconnect.
+- The forecast is a dependent query: it waits for the location (IP
+  geolocation, or the storefront capital if that fails) via `skipToken`.
+- `src/lib/persist.ts` saves each query's last good result to `localStorage`
+  and restores it as `initialData` (with `initialDataUpdatedAt`), so the
+  dashboard launches instantly, and offline, with the last forecast.
+  `staleTime` then decides whether it's refetched.
 
 ## Run it
 
@@ -52,4 +73,5 @@ xcrun simctl launch <udid> dev.tvml-react.examples -TVMLServerURL http://localho
 - `api.wikimedia.org`: "On this day"
 - `picsum.photos` through `images.weserv.nl`: backdrop photos, dimmed by the proxy
 
-TVJS has no `fetch`, so `src/lib/http.ts` wraps `XMLHttpRequest`.
+TVJS has no `fetch`; tvml-react polyfills it (and `AbortController`, so
+TanStack Query's `signal` cancels requests).

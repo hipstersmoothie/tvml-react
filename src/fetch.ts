@@ -40,12 +40,19 @@ export class AbortSignalPolyfill {
   /** A signal that aborts when any of `signals` does. */
   static any(signals: Array<AbortSignalPolyfill>): AbortSignalPolyfill {
     const combined = new AbortSignalPolyfill();
+    const cleanups: Array<() => void> = [];
+    const done = (reason: unknown) => {
+      for (const cleanup of cleanups) cleanup();
+      combined._abort(reason);
+    };
     for (const signal of signals) {
       if (signal.aborted) {
-        combined._abort(signal.reason);
+        done(signal.reason);
         break;
       }
-      signal.addEventListener("abort", () => combined._abort(signal.reason));
+      const onAbort = () => done(signal.reason);
+      signal.addEventListener("abort", onAbort);
+      cleanups.push(() => signal.removeEventListener("abort", onAbort));
     }
     return combined;
   }

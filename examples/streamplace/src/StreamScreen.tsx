@@ -1,11 +1,11 @@
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { PlayerOverlay, useKeepAwake, useNavigation, usePlayer } from "tvml-react";
+import { useScreenQuery } from "tvml-react/query";
 
 import {
   activityName,
   checkPlayable,
-  getLivestream,
-  getRecentChat,
   playlistUrl,
   thumbnailUrl,
   type ChatMessage,
@@ -13,34 +13,42 @@ import {
   type Profile,
 } from "./api";
 import { ago, oneLine, uptime, viewers } from "./format";
-import { useLiveData, useNow, type Remote } from "./hooks";
-import { useProfiles } from "./store";
+import { useNow } from "./hooks";
+import { chatQuery, livestreamQuery, profileQuery, STREAM_REFRESH_MS } from "./queries";
 
-const STREAM_REFRESH_MS = 15_000;
-const CHAT_REFRESH_MS = 8_000;
-
-export function StreamScreen({ did, initial }: { did: string; initial?: Livestream }) {
+export function StreamScreen({ did }: { did: string }) {
   const navigation = useNavigation();
   const player = usePlayer();
-  const profile = useProfiles([did])[did];
+  (globalThis as any).__player = player; // TEMP-DRIVER
+  const { data: profile } = useQuery(profileQuery(did));
 
-  // The fullscreen player hides this screen, but the chat overlay drawn on
-  // top of the video still needs fresh chat and viewer counts.
+  // The fullscreen player covers this screen, which pauses screen queries, but
+  // the chat overlay drawn over the video still needs fresh chat and viewer
+  // counts: keep them refreshing while watching.
   const watching = player.state !== "idle" && player.state !== "end";
+  const subscribed = watching || undefined; // undefined: follow screen visibility
   useKeepAwake(watching);
 
-  const stream = useLiveData((signal) => getLivestream(did, signal), STREAM_REFRESH_MS, { keepAlive: watching });
-  const live = stream.status === "ready" ? stream.data : initial;
-  const chat = useLiveData((signal) => getRecentChat(did, signal), CHAT_REFRESH_MS, { enabled: !!live, keepAlive: watching });
+  const stream = useScreenQuery({ ...livestreamQuery(did), subscribed });
+  const live = stream.data;
+  const chat = useScreenQuery({ ...chatQuery(did), enabled: !!live, subscribed });
 
   let content: ReactNode;
   if (live === undefined) {
     content =
-      stream.status === "error" ? (
+      stream.fetchStatus === "paused" ? (
+        <alertTemplate theme="dark">
+          <title>You’re offline</title>
+          <description>This page will load when your Apple TV is back online.</description>
+          <button onSelect={() => navigation.pop()}>
+            <text>Back</text>
+          </button>
+        </alertTemplate>
+      ) : stream.isLoadingError ? (
         <alertTemplate theme="dark">
           <title>Couldn’t load this stream</title>
           <description>{stream.error.message}</description>
-          <button onSelect={stream.refresh}>
+          <button onSelect={() => void stream.refetch()}>
             <text>Try Again</text>
           </button>
           <button onSelect={() => navigation.pop()}>
@@ -55,11 +63,11 @@ export function StreamScreen({ did, initial }: { did: string; initial?: Livestre
         </loadingTemplate>
       );
   } else if (live === null) {
-    content = <OfflineStreamer did={did} profile={profile} onRefresh={stream.refresh} />;
+    content = <OfflineStreamer did={did} profile={profile ?? undefined} checking={stream.isFetching} onRefresh={() => void stream.refetch()} />;
   } else {
     const name = profile?.displayName || `@${live.author.handle}`;
     const title = oneLine(live.record.title);
-    const thumb = thumbnailUrl(did, Math.floor((stream.updatedAt ?? 0) / STREAM_REFRESH_MS));
+    const thumb = thumbnailUrl(did, Math.floor(stream.dataUpdatedAt / STREAM_REFRESH_MS));
     const play = () => {
       player.play({
         url: playlistUrl(did),
@@ -70,7 +78,7 @@ export function StreamScreen({ did, initial }: { did: string; initial?: Livestre
       });
     };
     const cantPlay = (error: Error) => {
-      stream.refresh();
+      void stream.refetch();
       navigation.presentModal(
         <alertTemplate theme="dark">
           <title>Can’t play this stream</title>
@@ -88,7 +96,7 @@ export function StreamScreen({ did, initial }: { did: string; initial?: Livestre
         name={name}
         title={title}
         thumb={thumb}
-        profile={profile}
+        profile={profile ?? undefined}
         chat={chat}
         onPlay={play}
         onCantPlay={cantPlay}
@@ -150,7 +158,7 @@ function LiveStream({
   title: string;
   thumb: string;
   profile?: Profile;
-  chat: Remote<Array<ChatMessage>>;
+  chat: UseQueryResult<Array<ChatMessage>>;
   onPlay(): void;
   onCantPlay(error: Error): void;
 }) {
@@ -218,7 +226,7 @@ function LiveStream({
       </banner>
       <shelf>
         <header>
-          <title>{chatHeading(chat.status, messages.length)}</title>
+          <title>{chatHeading(chat, messages.length)}</title>
         </header>
         <section>
           {messages.map((m) => (
@@ -234,19 +242,21 @@ function LiveStream({
   );
 }
 
-function chatHeading(status: Remote<unknown>["status"], count: number): string {
-  if (status === "loading") return "Loading chat…";
-  if (status === "error") return "Chat is unavailable right now";
+function chatHeading(chat: UseQueryResult<unknown>, count: number): string {
+  if (chat.isPending) return "Loading chat…";
+  if (chat.isLoadingError) return "Chat is unavailable right now";
   return count === 0 ? "No chat messages yet" : "Recent chat";
 }
 
 function OfflineStreamer({
   did,
   profile,
+  checking,
   onRefresh,
 }: {
   did: string;
   profile?: Profile;
+  checking: boolean;
   onRefresh(): void;
 }) {
   const navigation = useNavigation();
@@ -263,9 +273,9 @@ function OfflineStreamer({
           </row>
           <description>{profile?.description || "Not streaming right now."}</description>
           <row>
-            <buttonLockup onSelect={onRefresh}>
+            <buttonLockup onSelect={checking ? undefined : onRefresh}>
               <badge src="resource://button-more" />
-              <title>Check Again</title>
+              <title>{checking ? "Checking…" : "Check Again"}</title>
             </buttonLockup>
             <buttonLockup onSelect={() => navigation.pop()}>
               <badge src="resource://button-remove" />

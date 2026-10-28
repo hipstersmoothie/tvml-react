@@ -10,7 +10,8 @@ import { usePalette } from "../theme";
 interface HeaderProps {
   now: Date;
   locale: Locale;
-  place: Place;
+  /** Undefined while locating. */
+  place: Place | undefined;
   forecast: Forecast | undefined;
   offline: boolean;
   fetchedAt: number | undefined;
@@ -56,7 +57,7 @@ export function Header({ now, locale, place, forecast, offline, fetchedAt }: Hea
   const today = forecast?.daily;
   const { label, icon } = condition(current?.weather_code, current?.is_day !== 0);
 
-  const where = [place.city || "Locating…"];
+  const where = [place?.city || "Locating…"];
   if (today) {
     where.push(`🌅 ${locale.time.format(wallClock(today.sunrise[0]))}`);
     where.push(`🌇 ${locale.time.format(wallClock(today.sunset[0]))}`);
@@ -97,7 +98,7 @@ export function Header({ now, locale, place, forecast, offline, fetchedAt }: Hea
       </Row>
       <Row region="top" marginTop={12}>
         <Cell width={LEFT - BADGE} size={30} color={palette.tertiary}>
-          {`📍 ${where.join("     ")}${place.approximate ? " (approx.)" : ""}`}
+          {`📍 ${where.join("     ")}${place?.approximate ? " (approx.)" : ""}`}
         </Cell>
         {offline ? (
           <Cell width={BADGE} height={50} size={28} weight="semibold" align="center" color="white" background={palette.warning} offset={RIGHT}>

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigation } from "tvml-react";
+import { useScreenQuery } from "tvml-react/query";
 
 import { CommentScreen } from "./CommentScreen";
-import { fetchThread, type Comment, type Story, type Thread } from "./hn";
-import { useQuery } from "./lib/query";
+import type { Comment, Story } from "./hn";
+import { threadQuery } from "./queries";
 import { domain, excerpt, plural, timeAgo } from "./text";
 
 /** Comments are rendered in pages; big threads have 500+. */
@@ -11,9 +12,8 @@ const COMMENT_PAGE = 100;
 
 export function StoryScreen({ story: initial }: { story: Story }) {
   const navigation = useNavigation();
-  const thread = useQuery<Thread>(`thread:${initial.id}`, (signal) => fetchThread(initial.id, signal), {
-    staleTime: 60_000,
-  });
+  // Paused while a comment covers this screen; refetched if stale when it's back.
+  const thread = useScreenQuery(threadQuery(initial.id));
   const [shown, setShown] = useState(COMMENT_PAGE);
 
   // Show what the list already knew while the comment tree loads.
@@ -64,22 +64,21 @@ export function StoryScreen({ story: initial }: { story: Story }) {
         <section>
           <header>
             <title>
-              {thread.status === "success"
-                ? comments.length > 0
-                  ? plural(comments.length, "comment")
-                  : "No comments yet"
-                : thread.status === "error"
+              {thread.data
+                ? (comments.length > 0 ? plural(comments.length, "comment") : "No comments yet") +
+                  (thread.isRefetchError ? " · couldn't refresh" : "")
+                : thread.isLoadingError
                   ? "Couldn't load comments"
                   : "Loading comments…"}
             </title>
           </header>
-          {thread.status === "error" && (
-            <listItemLockup onSelect={() => void thread.refetch()} disabled={thread.isFetching}>
-              <title>{thread.isFetching ? "Retrying…" : "Try Again"}</title>
+          {thread.isLoadingError && (
+            <listItemLockup onSelect={() => void thread.refetch()}>
+              <title>Try Again</title>
               <relatedContent>
                 <lockup>
                   <title>Couldn't load comments</title>
-                  <description>{thread.error?.message ?? ""}</description>
+                  <description>{thread.error.message}</description>
                 </lockup>
               </relatedContent>
             </listItemLockup>
@@ -87,7 +86,6 @@ export function StoryScreen({ story: initial }: { story: Story }) {
           {comments.slice(0, shown).map((comment) => (
             <CommentRow
               key={comment.id}
-              
               comment={comment}
               onSelect={() =>
                 navigation.push(

@@ -12,10 +12,6 @@ export class HttpError extends Error {
   }
 }
 
-export function isAbortError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
-}
-
 export interface RequestOptions {
   signal?: AbortSignal;
   /** Milliseconds. Defaults to 15s. */

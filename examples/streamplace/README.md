@@ -33,9 +33,36 @@ nor `EventSource`. Chat messages are ordinary AT Protocol records, though, so
 the app polls them from Microcosm's public indexes every 8 s. That chat isn't
 moderated by stream.place, so hidden or banned messages can still show up.
 
+## Data
+
+Server state lives in [TanStack Query](https://tanstack.com/query) through
+`tvml-react/query`. `main.tsx` puts `TVMLQueryProvider` in `launch`'s
+`wrapper`, so the home screen and every pushed stream page share one cache.
+That provider points TanStack Query's focus and online managers at TVJS: polling
+pauses while the app is in the background and refetches stale data on resume,
+and requests wait while the Apple TV is offline.
+
+| Query | Key | Freshness |
+| --- | --- | --- |
+| Live streams | `["live"]` | `refetchInterval` 30 s, `staleTime` 10 s, sorted by viewers in `select` |
+| One stream (+ viewer count) | `["stream", did]` | `refetchInterval` 15 s; starts from the live list's entry (`initialData`) |
+| Chat | `["chat", did]` | `refetchInterval` 8 s, only once the stream is known to be live |
+| Chat records, handles | `["chat-record", uri]`, `["handle", did]` | fetched once with `ensureQueryData` (`staleTime: Infinity`) |
+| Profiles | `["profiles", dids]`, `["profile", did]` | 10 min; the home screen waits for the live list so it's one request, and each batch seeds the single-profile cache |
+
+Screens use `useScreenQuery`, which pauses while a screen is covered: the home
+screen stops polling while a stream page is pushed and refetches when it's
+popped. Presenting the player covers the stream page too, so while
+watching, the stream and chat queries pass `subscribed: true` to keep the chat
+overlay and viewer count updating.
+
+A failed refresh keeps the last data (TanStack's `isRefetchError`) and the
+banner says so; no data yet and offline is a "You're offline" page
+(`fetchStatus: "paused"`) that loads by itself on reconnect.
+
 ## Files
 
-- `api.ts`: a `fetch` client. A 404 from `/api/livestream` means the streamer is offline; requests time out after 15 s and take an `AbortSignal`.
-- `hooks.ts`: `useLiveData`, which polls only while the screen is visible and the app is active, and cancels the previous request on each refresh. Presenting the player fires `disappear` on the stream page, so `keepAlive` keeps the chat overlay's data fresh while watching.
-- `store.tsx`: profiles and "recently live" history, provided through `launch`'s `wrapper`.
+- `api.ts`: a `fetch` client. A 404 from `/api/livestream` means the streamer is offline; requests time out after 15 s and take TanStack Query's `AbortSignal`.
+- `queries.ts`: the `QueryClient` and `queryOptions` for every query above.
+- `hooks.ts`: `useRecentlyLive` (the "recently live" history in `localStorage`, stamped on each successful live-list fetch) and `useNow` (a ticking clock for "5 min ago" labels).
 - `StreamScreen.tsx`: the stream page and the chat overlay. The `<PlayerOverlay>` is mounted only while the player is up, because TVMLKit doesn't draw an overlay document assigned before the player is presented.

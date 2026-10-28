@@ -25,10 +25,26 @@ A TV show catalog for tvml-react, built on the free [TVMaze API](https://www.tvm
   `listTemplate` that previews the highlighted episode through
   `relatedContent`), then episode. "Next Episode" swaps the episode screen in
   place with `navigation.replace()`.
-- **Data loading without `fetch`.** [`src/api.ts`](src/api.ts) wraps
-  `XMLHttpRequest` with an in-memory cache. [`src/useApi.ts`](src/useApi.ts)
-  switches between `loadingTemplate`, an error alert with Retry, and the
-  loaded screen.
+- **Data loading with [TanStack Query](https://tanstack.com/query)** through
+  `tvml-react/query`. [`src/api.ts`](src/api.ts) has one `queryOptions` per
+  TVMaze endpoint (query key, `queryFn` passing TanStack's `signal` to the
+  polyfilled `fetch`) and the app's `QueryClient` (catalog data is fresh for an
+  hour; 404s aren't retried). `TVMLQueryProvider` goes in `launch`'s `wrapper`,
+  so tabs and pushed screens share one cache: going back to a screen, or
+  Search's Trending shelf reusing Popular's first page, doesn't refetch.
+  - Screens use `useScreenQuery`, which only stays subscribed while the screen
+    is on the TV: hidden tabs and covered screens don't refetch, and stale data
+    refreshes when they come back (Tonight's schedule also refreshes when the
+    app resumes). Popular combines three page queries with `useQueries` +
+    `combine`, subscribed via `useIsScreenVisible`.
+  - `select` turns responses into what each screen renders (time slots,
+    categories, search results).
+  - Resting on a poster prefetches that show (`queryClient.prefetchQuery`), so
+    its detail screen usually opens with cast and seasons already there.
+  - Search debounces typing, then keeps the previous results on screen
+    (`placeholderData: keepPreviousData`) while the next query loads.
+  - `QueryFallback` in [`src/components.tsx`](src/components.tsx) shows the
+    `loadingTemplate`, or an error alert whose Try Again calls `refetch()`.
 
 ## Run it
 

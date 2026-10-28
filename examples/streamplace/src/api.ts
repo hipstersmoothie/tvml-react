@@ -92,7 +92,7 @@ export async function getLiveStreams(signal?: AbortSignal): Promise<Array<Livest
     `${STREAMPLACE}/xrpc/place.stream.live.getLiveUsers?limit=50`,
     signal,
   );
-  return streams.sort((a, b) => (b.viewerCount?.count ?? 0) - (a.viewerCount?.count ?? 0));
+  return streams;
 }
 
 /** The current livestream for one streamer, or null if they're offline. */
@@ -158,13 +158,14 @@ export interface Profile {
 const jpeg = (url: string | undefined) =>
   url && !url.includes("@") ? `${url}@jpeg` : url;
 
-export async function getProfiles(dids: Array<string>): Promise<Array<Profile>> {
+export async function getProfiles(dids: Array<string>, signal?: AbortSignal): Promise<Array<Profile>> {
   const batches: Array<Array<string>> = [];
   for (let i = 0; i < dids.length; i += 25) batches.push(dids.slice(i, i + 25));
   const results = await Promise.all(
     batches.map((actors) =>
       getJSON<{ profiles: Array<Profile> }>(
         `${BSKY_APPVIEW}/xrpc/app.bsky.actor.getProfiles?${query({ actors })}`,
+        signal,
       ),
     ),
   );
@@ -179,7 +180,8 @@ export async function getProfiles(dids: Array<string>): Promise<Array<Profile>> 
 // stream.place only pushes chat (`place.stream.chat.message`) over its
 // WebSocket, which TVJS doesn't have. Chat messages are ordinary records in
 // each chatter's repo with a `streamer` field, so Constellation can list the
-// newest ones by backlink and Slingshot can fetch each record.
+// newest ones by backlink and Slingshot can fetch each record. `queries.ts`
+// puts the pieces together and caches the records.
 
 export interface ChatMessage {
   uri: string;
@@ -189,62 +191,18 @@ export interface ChatMessage {
   createdAt: string;
 }
 
-interface Backlink {
+export interface Backlink {
   did: string;
   collection: string;
   rkey: string;
 }
 
-const messageCache = new Map<string, Promise<ChatMessage | null>>();
-const handleCache = new Map<string, Promise<string>>();
-
-function resolveHandle(did: string): Promise<string> {
-  let handle = handleCache.get(did);
-  if (!handle) {
-    handle = getJSON<{ handle: string }>(
-      `${SLINGSHOT}/xrpc/com.bad-example.identity.resolveMiniDoc?${query({ identifier: did })}`,
-    ).then(
-      (doc) => doc.handle,
-      () => did.slice(0, 16),
-    );
-    handleCache.set(did, handle);
-  }
-  return handle;
-}
-
-function getMessage({ did, collection, rkey }: Backlink): Promise<ChatMessage | null> {
-  const uri = `at://${did}/${collection}/${rkey}`;
-  let message = messageCache.get(uri);
-  if (!message) {
-    message = Promise.all([
-      getJSON<{ value: { text: string; createdAt: string } }>(
-        `${SLINGSHOT}/xrpc/com.atproto.repo.getRecord?${query({ repo: did, collection, rkey })}`,
-      ),
-      resolveHandle(did),
-    ]).then(
-      ([record, handle]) => ({
-        uri,
-        did,
-        handle,
-        text: record.value.text,
-        createdAt: record.value.createdAt,
-      }),
-      () => {
-        messageCache.delete(uri); // deleted record or transient error: retry next poll
-        return null;
-      },
-    );
-    messageCache.set(uri, message);
-  }
-  return message;
-}
-
-/** The newest chat messages for a streamer, newest first. */
-export async function getRecentChat(
+/** The newest chat messages linking to a streamer, newest first. */
+export async function getChatBacklinks(
   streamerDid: string,
   signal?: AbortSignal,
   limit = 12,
-): Promise<Array<ChatMessage>> {
+): Promise<Array<Backlink>> {
   const { linking_records } = await getJSON<{ linking_records: Array<Backlink> }>(
     `${CONSTELLATION}/links?${query({
       target: streamerDid,
@@ -254,9 +212,19 @@ export async function getRecentChat(
     })}`,
     signal,
   );
-  // Not cancelled with `signal`: records are cached and shared between polls.
-  const messages = await Promise.all(linking_records.map(getMessage));
-  return messages
-    .filter((m): m is ChatMessage => m !== null && m.text.trim() !== "")
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  return linking_records;
+}
+
+export async function getChatRecord({ did, collection, rkey }: Backlink): Promise<{ text: string; createdAt: string }> {
+  const { value } = await getJSON<{ value: { text: string; createdAt: string } }>(
+    `${SLINGSHOT}/xrpc/com.atproto.repo.getRecord?${query({ repo: did, collection, rkey })}`,
+  );
+  return { text: value.text, createdAt: value.createdAt };
+}
+
+export async function resolveHandle(did: string): Promise<string> {
+  const { handle } = await getJSON<{ handle: string }>(
+    `${SLINGSHOT}/xrpc/com.bad-example.identity.resolveMiniDoc?${query({ identifier: did })}`,
+  );
+  return handle;
 }

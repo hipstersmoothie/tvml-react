@@ -185,7 +185,10 @@ const navigation = useNavigation();
 <lockup onSelect={() => navigation.push(<AlbumDetail album={album} />)} />
 ```
 
-`push`, `presentModal`, `replace`, `pop`, `popToRoot` and `dismissModal`. Each
+`push`, `presentModal`, `replace`, `pop`, `popToRoot` and `dismissModal`.
+`replace` swaps out the top screen. If that's the first screen, its component
+unmounts, so keep app-wide timers and state above it: in `launch`'s `wrapper`,
+or in the new screen. Each
 pushed screen gets its own TVML document but renders from the app's one React
 tree (through a portal), so state and context are shared. A screen unmounts
 when TVMLKit unloads its document, including when the user presses Menu.
@@ -385,15 +388,81 @@ const player = usePlayer();
 
 ## Data fetching
 
-TVJS has `XMLHttpRequest` but no `fetch`. tvml-react's polyfills install
-`fetch`, `Headers`, `Response`, `AbortController` and `AbortSignal` on top of it,
-so data libraries like TanStack Query and SWR work. It covers JSON and text
-bodies (no streaming or blobs). TVJS's `XMLHttpRequest` fires `error` instead of
-`load` for HTTP errors such as 404; the polyfill resolves those as ordinary
-responses with `ok: false`. TVJS has no `WebSocket` or `EventSource`.
+Use [TanStack Query](https://tanstack.com/query) through `tvml-react/query`:
 
-For timeouts, use `AbortSignal.timeout(ms)`, combined with a caller's signal
-via `AbortSignal.any([...])`, or pass the non-standard `timeout` option.
+```sh
+npm install @tanstack/react-query
+```
+
+```tsx
+import { QueryClient } from "@tanstack/react-query";
+import { TVMLQueryProvider, useScreenQuery } from "tvml-react/query";
+
+const client = new QueryClient();
+
+launch(<App />, {
+  wrapper: ({ children }) => <TVMLQueryProvider client={client}>{children}</TVMLQueryProvider>,
+});
+
+function LiveNow() {
+  const { data, status } = useScreenQuery({
+    queryKey: ["live"],
+    queryFn: ({ signal }) => fetch(LIVE_URL, { signal }).then((r) => r.json()),
+    refetchInterval: 30_000,
+  });
+  // …
+}
+```
+
+`TVMLQueryProvider` puts TanStack Query in the right mode for the TV:
+- **Not a server.** TVJS has no `window`, so TanStack Query would otherwise
+  assume it's running on a server and silently turn off `refetchInterval` and
+  retries.
+- **Focus is app resume.** `refetchOnWindowFocus` refetches stale data when the
+  user comes back to the app.
+- **Online is the Apple TV's connection.** Queries pause offline and refetch on
+  reconnect.
+
+`useScreenQuery` and `useScreenInfiniteQuery` are `useQuery` and
+`useInfiniteQuery` that pause while their screen is hidden. A hidden tab or a
+covered screen stops polling and skips focus and reconnect refetches, but its
+data stays cached and in-flight requests aren't cancelled. When the screen
+reappears, stale data refetches. Use plain `useQuery`, or pass
+`subscribed: true`, for data that should keep refreshing while hidden, such as
+a live chat overlay drawn over the fullscreen player.
+
+Put the provider in `launch`'s `wrapper` so tabs and pushed screens share one
+cache. `wrapper` also takes a list, outermost first:
+`wrapper: [QueryProvider, PlayerProvider]`. Everything else is plain TanStack
+Query.
+
+TV tips:
+- **Paging grids.** Load the next page from `onHighlight` near the end of a
+  grid with `fetchNextPage({ cancelRefetch: false })`. The default restarts the
+  in-flight request on every focus move.
+- **Set a `staleTime`.** App resume counts as window focus, so with the default
+  `staleTime: 0` every visible query refetches each time the user comes back.
+- **Polling restarts on remount.** `refetchInterval` timers belong to the
+  query's subscriber, so they start again whenever a screen is replaced or
+  remounted. For a steady cadence, also set `staleTime`, so a remount refetches
+  only when data is actually old.
+- **Offline queries pause.** They don't fail: `status` stays `"pending"` with
+  `fetchStatus: "paused"`. Show a "waiting for a connection" state rather than
+  a spinner that never ends.
+- **Persisting the cache.** TVJS's `localStorage` is synchronous, so TanStack's
+  `@tanstack/query-sync-storage-persister` with
+  `@tanstack/react-query-persist-client` can save the cache for instant, offline
+  launches. Pass `storage: localStorage` explicitly: its default looks for
+  `window.localStorage`, which TVJS doesn't have.
+
+`fetch` comes from tvml-react's polyfills. TVJS has `XMLHttpRequest` but no
+`fetch`, so `fetch`, `Headers`, `Response`, `AbortController` and `AbortSignal`
+are built on top of it. They cover JSON and text bodies (no streaming or blobs).
+TVJS's `XMLHttpRequest` fires `error` instead of `load` for HTTP errors such as
+404; the polyfill resolves those as ordinary responses with `ok: false`. For
+timeouts, use `AbortSignal.timeout(ms)`, combined with other signals via
+`AbortSignal.any([...])`, or pass the non-standard `timeout` option. TVJS has
+no `WebSocket` or `EventSource`.
 
 ## Testing on the device
 

@@ -32,15 +32,6 @@ Known gaps and missing features, roughly in priority order within each section.
 
 ## Features
 
-- [ ] **Data fetching hook.** Every example app wrote its own query hook. Ship
-      `useQuery(key, fetcher, { staleTime, interval })` with a cache shared
-      across screens, plus `loadMore` for paging. TV-specific needs:
-      - refetch on `appear` and on resume, but only for the visible screen;
-      - pause while the app is backgrounded or offline;
-      - keep the last data when a refresh fails.
-
-      The hacker-news (`lib/query.ts`), dashboard (`useLiveResource`) and
-      streamplace (`useLiveData`) examples each have one.
 - [ ] **Layout helpers.** `divTemplate` is a region flow layout with many
       no-op styles (see docs/platform-notes.md). Ship `tvml-react/layout`
       (`Row`, `Cell`, `Columns`, safe-area constants), starting from

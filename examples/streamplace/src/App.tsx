@@ -1,32 +1,40 @@
-import { useEffect } from "react";
-import { useNavigation, useNetworkStatus } from "tvml-react";
+import { keepPreviousData } from "@tanstack/react-query";
+import { useNavigation } from "tvml-react";
+import { useScreenQuery } from "tvml-react/query";
 
-import { getLiveStreams, thumbnailUrl, type Livestream } from "./api";
+import { thumbnailUrl } from "./api";
 import { ago, clockTime, oneLine, viewers } from "./format";
-import { useLiveData, useNow } from "./hooks";
-import { useProfiles, useStore, type SeenStreamer } from "./store";
+import { useNow, useRecentlyLive, type SeenStreamer } from "./hooks";
+import { LIVE_REFRESH_MS, liveStreamsQuery, profilesQuery } from "./queries";
 import { StreamScreen } from "./StreamScreen";
-
-const REFRESH_MS = 30_000;
 
 export function App() {
   const navigation = useNavigation();
-  const network = useNetworkStatus();
-  const { history, rememberLive } = useStore();
-  const live = useLiveData(getLiveStreams, REFRESH_MS);
+  // Polls every 30 s while this screen is on the TV and the app is in the
+  // foreground; refetches when it comes back into view or the app resumes.
+  const live = useScreenQuery(liveStreamsQuery);
   const now = useNow();
 
   const streams = live.data ?? [];
-  useEffect(() => {
-    if (live.data) rememberLive(live.data);
-  }, [live.data, rememberLive]);
-
+  const history = useRecentlyLive(live.data, live.dataUpdatedAt);
   const liveDids = new Set(streams.map((s) => s.author.did));
   const offline = history.filter((s) => !liveDids.has(s.did));
-  const profiles = useProfiles([...liveDids, ...offline.map((s) => s.did)]);
 
-  if (live.status === "loading") {
-    return (
+  // Waits for the live list so live and offline streamers share one request.
+  const profileDids = [...liveDids, ...offline.map((s) => s.did)];
+  const { data: profiles = {} } = useScreenQuery({
+    ...profilesQuery(profileDids),
+    enabled: live.isSuccess && profileDids.length > 0,
+    placeholderData: keepPreviousData,
+  });
+
+  if (live.isPending) {
+    return live.fetchStatus === "paused" ? (
+      <alertTemplate theme="dark">
+        <title>You’re offline</title>
+        <description>Live streams will load when your Apple TV is back online.</description>
+      </alertTemplate>
+    ) : (
       <loadingTemplate theme="dark">
         <activityIndicator>
           <title>Finding live streams…</title>
@@ -35,33 +43,32 @@ export function App() {
     );
   }
 
-  if (live.status === "error") {
+  if (live.isLoadingError) {
     return (
       <alertTemplate theme="dark">
-        <title>{network.online ? "Couldn’t reach stream.place" : "You’re offline"}</title>
-        <description>
-          {network.online
-            ? `${live.error.message}. Check your connection and try again.`
-            : "Connect your Apple TV to the internet to watch live streams."}
-        </description>
-        <button onSelect={live.refresh}>
+        <title>Couldn’t reach stream.place</title>
+        <description>{`${live.error.message}. Check your connection and try again.`}</description>
+        <button onSelect={() => void live.refetch()}>
           <text>Try Again</text>
         </button>
       </alertTemplate>
     );
   }
 
-  const open = (did: string, stream?: Livestream) =>
-    navigation.push(<StreamScreen did={did} initial={stream} />);
+  const open = (did: string) =>
+    navigation.push(<StreamScreen did={did} />);
 
-  const status = live.error
-    ? `Couldn’t refresh (${live.error.message}) · showing ${clockTime(live.updatedAt)}`
-    : streams.length === 0
-      ? `Nobody’s live right now · checking again every ${REFRESH_MS / 1000} seconds`
-      : `${streams.length} live ${streams.length === 1 ? "stream" : "streams"} · updated ${clockTime(live.updatedAt)}`;
+  const status =
+    live.fetchStatus === "paused"
+      ? `You’re offline · showing ${clockTime(live.dataUpdatedAt)}`
+      : live.isRefetchError
+        ? `Couldn’t refresh (${live.error.message}) · showing ${clockTime(live.dataUpdatedAt)}`
+        : streams.length === 0
+          ? `Nobody’s live right now · checking again every ${LIVE_REFRESH_MS / 1000} seconds`
+          : `${streams.length} live ${streams.length === 1 ? "stream" : "streams"} · updated ${clockTime(live.dataUpdatedAt)}`;
 
   // A new thumbnail URL per refresh so TVMLKit fetches a fresh frame.
-  const thumbVersion = Math.floor(live.updatedAt / REFRESH_MS);
+  const thumbVersion = Math.floor(live.dataUpdatedAt / LIVE_REFRESH_MS);
 
   return (
     <stackTemplate theme="dark">
@@ -80,7 +87,7 @@ export function App() {
                 const { did, handle } = stream.author;
                 const profile = profiles[did];
                 return (
-                  <lockup key={did} onSelect={() => open(did, stream)}>
+                  <lockup key={did} onSelect={() => open(did)}>
                     <img src={thumbnailUrl(did, thumbVersion)} width={480} height={270} />
                     <overlay style={{ padding: 16 }}>
                       {profile?.avatar && (

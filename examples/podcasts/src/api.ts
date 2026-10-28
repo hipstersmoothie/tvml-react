@@ -70,9 +70,11 @@ export async function topPodcasts(genreId?: number, signal?: AbortSignal): Promi
   }));
 }
 
-/** The podcast's RSS feed. Chart entries are looked up first for their feed URL. */
-export async function loadFeed(podcast: Podcast, signal?: AbortSignal): Promise<Feed> {
-  const feedUrl = podcast.feedUrl ?? (await lookupPodcast(podcast.id, signal)).feedUrl;
-  if (!feedUrl) throw new Error("This podcast doesn't publish a feed.");
-  return parseFeed(await requestText(feedUrl, signal), podcast.artwork);
+/** A podcast's RSS feed, parsed. */
+export async function loadFeed(
+  feedUrl: string,
+  fallbackArtwork: string,
+  signal?: AbortSignal,
+): Promise<Feed> {
+  return parseFeed(await requestText(feedUrl, signal), fallbackArtwork);
 }

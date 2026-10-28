@@ -1,4 +1,4 @@
-// TVJS has no `fetch`, so this is a small promise wrapper over XMLHttpRequest.
+// tvml-react polyfills `fetch` and `AbortController` for TVJS.
 
 export class HttpError extends Error {
   constructor(
@@ -9,40 +9,14 @@ export class HttpError extends Error {
   }
 }
 
-export interface GetJSONOptions {
-  /** Milliseconds before the request is aborted. */
-  timeout?: number;
-  headers?: Record<string, string>;
-}
-
-export function getJSON<T>(url: string, { timeout = 15_000, headers }: GetJSONOptions = {}): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    const timer = setTimeout(() => {
-      xhr.abort();
-      reject(new HttpError(`Timed out: ${url}`, 0));
-    }, timeout);
-
-    xhr.open("GET", url);
-    for (const [name, value] of Object.entries(headers ?? {})) {
-      xhr.setRequestHeader(name, value);
-    }
-    xhr.onload = () => {
-      clearTimeout(timer);
-      if (xhr.status < 200 || xhr.status >= 300) {
-        reject(new HttpError(`HTTP ${xhr.status}: ${url}`, xhr.status));
-        return;
-      }
-      try {
-        resolve(JSON.parse(xhr.responseText) as T);
-      } catch (error) {
-        reject(error);
-      }
-    };
-    xhr.onerror = () => {
-      clearTimeout(timer);
-      reject(new HttpError(`Network error: ${url}`, 0));
-    };
-    xhr.send();
-  });
+/**
+ * GET a JSON body. Pass TanStack Query's `signal` so a cancelled query aborts
+ * its request; a request that hangs for `timeout` ms fails (and is retried)
+ * instead of holding up every later refetch of that query.
+ */
+export async function getJSON<T>(url: string, signal?: AbortSignal, timeout = 15_000): Promise<T> {
+  const deadline = AbortSignal.timeout(timeout);
+  const response = await fetch(url, { signal: signal ? AbortSignal.any([signal, deadline]) : deadline });
+  if (!response.ok) throw new HttpError(`HTTP ${response.status}: ${url}`, response.status);
+  return (await response.json()) as T;
 }

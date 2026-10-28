@@ -1,7 +1,9 @@
 import { useNavigation } from "tvml-react";
+import { useScreenQuery } from "tvml-react/query";
 
 import { imageUrl, type Artwork } from "../api";
-import { useArtwork, useArtworkImage, useFavorites, useScreenScale } from "../hooks";
+import { useArtworkImage, useFavorites, useScreenScale } from "../hooks";
+import { artworkQuery } from "../queries";
 import { startSlideshow } from "../slideshow";
 import { AmbientScreen } from "./AmbientScreen";
 import { BrowseScreen } from "./BrowseScreen";
@@ -19,7 +21,8 @@ export function ArtworkScreen({
   collection?: Array<Artwork>;
 }) {
   const navigation = useNavigation();
-  const { artwork: detail, status, error } = useArtwork(artwork.id);
+  // The grid's `artwork` is shown right away; the details fill in.
+  const { data: detail, isPending, error } = useScreenQuery(artworkQuery(artwork.id));
   const { isFavorite, toggle } = useFavorites();
   const hero = useArtworkImage(artwork, HERO.width, HERO.height);
   const scale = useScreenScale();
@@ -39,8 +42,7 @@ export function ArtworkScreen({
   ];
 
   const description =
-    detail?.description ??
-    (status === "loading" ? "Loading…" : status === "error" ? error : detail?.creditLine);
+    detail?.description ?? (isPending ? "Loading…" : (error?.message ?? detail?.creditLine));
 
   return (
     <productTemplate theme="dark">

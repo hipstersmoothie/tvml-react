@@ -1,5 +1,7 @@
+import { useScreenQuery } from "tvml-react/query";
+
 import { getJSON } from "../lib/http";
-import { useLiveResource } from "./useLiveResource";
+import { persisted } from "../lib/persist";
 
 export interface HistoricalEvent {
   year: number;
@@ -17,18 +19,20 @@ export function useOnThisDay(language: string, today: Date): Array<HistoricalEve
   const lang = language.split(/[-_]/)[0] || "en";
   const mm = String(today.getMonth() + 1).padStart(2, "0");
   const dd = String(today.getDate()).padStart(2, "0");
-  const url = `https://api.wikimedia.org/feed/v1/wikipedia/${lang}/onthisday/selected/${mm}/${dd}`;
+  const queryKey = ["onthisday", lang, mm, dd];
 
-  const { data } = useLiveResource<Array<HistoricalEvent>>(
-    "dashboard.onthisday",
-    url,
-    async () => {
-      const body = await getJSON<OnThisDayResponse>(url);
+  const { data } = useScreenQuery<Array<HistoricalEvent>>({
+    queryKey,
+    queryFn: async ({ signal }) => {
+      const url = `https://api.wikimedia.org/feed/v1/wikipedia/${lang}/onthisday/selected/${mm}/${dd}`;
+      const body = await getJSON<OnThisDayResponse>(url, signal);
       return (body.selected ?? [])
         .filter((event) => event.text.length < 160)
         .map(({ year, text }) => ({ year, text }));
     },
-    { refreshEvery: 6 * HOUR },
-  );
+    staleTime: 6 * HOUR,
+    refetchInterval: 6 * HOUR,
+    ...persisted<Array<HistoricalEvent>>("dashboard.onthisday", queryKey),
+  });
   return data ?? [];
 }

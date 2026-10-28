@@ -97,6 +97,19 @@ function installLifecycle(): void {
   };
 }
 
+/**
+ * Subscribe to the app being suspended or resumed, outside React. Returns an
+ * unsubscribe function.
+ */
+export function onAppStateChange(listener: (state: AppState) => void): () => void {
+  return subscribeApp((event) => listener(event === "resume" ? "active" : "background"));
+}
+
+/** The app's current state, outside React. */
+export function getAppState(): AppState {
+  return appState;
+}
+
 function subscribeApp(listener: (event: AppEvent) => void): () => void {
   installLifecycle();
   appListeners.add(listener);

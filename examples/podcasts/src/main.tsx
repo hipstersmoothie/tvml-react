@@ -1,10 +1,21 @@
+import type { ReactNode } from "react";
 import { launch, type StartOptions } from "tvml-react";
+import { TVMLQueryProvider } from "tvml-react/query";
 
 import { App } from "./App";
 import { PlayerProvider } from "./PlayerProvider";
+import { queryClient } from "./queries";
+
+// The query cache and the player live in the wrapper so they're shared by (and
+// outlive) every pushed screen and modal.
+function Providers({ children }: { children?: ReactNode }) {
+  return (
+    <TVMLQueryProvider client={queryClient}>
+      <PlayerProvider>{children}</PlayerProvider>
+    </TVMLQueryProvider>
+  );
+}
 
 export function start(_options: StartOptions) {
-  // The player lives in the wrapper so it's shared by (and outlives) every
-  // pushed screen and modal.
-  launch(<App />, { wrapper: PlayerProvider, errorTitle: "Podcasts crashed" });
+  launch(<App />, { wrapper: Providers, errorTitle: "Podcasts crashed" });
 }

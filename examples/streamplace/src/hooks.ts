@@ -1,69 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useAppState, useIsScreenVisible } from "tvml-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocalStorage } from "tvml-react";
 
-export type Remote<T> =
-  | { status: "loading"; data?: undefined; error?: undefined; updatedAt?: undefined }
-  | { status: "ready"; data: T; error?: Error; updatedAt: number }
-  | { status: "error"; data?: undefined; error: Error; updatedAt?: undefined };
-
-/**
- * Load `load()` now, then every `intervalMs`, but only while this screen is
- * the one on the TV and the app is in the foreground. Coming back to the
- * screen (popping a pushed screen, closing the player) or resuming the app
- * refreshes immediately. A failed refresh keeps the last good data and
- * reports the error alongside it. A refresh cancels the one before it.
- */
-export function useLiveData<T>(
-  load: (signal: AbortSignal) => Promise<T>,
-  intervalMs: number,
-  options: {
-    enabled?: boolean;
-    /**
-     * Keep polling while the screen is hidden. The fullscreen player hides
-     * the screen that presented it, but its overlay still shows our data.
-     */
-    keepAlive?: boolean;
-  } = {},
-): Remote<T> & { refresh(): void } {
-  const visible = useIsScreenVisible();
-  const appState = useAppState();
-  const active =
-    (visible || options.keepAlive === true) && appState === "active" && options.enabled !== false;
-
-  const [state, setState] = useState<Remote<T>>({ status: "loading" });
-  const loadRef = useRef(load);
-  loadRef.current = load;
-  const inFlight = useRef<AbortController | null>(null);
-
-  const refresh = useCallback(() => {
-    inFlight.current?.abort();
-    const { signal } = (inFlight.current = new AbortController());
-    loadRef.current(signal).then(
-      (data) => {
-        if (!signal.aborted) setState({ status: "ready", data, updatedAt: Date.now() });
-      },
-      (error: unknown) => {
-        if (signal.aborted) return;
-        const err = error instanceof Error ? error : new Error(String(error));
-        setState((prev) =>
-          prev.status === "ready" ? { ...prev, error: err } : { status: "error", error: err },
-        );
-      },
-    );
-  }, []);
-
-  useEffect(() => {
-    if (!active) return;
-    refresh();
-    const timer = setInterval(refresh, intervalMs);
-    return () => {
-      clearInterval(timer);
-      inFlight.current?.abort();
-    };
-  }, [active, intervalMs, refresh]);
-
-  return { ...state, refresh };
-}
+import type { Livestream } from "./api";
 
 /** `Date.now()` that ticks every `intervalMs`, for "5 min ago" labels. */
 export function useNow(intervalMs = 30_000): number {
@@ -73,4 +11,47 @@ export function useNow(intervalMs = 30_000): number {
     return () => clearInterval(id);
   }, [intervalMs]);
   return now;
+}
+
+export interface SeenStreamer {
+  did: string;
+  handle: string;
+  title: string;
+  lastLiveAt: number;
+}
+
+// Streamers to suggest before we've seen anyone live on this Apple TV.
+const SEEDS: Array<SeenStreamer> = [
+  { did: "did:plc:rbvrr34edl5ddpuwcubjiost", handle: "stream.place", title: "Streamplace", lastLiveAt: 0 },
+  { did: "did:plc:2zmxikig2sj7gqaezl5gntae", handle: "iame.li", title: "Building Streamplace", lastLiveAt: 0 },
+];
+const MAX_HISTORY = 24;
+
+/**
+ * Streamers seen live on this Apple TV, newest first, remembered in
+ * `localStorage`. Each successful fetch of the live list (a new `updatedAt`)
+ * stamps everyone in it. (`streams` keeps its identity while the list is
+ * unchanged, so it can't be the trigger.)
+ */
+export function useRecentlyLive(streams: Array<Livestream> | undefined, updatedAt: number): Array<SeenStreamer> {
+  const [saved, setSaved] = useLocalStorage<Array<SeenStreamer>>("streamplace.history", []);
+  const latest = useRef(streams);
+  latest.current = streams;
+
+  useEffect(() => {
+    const live = latest.current;
+    if (!live?.length) return;
+    setSaved((current) => {
+      const byDid = new Map(current.map((s) => [s.did, s]));
+      for (const s of live) {
+        byDid.set(s.author.did, { did: s.author.did, handle: s.author.handle, title: s.record.title, lastLiveAt: updatedAt });
+      }
+      return [...byDid.values()].sort((a, b) => b.lastLiveAt - a.lastLiveAt).slice(0, MAX_HISTORY);
+    });
+  }, [updatedAt, setSaved]);
+
+  return useMemo(() => {
+    const dids = new Set(saved.map((s) => s.did));
+    return [...saved, ...SEEDS.filter((s) => !dids.has(s.did))];
+  }, [saved]);
 }

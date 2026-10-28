@@ -51,36 +51,25 @@ export function fetchFeedIds(feed: FeedId, signal?: AbortSignal): Promise<Array<
   return getJSON<Array<number>>(`${FIREBASE}/${feed}stories.json`, { signal });
 }
 
-const itemCache = new Map<number, { story: Story | null; at: number }>();
-
-async function fetchStory(id: number, maxAge: number, signal?: AbortSignal): Promise<Story | null> {
-  const cached = itemCache.get(id);
-  if (cached && Date.now() - cached.at < maxAge) return cached.story;
+async function fetchStory(id: number, signal?: AbortSignal): Promise<Story | null> {
   const raw = await getJSON<RawItem | null>(`${FIREBASE}/item/${id}.json`, { signal });
-  const story: Story | null =
-    raw && !raw.deleted && !raw.dead && raw.title
-      ? {
-          id: raw.id,
-          title: decodeHtml(raw.title),
-          by: raw.by ?? "unknown",
-          time: raw.time ?? 0,
-          score: raw.score ?? 0,
-          comments: raw.descendants ?? 0,
-          url: raw.url,
-          text: raw.text ? decodeHtml(raw.text) : undefined,
-          type: raw.type === "job" || raw.type === "poll" ? raw.type : "story",
-        }
-      : null;
-  itemCache.set(id, { story, at: Date.now() });
-  return story;
+  if (!raw || raw.deleted || raw.dead || !raw.title) return null;
+  return {
+    id: raw.id,
+    title: decodeHtml(raw.title),
+    by: raw.by ?? "unknown",
+    time: raw.time ?? 0,
+    score: raw.score ?? 0,
+    comments: raw.descendants ?? 0,
+    url: raw.url,
+    text: raw.text ? decodeHtml(raw.text) : undefined,
+    type: raw.type === "job" || raw.type === "poll" ? raw.type : "story",
+  };
 }
 
 /** Fetch stories for `ids`, 10 requests at a time, dropping deleted ones. */
-export async function fetchStories(
-  ids: ReadonlyArray<number>,
-  { maxAge = 60_000, signal }: { maxAge?: number; signal?: AbortSignal } = {},
-): Promise<Array<Story>> {
-  const stories = await mapLimit(ids, 10, (id) => fetchStory(id, maxAge, signal));
+export async function fetchStories(ids: ReadonlyArray<number>, signal?: AbortSignal): Promise<Array<Story>> {
+  const stories = await mapLimit(ids, 10, (id) => fetchStory(id, signal));
   return stories.filter((s): s is Story => s !== null);
 }
 

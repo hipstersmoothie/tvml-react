@@ -1,6 +1,7 @@
-import { airTime, channel, endpoints, episodeCode, type ScheduledEpisode } from "./api";
-import { ErrorScreen, Loading, ShowLockup, useWatchlist } from "./components";
-import { useApi } from "./useApi";
+import { useScreenQuery } from "tvml-react/query";
+
+import { airTime, channel, episodeCode, tvmaze, type ScheduledEpisode } from "./api";
+import { QueryFallback, ShowLockup, useWatchlist } from "./components";
 
 interface Slot {
   time: string;
@@ -12,7 +13,7 @@ const endsAt = (episode: ScheduledEpisode) =>
 
 // Group today's schedule into time slots, one poster per show, starting with
 // whatever is on now. Late at night (nothing left today) show the whole day.
-function toSlots([schedule]: Array<Array<ScheduledEpisode>>): Array<Slot> {
+function toSlots(schedule: Array<ScheduledEpisode>): Array<Slot> {
   const slots = new Map<string, Slot>();
   const seen = new Set<number>();
   const now = Date.now();
@@ -33,11 +34,10 @@ function toSlots([schedule]: Array<Array<ScheduledEpisode>>): Array<Slot> {
 }
 
 export function Tonight() {
-  const schedule = useApi(endpoints.schedule(), toSlots);
+  const schedule = useScreenQuery({ ...tvmaze.schedule(), select: toSlots });
   const watchlist = useWatchlist();
 
-  if (schedule.status === "loading") return <Loading title="Loading tonight’s schedule…" />;
-  if (schedule.status === "error") return <ErrorScreen {...schedule} />;
+  if (schedule.data === undefined) return <QueryFallback query={schedule} title="Loading tonight’s schedule…" />;
 
   return (
     <stackTemplate theme="dark">

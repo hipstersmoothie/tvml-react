@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useAccessibility,
   useAppState,
@@ -36,55 +36,56 @@ function photoURL(id: number, scheme: Palette["scheme"]): string {
 const MINUTE = 60_000;
 
 /**
- * Picks the backdrop and keeps a <Dashboard> on screen with it.
+ * The launch screen: a random photo to start with.
  *
  * TVMLKit reads a template's <background> once, when the document is
  * presented: changing the <img> src, remounting the <img> or <background>, or
  * swapping the whole template all leave the old photo up. So each new photo
  * (or appearance change) presents a fresh document with
- * `navigation.replace()`. Data lives in localStorage-backed hooks, so the new
- * screen renders with it immediately.
+ * `navigation.replace()`, and the old screen unmounts along with its timers.
+ * Data lives in the QueryClient provided in `launch`'s wrapper, shared by
+ * every screen, so the new one renders with it immediately.
  */
 export function App() {
+  const [photo] = useState(() => Math.floor(Math.random() * PHOTOS.length));
+  return <Dashboard photo={photo} />;
+}
+
+function Dashboard({ photo }: { photo: number }) {
+  // An ambient screen shouldn't hand over to the screensaver.
+  useKeepAwake();
+
   const { scheme } = usePalette();
   const { reduceMotion } = useAccessibility();
   const { online } = useNetworkStatus();
   const foreground = useAppState() === "active";
   const navigation = useNavigation();
 
+  // Fixed for the life of this screen; see above.
+  const [backdrop] = useState(() => photoURL(PHOTOS[photo], scheme));
+  const [presentedScheme] = useState(scheme);
+  useEffect(() => {
+    if (scheme !== presentedScheme) navigation.replace(<Dashboard photo={photo} />);
+  }, [scheme, presentedScheme, photo, navigation]);
+
   // A changing backdrop is motion on a screen nobody's touching; with Reduce
   // Motion on, keep one photo.
-  const photo = useRotation(PHOTOS.length, 5 * MINUTE, foreground && online && !reduceMotion);
-  const backdrop = photoURL(PHOTOS[photo], scheme);
-
-  const [initial] = useState(backdrop);
-  const [replaced, setReplaced] = useState(false);
-  const shown = useRef(backdrop);
+  const rotate = foreground && online && !reduceMotion;
   useEffect(() => {
-    if (backdrop === shown.current) return;
-    shown.current = backdrop;
-    setReplaced(true);
-    navigation.replace(<Dashboard backdrop={backdrop} />);
-  }, [backdrop, navigation]);
+    if (!rotate) return;
+    const next = (photo + 1) % PHOTOS.length;
+    const timer = setTimeout(() => navigation.replace(<Dashboard photo={next} />), 5 * MINUTE);
+    return () => clearTimeout(timer);
+  }, [rotate, photo, navigation]);
 
-  // Once replaced, the launch document is off screen; leave it empty so its
-  // timers and requests stop.
-  return replaced ? <divTemplate /> : <Dashboard backdrop={initial} />;
-}
-
-function Dashboard({ backdrop }: { backdrop: string }) {
-  // An ambient screen shouldn't hand over to the screensaver.
-  useKeepAwake();
-
-  const { scheme } = usePalette();
   const locale = useLocale();
   const now = useNow();
   const place = useLocation(locale.region);
   const weather = useWeather(place, locale.temperatureUnit);
   const events = useOnThisDay(locale.language, now);
-  const { online } = useNetworkStatus();
-  const foreground = useAppState() === "active";
   const event = useRotation(events.length, MINUTE, foreground);
+  // 0 until the forecast has loaded (or been restored from localStorage).
+  const fetchedAt = weather.dataUpdatedAt || undefined;
 
   return (
     <divTemplate theme={scheme}>
@@ -97,11 +98,11 @@ function Dashboard({ backdrop }: { backdrop: string }) {
         place={place}
         forecast={weather.data}
         offline={!online}
-        fetchedAt={weather.fetchedAt}
+        fetchedAt={fetchedAt}
       />
       <OnThisDay event={events[event]} />
       <Forecast forecast={weather.data} locale={locale} now={now} />
-      <Credits updated={weather.fetchedAt ? locale.deviceTime.format(weather.fetchedAt) : undefined} />
+      <Credits updated={fetchedAt ? locale.deviceTime.format(fetchedAt) : undefined} />
     </divTemplate>
   );
 }

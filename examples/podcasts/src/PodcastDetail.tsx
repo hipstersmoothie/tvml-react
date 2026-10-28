@@ -1,28 +1,43 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigation } from "tvml-react";
+import { useScreenQuery } from "tvml-react/query";
 
-import { loadFeed } from "./api";
 import { ErrorScreen, LoadingScreen } from "./components";
 import { EpisodeActions } from "./EpisodeActions";
 import { formatLength, formatPublished, formatRemaining } from "./format";
 import { useProgress, useSubscriptions } from "./library";
 import { usePodcastPlayer } from "./PlayerProvider";
+import { feedQuery } from "./queries";
+import type { Feed } from "./rss";
 import type { Episode, Podcast, Progress } from "./types";
-import { useResource } from "./useResource";
 
+// Feeds can have hundreds of episodes; rows are added 40 at a time.
 const PAGE = 40;
 
 export function PodcastDetail({ podcast }: { podcast: Podcast }) {
-  const [feed, reload] = useResource(`feed:${podcast.id}`, (signal) => loadFeed(podcast, signal));
   const [visible, setVisible] = useState(PAGE);
+  // The whole feed is cached as parsed; the screen selects the rows it shows.
+  const selectPage = useCallback(
+    (feed: Feed) => ({ ...feed, page: feed.episodes.slice(0, visible) }),
+    [visible],
+  );
+  const feed = useScreenQuery({
+    ...feedQuery(podcast),
+    select: selectPage,
+  });
   const { isSubscribed, toggle } = useSubscriptions();
   const { progress } = useProgress();
   const { playEpisode } = usePodcastPlayer();
 
-  if (feed.status === "loading") return <LoadingScreen title={podcast.title} />;
-  if (feed.status === "error") return <ErrorScreen error={feed.error} onRetry={reload} />;
+  // Once loaded, keep showing the feed even if a background refetch fails.
+  if (!feed.data) {
+    if (feed.isError && !feed.isFetching) {
+      return <ErrorScreen error={feed.error} onRetry={() => void feed.refetch()} />;
+    }
+    return <LoadingScreen title={podcast.title} />;
+  }
 
-  const { episodes, description } = feed.data;
+  const { episodes, page, description } = feed.data;
   const subscribed = isSubscribed(podcast.id);
   const latest = episodes[0];
   // The newest episode the user is partway through, else the latest one.
@@ -70,7 +85,7 @@ export function PodcastDetail({ podcast }: { podcast: Podcast }) {
           <header>
             <title>{`${episodes.length} Episodes`}</title>
           </header>
-          {episodes.slice(0, visible).map((episode) => (
+          {page.map((episode) => (
             <EpisodeRow
               key={episode.id}
               episode={episode}
@@ -78,10 +93,10 @@ export function PodcastDetail({ podcast }: { podcast: Podcast }) {
               progress={progress[episode.id]}
             />
           ))}
-          {visible < episodes.length ? (
+          {page.length < episodes.length ? (
             <listItemLockup onSelect={() => setVisible((n) => n + PAGE)}>
               <title>Show More Episodes</title>
-              <decorationLabel>{`${episodes.length - visible} more`}</decorationLabel>
+              <decorationLabel>{`${episodes.length - page.length} more`}</decorationLabel>
             </listItemLockup>
           ) : null}
         </section>

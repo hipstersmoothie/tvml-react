@@ -1,6 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocalStorage, useNavigation } from "tvml-react";
 
-import { poster, type Image, type Show } from "./api";
+import { poster, tvmaze, type Image, type Show } from "./api";
 import { ShowDetail } from "./ShowDetail";
 
 export function Loading({ title = "Loading…" }: { title?: string }) {
@@ -13,25 +14,52 @@ export function Loading({ title = "Loading…" }: { title?: string }) {
   );
 }
 
-export function ErrorScreen({ error, retry }: { error: Error; retry: () => void }) {
-  return (
-    <alertTemplate theme="dark">
-      <title>Couldn’t load from TVMaze</title>
-      <description>{error.message}</description>
-      <button onSelect={retry}>
-        <text>Try Again</text>
-      </button>
-    </alertTemplate>
-  );
+/** The parts of a useQuery result (or a combined useQueries result) QueryFallback needs. */
+export interface QueryStatus {
+  isError: boolean;
+  isFetching: boolean;
+  error: Error | null;
+  refetch: () => unknown;
+}
+
+/**
+ * What a screen shows before its query has data: the error alert (Try Again
+ * refetches) once it has failed, otherwise the loading spinner.
+ */
+export function QueryFallback({ query, title }: { query: QueryStatus; title?: string }) {
+  if (query.isError && !query.isFetching) {
+    return (
+      <alertTemplate theme="dark">
+        <title>Couldn’t load from TVMaze</title>
+        <description>{query.error?.message}</description>
+        <button onSelect={() => query.refetch()}>
+          <text>Try Again</text>
+        </button>
+      </alertTemplate>
+    );
+  }
+  return <Loading title={title} />;
 }
 
 export const POSTER = { width: 250, height: 352 };
 
-/** A poster lockup that opens the show's detail screen. */
+let prefetchTimer: ReturnType<typeof setTimeout> | undefined;
+
+/**
+ * A poster lockup that opens the show's detail screen. Resting on a poster
+ * prefetches the show (cast and seasons), so the detail screen usually opens
+ * complete. The delay keeps scrolling through a shelf from firing a request
+ * per poster.
+ */
 export function ShowLockup({ show, subtitle }: { show: ShowSummary; subtitle?: string }) {
   const navigation = useNavigation();
+  const queryClient = useQueryClient();
+  const prefetch = () => {
+    clearTimeout(prefetchTimer);
+    prefetchTimer = setTimeout(() => queryClient.prefetchQuery(tvmaze.show(show.id)), 400);
+  };
   return (
-    <lockup onSelect={() => navigation.push(<ShowDetail show={show} />)}>
+    <lockup onHighlight={prefetch} onSelect={() => navigation.push(<ShowDetail show={show} />)}>
       <img src={poster(show.image) ?? "resource://button-more"} {...POSTER} />
       <title>{show.name}</title>
       {subtitle ? <subtitle>{subtitle}</subtitle> : null}

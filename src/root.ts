@@ -19,6 +19,20 @@ import { NavigationHost } from "./navigation.js";
 import { reconciler } from "./reconciler.js";
 import { ScreenContext, setScreenVisible, trackScreen } from "./screen.js";
 
+type Wrapper = ComponentType<{ children?: ReactNode }>;
+
+// [A, B] renders <A><B>{children}</B></A>.
+function composeWrappers(wrapper: Wrapper | Array<Wrapper> | undefined): Wrapper | undefined {
+  if (!Array.isArray(wrapper)) return wrapper;
+  if (wrapper.length === 0) return undefined;
+  const Composed = ({ children }: { children?: ReactNode }) =>
+    wrapper.reduceRight<ReactNode>(
+      (inner, Outer) => createElement(Outer, null, inner),
+      children,
+    );
+  return Composed as Wrapper;
+}
+
 export interface RootOptions {
   /** Called for every error React reports. Defaults to `console.error`. */
   onError?: (error: unknown) => void;
@@ -30,7 +44,7 @@ export interface RootOptions {
    * Wraps the app and every screen pushed with `useNavigation()` in a single
    * tree. Put context providers here so pushed screens can see them.
    */
-  wrapper?: ComponentType<{ children?: ReactNode }>;
+  wrapper?: Wrapper | Array<Wrapper>;
   /**
    * What a screen shows when it throws while rendering. Each screen (root,
    * pushed screen, modal, tab) has its own boundary. Defaults to an alert with
@@ -65,6 +79,7 @@ export function createRoot(
   const container: TVMLElement = doc.documentElement;
   const detachEvents = attachEventDelegation(doc);
   const untrack = trackScreen(doc);
+  const wrapper = composeWrappers(options.wrapper);
 
   const fiberRoot = reconciler.createContainer(
     container,
@@ -101,7 +116,7 @@ export function createRoot(
             { value: doc },
             createElement(
               NavigationHost,
-              { wrapper: options.wrapper },
+              { wrapper },
               createElement(ScreenErrorBoundary, null, children),
             ),
           ),

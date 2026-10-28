@@ -1,6 +1,9 @@
-// A small TVMaze client. TVJS has no `fetch`, so requests go through
-// XMLHttpRequest. Responses are cached in memory for the session, so going back
-// to a screen (or switching tabs) doesn't refetch.
+// A small TVMaze client: TanStack Query options for each endpoint, plus the
+// app's QueryClient. tvml-react polyfills `fetch` and `AbortController`; query
+// functions pass TanStack's `signal` along, so a request no screen is waiting
+// for any more is aborted.
+
+import { QueryClient, queryOptions } from "@tanstack/react-query";
 
 const API = "https://api.tvmaze.com";
 
@@ -79,44 +82,72 @@ export interface SearchResult {
   show: Show;
 }
 
-export const endpoints = {
-  schedule: (country = "US") => `/schedule?country=${country}`,
-  shows: (page: number) => `/shows?page=${page}`,
-  search: (query: string) => `/search/shows?q=${encodeURIComponent(query)}`,
-  show: (id: number) => `/shows/${id}?embed[]=cast&embed[]=seasons`,
-  episodes: (seasonId: number) => `/seasons/${seasonId}/episodes`,
+class HttpError extends Error {
+  constructor(readonly status: number, path: string) {
+    super(`TVMaze returned ${status} for ${path}`);
+  }
+}
+
+async function getJSON<T>(path: string, signal: AbortSignal): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(API + path, { signal });
+  } catch (error) {
+    if (signal.aborted) throw error;
+    throw new Error(`Couldn't reach TVMaze (${path})`);
+  }
+  if (!response.ok) throw new HttpError(response.status, path);
+  return (await response.json()) as T;
+}
+
+const MINUTE = 60_000;
+
+/** One query per endpoint. Spread into useScreenQuery (adding `select`) or prefetch. */
+export const tvmaze = {
+  /** Today's schedule. Refreshed on app resume once it's 5 minutes old. */
+  schedule: (country = "US") =>
+    queryOptions({
+      queryKey: ["schedule", country],
+      queryFn: ({ signal }) => getJSON<Array<ScheduledEpisode>>(`/schedule?country=${country}`, signal),
+      staleTime: 5 * MINUTE,
+    }),
+  /** A page of the /shows index (ordered by id, 250 per page). */
+  shows: (page: number) =>
+    queryOptions({
+      queryKey: ["shows", page],
+      queryFn: ({ signal }) => getJSON<Array<Show>>(`/shows?page=${page}`, signal),
+    }),
+  search: (query: string) =>
+    queryOptions({
+      queryKey: ["search", query],
+      queryFn: ({ signal }) =>
+        getJSON<Array<SearchResult>>(`/search/shows?q=${encodeURIComponent(query)}`, signal),
+    }),
+  show: (id: number) =>
+    queryOptions({
+      queryKey: ["show", id],
+      queryFn: ({ signal }) => getJSON<ShowDetails>(`/shows/${id}?embed[]=cast&embed[]=seasons`, signal),
+    }),
+  episodes: (seasonId: number) =>
+    queryOptions({
+      queryKey: ["episodes", seasonId],
+      queryFn: ({ signal }) => getJSON<Array<Episode>>(`/seasons/${seasonId}/episodes`, signal),
+    }),
 };
 
-const cache = new Map<string, Promise<unknown>>();
-
-export function getJSON<T>(path: string): Promise<T> {
-  let request = cache.get(path) as Promise<T> | undefined;
-  if (!request) {
-    request = new Promise<T>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("GET", API + path);
-      xhr.timeout = 15000;
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            resolve(JSON.parse(xhr.responseText) as T);
-          } catch (error) {
-            reject(error);
-          }
-        } else {
-          reject(new Error(`TVMaze returned ${xhr.status} for ${path}`));
-        }
-      };
-      xhr.onerror = () => reject(new Error(`Couldn't reach TVMaze (${path})`));
-      xhr.ontimeout = () => reject(new Error(`TVMaze timed out (${path})`));
-      xhr.send();
-    });
-    cache.set(path, request);
-    // Don't cache failures: a retry should hit the network again.
-    request.catch(() => cache.delete(path));
-  }
-  return request;
-}
+/**
+ * Catalog data changes rarely, so it's fresh for an hour. Not-found errors
+ * aren't retried; anything else is retried once.
+ */
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * MINUTE,
+      retry: (failures, error) =>
+        failures < 1 && !(error instanceof HttpError && error.status >= 400 && error.status < 500),
+    },
+  },
+});
 
 // Formatting helpers ---------------------------------------------------------
 

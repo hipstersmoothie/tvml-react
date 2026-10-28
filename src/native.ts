@@ -152,16 +152,38 @@ function subscribePolling(listener: () => void): () => void {
   };
 }
 
+function readNetworkStatus(native: boolean): NetworkStatus {
+  if (native) {
+    return bridge()?.state?.network ?? FALLBACK.network;
+  }
+  polledOnline = globals.Device?.isNetworkReachable ?? polledOnline;
+  return polledOnline ? FALLBACK.network : offlineFallback;
+}
+
+/**
+ * Subscribe to connectivity changes outside React (e.g. to drive a data
+ * library's online manager). Returns an unsubscribe function.
+ */
+export function onNetworkStatusChange(
+  listener: (status: NetworkStatus) => void,
+): () => void {
+  const native = hasNativeBridge();
+  return (native ? subscribe : subscribePolling)(() =>
+    listener(readNetworkStatus(native)),
+  );
+}
+
+/** Current connectivity, outside React. */
+export function getNetworkStatus(): NetworkStatus {
+  return readNetworkStatus(hasNativeBridge());
+}
+
 /** Whether the Apple TV is online. Updates when connectivity changes. */
 export function useNetworkStatus(): NetworkStatus {
   const native = hasNativeBridge();
-  return useSyncExternalStore(native ? subscribe : subscribePolling, () => {
-    if (native) {
-      return bridge()?.state?.network ?? FALLBACK.network;
-    }
-    polledOnline = globals.Device?.isNetworkReachable ?? polledOnline;
-    return polledOnline ? FALLBACK.network : offlineFallback;
-  });
+  return useSyncExternalStore(native ? subscribe : subscribePolling, () =>
+    readNetworkStatus(native),
+  );
 }
 
 // Reference-counted so any mounted component can keep the screen awake.

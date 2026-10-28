@@ -1,6 +1,8 @@
-import { endpoints, years, type Show } from "./api";
-import { ErrorScreen, Loading, ShowLockup } from "./components";
-import { useApi } from "./useApi";
+import type { UseQueryResult } from "@tanstack/react-query";
+import { useScreenQueries } from "tvml-react/query";
+
+import { tvmaze, years, type Show } from "./api";
+import { QueryFallback, ShowLockup } from "./components";
 
 const PAGES = [0, 1, 2];
 const GENRES = ["Drama", "Comedy", "Crime", "Science-Fiction", "Action", "Thriller", "Fantasy", "Romance", "Horror", "Family"];
@@ -27,17 +29,31 @@ function toCategories(pages: Array<Array<Show>>): Array<Category> {
   ].filter((category) => category.shows.length > 0);
 }
 
-export function Popular() {
-  const catalog = useApi(PAGES.map(endpoints.shows), toCategories);
+// Three /shows pages, each its own query (Search's Trending shelf shares page
+// 0), combined into one result for the screen.
+function combinePages(pages: Array<UseQueryResult<Array<Show>>>) {
+  const failed = pages.find((page) => page.isError);
+  return {
+    categories: pages.every((page) => page.data) ? toCategories(pages.map((page) => page.data!)) : undefined,
+    isFetching: pages.some((page) => page.isFetching),
+    isError: failed !== undefined,
+    error: failed?.error ?? null,
+    refetch: () => Promise.all(pages.filter((page) => page.isError).map((page) => page.refetch())),
+  };
+}
 
-  if (catalog.status === "loading") return <Loading title="Loading popular shows…" />;
-  if (catalog.status === "error") return <ErrorScreen {...catalog} />;
+export function Popular() {
+  const catalog = useScreenQueries({ queries: PAGES.map(tvmaze.shows), combine: combinePages });
+
+  if (catalog.categories === undefined) {
+    return <QueryFallback query={catalog} title="Loading popular shows…" />;
+  }
 
   return (
     <catalogTemplate theme="dark">
       <list>
         <section>
-          {catalog.data.map((category) => (
+          {catalog.categories.map((category) => (
             <listItemLockup key={category.title}>
               <title>{category.title}</title>
               <decorationLabel>{String(category.shows.length)}</decorationLabel>

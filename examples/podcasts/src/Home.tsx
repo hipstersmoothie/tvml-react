@@ -1,13 +1,13 @@
 import { useNavigation } from "tvml-react";
+import { useScreenQuery } from "tvml-react/query";
 
-import { topPodcasts } from "./api";
 import { PodcastLockup } from "./components";
 import { EpisodeActions } from "./EpisodeActions";
 import { formatRemaining } from "./format";
 import { useProgress, useSubscriptions } from "./library";
 import { usePodcastPlayer } from "./PlayerProvider";
+import { chartQuery } from "./queries";
 import { Search } from "./Search";
-import { useResource } from "./useResource";
 
 const GENRES: Array<{ id: number; name: string }> = [
   { id: 1489, name: "News" },
@@ -94,8 +94,9 @@ function ContinueListening() {
 }
 
 function ChartShelf({ title, genreId }: { title: string; genreId?: number }) {
-  const [chart] = useResource(`top:${genreId ?? "all"}`, (signal) => topPodcasts(genreId, signal));
-  if (chart.status !== "done" || chart.data.length === 0) return null;
+  // Each shelf loads on its own and stays hidden until it has shows.
+  const { data: podcasts } = useScreenQuery(chartQuery(genreId));
+  if (!podcasts?.length) return null;
 
   return (
     <shelf>
@@ -103,7 +104,7 @@ function ChartShelf({ title, genreId }: { title: string; genreId?: number }) {
         <title>{title}</title>
       </header>
       <section>
-        {chart.data.map((podcast) => (
+        {podcasts.map((podcast) => (
           <PodcastLockup key={podcast.id} podcast={podcast} />
         ))}
       </section>
