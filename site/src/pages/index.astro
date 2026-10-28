@@ -3,6 +3,8 @@ import { Code } from "astro:components";
 
 import Site from "../layouts/Site.astro";
 
+const theme = "github-dark-default";
+
 const counter = `import { launch, type StartOptions } from "tvml-react";
 import { useState } from "react";
 
@@ -22,47 +24,139 @@ export function start(_options: StartOptions) {
   launch(<Counter />);
 }`;
 
-const features = [
+const templates = `<stackTemplate>
+  <banner><title>Albums</title></banner>
+  <collectionList>
+    <shelf>
+      <section>
+        {albums.map((album) => (
+          <lockup
+            key={album.id}
+            onSelect={() => navigation.push(<Album album={album} />)}
+            onPlay={() => player.play(album.tracks)}
+          >
+            <img src={album.art} width={250} height={250} />
+            <title>{album.title}</title>
+          </lockup>
+        ))}
+      </section>
+    </shelf>
+  </collectionList>
+</stackTemplate>`;
+
+const navigationCode = `const navigation = useNavigation();
+
+navigation.push(<Detail id={id} />); // Menu pops and unmounts it
+navigation.presentModal(<Confirm />);
+navigation.replace(<Dashboard />);
+
+<menuBarTemplate>
+  <MenuBar>
+    <MenuBarItem id="home" title="Home"><Home /></MenuBarItem>
+    <MenuBarItem id="search" title="Search"><Search /></MenuBarItem>
+  </MenuBar>
+</menuBarTemplate>`;
+
+const layoutCode = `<Row region="top" gap={40}>
+  <Image src={artwork} width={160} height={160} />
+  <Stack gap={10} width={1000}>
+    <Cell size={56} weight="semibold">{title}</Cell>
+    <Cell size={34} color="#999">{artist}</Cell>
+  </Stack>
+  <Stack align="right" width={500}>
+    <Cell size={30}>{elapsed}</Cell>
+  </Stack>
+</Row>`;
+
+const mediaCode = `const player = usePlayer();
+
+player.play({
+  url: episode.audio,
+  type: "audio",
+  title: episode.title, // shown in the player and Now Playing
+  subtitle: show.name,
+  artworkImageURL: show.artwork,
+  startTime: savedPosition,
+});
+
+usePlayerEvent("itemEnd", ({ item, time, reason }) => save(item, time));`;
+
+const dataCode = `import { useScreenQuery } from "tvml-react/query";
+
+// Refreshes every minute while you're looking at it; a tab you've left or a
+// screen under a pushed one keeps its data but stops refetching.
+const { data } = useScreenQuery({
+  queryKey: ["scores"],
+  queryFn: () => fetch(api + "/scores").then((r) => r.json()),
+  refetchInterval: 60_000,
+});
+
+const socket = new WebSocket("wss://jetstream.example/subscribe");`;
+
+const terminal = `$ npm run dev
+
+Serving TVML app (live reload + console relay). Set TVMLServerURL to one of:
+  http://localhost:9001/
+  http://192.168.1.42:9001/
+[watch] build finished, watching for changes...
+[tv log] loaded 24 albums
+[watch] build started (change: "src/Albums.tsx")
+[watch] build finished
+[tv warn] tvml-react: in divTemplate, background-color on <row> is ignored;
+          put it on the text (see docs/platform-notes.md).`;
+
+const benefits = [
   {
-    title: "Native TVML, from React",
-    body: "Write screens as components; tvOS draws real TVML templates, so focus, the remote and the system look just work.",
-    href: "/learn/getting-started/",
+    title: "Native, not a web view",
+    body: "Your components become TVML templates that tvOS draws itself. The focus engine, the Siri Remote, VoiceOver and the system look come with them.",
   },
   {
-    title: "Screens in one tree",
-    body: "Push screens, present modals and build tab bars that share state and context, with an error boundary per screen.",
-    href: "/learn/screens-and-navigation/",
+    title: "The React you know",
+    body: "Hooks, state, context, data fetching with TanStack Query, and TypeScript types for every TVML element and attribute.",
   },
   {
-    title: "Layout that holds",
-    body: "Rows, cells, stacks and boxes for free-form screens, inside the TV-safe area, built on what TVMLKit actually does.",
-    href: "/learn/layout/",
+    title: "Update by deploying",
+    body: "The tvOS app loads your bundle from a URL, the way TVMLKit apps are meant to. JavaScript changes don't need an Xcode rebuild.",
   },
   {
-    title: "Media",
-    body: "Video and audio in the system player, shared across screens, with overlays and Now Playing from your metadata.",
-    href: "/learn/media/",
+    title: "Small",
+    body: "A whole app, React included, is about 160 KB minified (around 50 KB gzipped), running on the JavaScript engine tvOS already has.",
   },
-  {
-    title: "Data",
-    body: "TanStack Query that pauses on hidden screens, plus fetch and WebSockets for TVJS.",
-    href: "/learn/data/",
-  },
-  {
-    title: "Platform hooks",
-    body: "App state, appearance, accessibility, network, display, storage and keeping the screen awake.",
-    href: "/learn/platform-hooks/",
-  },
+];
+
+const hooks = [
+  "useAppState",
+  "useColorScheme",
+  "useAccessibility",
+  "useNetworkStatus",
+  "useDisplay",
+  "useKeepAwake",
+  "useDevice",
+  "usePlatformSettings",
+  "useLocalStorage",
+  "useIsScreenVisible",
+  "useScreenEvent",
+  "measureText",
+  "openURL",
+];
+
+const nativeElements = [
+  ["Backdrop", "A full-screen background you can change and cross-fade, which TVML's can't."],
+  ["Card", "A blurred, rounded panel with an image and text."],
+  ["Avatar", "A round image with initials as the fallback."],
+  ["QRCode", "A sign-in link people scan with their phone."],
+  ["SimplifiedList", "A native scrolling list that takes the remote's select."],
 ];
 ---
 
 <Site title="tvml-react" description="A React renderer for Apple TV's TVMLKit.">
   <main class="landing">
+    <!-- Hero -->
     <section class="hero">
       <div class="copy">
         <p class="eyebrow">tvml-react</p>
         <h1>React for Apple&nbsp;TV.</h1>
-        <p class="abstract">
+        <p class="lede">
           A React renderer for TVMLKit. Your components become native tvOS screens, with focus,
           the remote and the system look handled by tvOS.
         </p>
@@ -72,32 +166,262 @@ const features = [
           <a class="secondary" href="/reference/stack/">Reference</a>
         </div>
       </div>
-      <div class="tv">
+      <div class="tv tilt">
         <img src="/screens/hello-albums.jpg" alt="The hello example: a shelf of albums under a tab bar" />
       </div>
     </section>
 
-    <section class="features tiles">
+    <!-- Benefits -->
+    <section class="benefits">
       {
-        features.map((feature) => (
-          <a class="tile" href={feature.href}>
-            <b>{feature.title}</b>
-            <span>{feature.body}</span>
-          </a>
+        benefits.map((benefit) => (
+          <div class="benefit">
+            <b>{benefit.title}</b>
+            <p>{benefit.body}</p>
+          </div>
         ))
       }
     </section>
 
-    <section class="code">
-      <div>
-        <h2>A screen is a component.</h2>
+    <!-- How it works -->
+    <section class="how" id="how">
+      <h2>How it works</h2>
+      <ol class="pipeline">
+        <li>
+          <b>Your components</b>
+          <span>JSX with TVML's elements: <code>&lt;stackTemplate&gt;</code>, <code>&lt;lockup&gt;</code>, <code>&lt;shelf&gt;</code>.</span>
+        </li>
+        <li>
+          <b>tvml-react</b>
+          <span>A React renderer that writes straight into the TVJS DOM, one document per screen.</span>
+        </li>
+        <li>
+          <b>TVMLKit</b>
+          <span>Apple's framework turns each document into native views.</span>
+        </li>
+        <li>
+          <b>tvOS</b>
+          <span>Focus, the remote, animation and accessibility, as in Apple's own apps.</span>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Templates -->
+    <section class="feature">
+      <div class="text">
+        <p class="kicker">Templates</p>
+        <h2>Every TVML template, typed.</h2>
         <p>
-          TVML's elements are typed JSX tags, events are props, and state is React state. Export{" "}
-          <code>start</code>, and <code>tvml-react dev</code> serves it to your Apple TV with live reload.
+          TVMLKit's elements are lowercase JSX tags, each with its own attributes, so a misspelled
+          tag or an attribute that doesn't belong won't compile. Events are props:{" "}
+          <code>onSelect</code>, <code>onHighlight</code>, <code>onPlay</code> for the play/pause
+          button, and <code>onHoldSelect</code> for a long press.
+        </p>
+        <a href="/examples/">See every template on tvOS →</a>
+      </div>
+      <div class="visual">
+        <div class="mosaic">
+          {
+            ["catalogTemplate", "productTemplate", "compilationTemplate", "showcaseTemplate"].map((name) => (
+              <img src={`/screens/${name}.jpg`} alt={name} loading="lazy" />
+            ))
+          }
+        </div>
+        <Code code={templates} lang="tsx" theme={theme} />
+      </div>
+    </section>
+
+    <!-- Screens -->
+    <section class="feature flip">
+      <div class="text">
+        <p class="kicker">Screens and tabs</p>
+        <h2>Every screen in one React tree.</h2>
+        <p>
+          Each screen is its own TVML document, rendered through a portal from your app's single
+          tree. Pushed screens, modals and tabs share state and context, unmount when TVMLKit
+          unloads them, and each has an error boundary: a screen that throws shows an alert with
+          Try Again while the rest of the app keeps working.
         </p>
         <a href="/learn/screens-and-navigation/">Screens and navigation →</a>
       </div>
-      <Code code={counter} lang="tsx" theme="github-dark-default" />
+      <div class="visual">
+        <div class="tv"><img src="/screens/menuBarTemplate.jpg" alt="A tab bar built with MenuBar" loading="lazy" /></div>
+        <Code code={navigationCode} lang="tsx" theme={theme} />
+      </div>
+    </section>
+
+    <!-- Layout -->
+    <section class="feature">
+      <div class="text">
+        <p class="kicker">Layout</p>
+        <h2>Free-form screens that hold together.</h2>
+        <p>
+          <code>divTemplate</code> isn't absolute positioning, and many styles silently do
+          nothing. <code>tvml-react/layout</code> builds on what it reliably does: rows, cells,
+          stacks and boxes that stay inside the TV-safe area, with text measured by tvOS. In
+          development, styles TVMLKit would ignore warn in your terminal.
+        </p>
+        <a href="/learn/layout/">Laying out a divTemplate →</a>
+      </div>
+      <div class="visual">
+        <div class="tv"><img src="/screens/stacks-and-boxes.jpg" alt="Stacks and boxes on tvOS" loading="lazy" /></div>
+        <Code code={layoutCode} lang="tsx" theme={theme} />
+      </div>
+    </section>
+
+    <!-- Media -->
+    <section class="feature flip" id="media">
+      <div class="text">
+        <p class="kicker">Media</p>
+        <h2>The system player, as React state.</h2>
+        <p>
+          <code>usePlayer</code> plays video and audio in tvOS's own player and gives you its
+          state, time and end events. Share one player across screens, draw over it with{" "}
+          <code>&lt;PlayerOverlay&gt;</code>, and your items' titles and artwork show in Now
+          Playing. Audio keeps going from the Home screen with the background audio mode.
+        </p>
+        <a href="/learn/media/">Media playback →</a>
+      </div>
+      <div class="visual">
+        <Code code={mediaCode} lang="tsx" theme={theme} />
+      </div>
+    </section>
+
+    <!-- Data -->
+    <section class="feature">
+      <div class="text">
+        <p class="kicker">Data</p>
+        <h2>Data that knows what's on screen.</h2>
+        <p>
+          <code>tvml-react/query</code> is TanStack Query wired to tvOS: it refetches when the app
+          comes back and when the network returns, and pauses queries on screens nobody can see.
+          TVJS has no <code>fetch</code> or <code>WebSocket</code>; tvml-react provides both.
+        </p>
+        <a href="/learn/data/">Data and networking →</a>
+      </div>
+      <div class="visual">
+        <Code code={dataCode} lang="tsx" theme={theme} />
+      </div>
+    </section>
+
+    <!-- Platform -->
+    <section class="feature flip">
+      <div class="text">
+        <p class="kicker">Platform</p>
+        <h2>Hooks for the Apple TV itself.</h2>
+        <p>
+          App state, appearance, accessibility settings, the network, the display, storage, and
+          keeping the screen awake during a slideshow or a live game, as hooks that update when
+          tvOS does.
+        </p>
+        <a href="/learn/platform-hooks/">Platform hooks →</a>
+      </div>
+      <div class="visual chips">
+        {hooks.map((hook) => <code>{hook}</code>)}
+      </div>
+    </section>
+
+    <!-- Native -->
+    <section class="feature">
+      <div class="text">
+        <p class="kicker">Native</p>
+        <h2>Native views where TVML stops.</h2>
+        <p>
+          The <code>TVMLReactExtras</code> Swift package launches your app in one call and adds
+          elements TVML doesn't have, as React components. Register your own UIKit views the same
+          way. It also works around TVMLKit crashes on tvOS 26, and bridges focus between a
+          header nav and the content below it.
+        </p>
+        <a href="/learn/native/">Native elements and the Swift package →</a>
+      </div>
+      <div class="visual">
+        <div class="tv"><img src="/screens/native-list.jpg" alt="SimplifiedList, a native list" loading="lazy" /></div>
+        <dl class="elements">
+          {
+            nativeElements.map(([name, body]) => (
+              <>
+                <dt>
+                  <code>{name}</code>
+                </dt>
+                <dd>{body}</dd>
+              </>
+            ))
+          }
+        </dl>
+      </div>
+    </section>
+
+    <!-- DX -->
+    <section class="feature flip">
+      <div class="text">
+        <p class="kicker">Developer experience</p>
+        <h2>Save, and it's on your TV.</h2>
+        <p>
+          <code>tvml-react dev</code> bundles with esbuild, serves your app on your network, and
+          reloads it on the Apple TV after every change. Your app's <code>console</code> output
+          shows up in your terminal, alongside warnings about TVML that won't do what you meant.{" "}
+          <code>tvml-react/testing</code> drives a running app from JavaScript.
+        </p>
+        <a href="/learn/getting-started/">Getting started →</a>
+      </div>
+      <div class="visual">
+        <pre class="terminal">{terminal}</pre>
+      </div>
+    </section>
+
+    <!-- Reliability -->
+    <section class="proof" id="proof">
+      <h2>Built on what tvOS actually does.</h2>
+      <p class="sub">
+        TVMLKit's documentation leaves a lot out, so tvml-react is tested against the real thing.
+      </p>
+      <div class="stats">
+        <div>
+          <b>17</b>
+          <span>TVML templates opened with the Siri Remote on the tvOS 26.5 simulator by the UI tests</span>
+        </div>
+        <div>
+          <b>2</b>
+          <span>TVMLKit crashes fixed for you: tvOS 26's focus crash in shelves and grids, and a double free from adjacent text</span>
+        </div>
+        <div>
+          <b>50+</b>
+          <span>platform quirks written down, from ignored styles to what Menu does during audio</span>
+        </div>
+      </div>
+      <a class="notes" href="/learn/platform-notes/">Read the platform notes →</a>
+    </section>
+
+    <!-- Start -->
+    <section class="start">
+      <h2>Start in a minute.</h2>
+      <ol>
+        <li>
+          <span>1</span>
+          <div>
+            <b>Create the app</b>
+            <code>npm create tvml-react my-app</code>
+          </div>
+        </li>
+        <li>
+          <span>2</span>
+          <div>
+            <b>Serve it</b>
+            <code>cd my-app && npm install && npm run dev</code>
+          </div>
+        </li>
+        <li>
+          <span>3</span>
+          <div>
+            <b>Run it</b>
+            <code>open tvos/MyApp.xcodeproj</code>
+          </div>
+        </li>
+      </ol>
+      <div class="actions center">
+        <a class="primary" href="/learn/getting-started/">Read the guide</a>
+        <a class="secondary" href="https://github.com/hipstersmoothie/tvml-react">GitHub</a>
+      </div>
     </section>
   </main>
 </Site>
@@ -106,8 +430,10 @@ const features = [
   .landing {
     max-width: 1240px;
     margin: 0 auto;
-    padding: 40px 28px 120px;
+    padding: 40px 28px 140px;
   }
+
+  /* Hero */
   .hero {
     display: grid;
     grid-template-columns: 1fr 1.15fr;
@@ -118,9 +444,15 @@ const features = [
   .hero h1 {
     font-size: 76px;
   }
+  .lede {
+    margin: 0 0 28px;
+    font-size: 22px;
+    line-height: 1.45;
+    color: var(--secondary);
+  }
   .install {
     display: inline-block;
-    margin: 4px 0 26px;
+    margin: 0 0 26px;
     padding: 12px 18px;
     background: rgba(0, 0, 0, 0.45);
     border: 1px solid var(--line);
@@ -128,18 +460,21 @@ const features = [
     font: 15px var(--mono);
   }
   .install span {
-    color: var(--tertiary);
     margin-right: 6px;
+    color: var(--tertiary);
   }
   .actions {
     display: flex;
     gap: 12px;
   }
+  .actions.center {
+    justify-content: center;
+  }
   .actions a {
     padding: 11px 22px;
     border-radius: 999px;
-    font-weight: 600;
     font-size: 15px;
+    font-weight: 600;
     transition: transform 0.15s;
   }
   .actions a:hover {
@@ -152,54 +487,294 @@ const features = [
   }
   .secondary {
     background: var(--glass-strong);
-    color: var(--text);
     border: 1px solid var(--line);
+    color: var(--text);
   }
   .tv {
-    padding: 10px;
+    padding: 8px;
     background: #000;
+    border-radius: 18px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55);
+  }
+  .tv.tilt {
+    padding: 10px;
     border-radius: 22px;
-    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
     transform: perspective(1600px) rotateY(-6deg);
   }
   .tv img {
     display: block;
     width: 100%;
-    border-radius: 12px;
+    border-radius: 10px;
   }
-  .features {
-    margin: 40px 0 0;
-    grid-template-columns: repeat(3, 1fr);
+
+  /* Section headings */
+  h2 {
+    margin: 0 0 14px;
+    font-size: 44px;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
   }
-  .features b {
-    font-size: 18px;
-  }
-  .code {
-    display: grid;
-    grid-template-columns: 0.8fr 1.2fr;
-    gap: 48px;
-    align-items: center;
-    margin-top: 96px;
-  }
-  .code h2 {
-    font-size: 40px;
-    margin: 0 0 12px;
-  }
-  .code p {
+  section > p,
+  .text p {
     font-size: 18px;
     line-height: 1.6;
     color: var(--body);
   }
-  .code p code {
-    font: 0.9em var(--mono);
+  .text code,
+  .how code {
+    font: 0.88em var(--mono);
     color: var(--text);
   }
-  .code :global(pre) {
+
+  /* Benefits */
+  .benefits {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-top: 48px;
+  }
+  .benefit {
+    padding: 22px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+  }
+  .benefit b {
+    font-size: 18px;
+  }
+  .benefit p {
+    margin: 8px 0 0;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--secondary);
+  }
+
+  /* How it works */
+  .how {
+    margin-top: 120px;
+    text-align: center;
+  }
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin: 36px 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+  .pipeline li {
+    position: relative;
+    display: grid;
+    gap: 8px;
+    padding: 0 22px;
+    text-align: left;
+  }
+  .pipeline li::before {
+    counter-increment: step;
+    content: counter(step);
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 8px;
+    border-radius: 50%;
+    background: var(--focus);
+    color: #000;
+    font-weight: 700;
+  }
+  .pipeline li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 18px;
+    left: 70px;
+    right: -4px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.4), transparent);
+  }
+  .pipeline b {
+    font-size: 19px;
+  }
+  .pipeline span {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--secondary);
+  }
+
+  /* Feature rows */
+  .feature {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 64px;
+    align-items: center;
+    margin-top: 140px;
+  }
+  .feature.flip {
+    grid-template-columns: 1.15fr 0.85fr;
+  }
+  .feature.flip .text {
+    order: 2;
+  }
+  .kicker {
+    margin: 0 0 10px !important;
+    font: 600 14px var(--mono) !important;
+    letter-spacing: 0.02em;
+    color: var(--accent) !important;
+  }
+  .text a {
+    display: inline-block;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+  .visual {
+    display: grid;
+    gap: 18px;
+  }
+  .visual :global(pre) {
+    margin: 0;
+    padding: 20px 22px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    font: 13.5px/1.6 var(--mono);
+    overflow-x: auto;
+    background: rgba(0, 0, 0, 0.45) !important;
+  }
+  .mosaic {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .mosaic img {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-content: center;
+  }
+  .chips code {
+    padding: 10px 16px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font: 15px var(--mono);
+    transition:
+      transform 0.15s,
+      background 0.15s,
+      color 0.15s;
+  }
+  .chips code:hover {
+    transform: scale(1.08);
+    background: var(--focus);
+    color: #000;
+  }
+  .elements {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px 18px;
+    margin: 0;
+    font-size: 15px;
+  }
+  .elements dt code {
+    font: 600 14px var(--mono);
+  }
+  .elements dd {
+    margin: 0;
+    color: var(--secondary);
+  }
+  .terminal {
     margin: 0;
     padding: 22px 24px;
+    background: rgba(0, 0, 0, 0.6);
     border: 1px solid var(--line);
-    border-radius: 20px;
-    font: 14px/1.6 var(--mono);
-    background: rgba(0, 0, 0, 0.45) !important;
+    border-radius: 18px;
+    font: 13.5px/1.65 var(--mono);
+    color: #d0d0d5;
+    white-space: pre-wrap;
+  }
+
+  /* Proof */
+  .proof {
+    margin-top: 150px;
+    padding: 56px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 32px;
+    text-align: center;
+  }
+  .proof .sub {
+    margin: 0 auto;
+    max-width: 640px;
+    color: var(--secondary);
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    margin: 40px 0 28px;
+  }
+  .stats b {
+    display: block;
+    font-size: 64px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .stats span {
+    display: block;
+    max-width: 300px;
+    margin: 6px auto 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--secondary);
+  }
+  .notes {
+    font-weight: 600;
+  }
+
+  /* Start */
+  .start {
+    margin-top: 140px;
+    text-align: center;
+  }
+  .start ol {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin: 36px 0;
+    padding: 0;
+    list-style: none;
+    text-align: left;
+  }
+  .start li {
+    display: flex;
+    gap: 16px;
+    align-items: start;
+    padding: 22px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+  }
+  .start li > span {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--focus);
+    color: #000;
+    font-weight: 700;
+  }
+  .start b {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 17px;
+  }
+  .start li code {
+    font: 13px var(--mono);
+    color: var(--secondary);
   }
 </style>
