@@ -1,6 +1,9 @@
+export { DocumentPortal } from "./document-portal.js";
+export type { DocumentPortalProps } from "./document-portal.js";
 export {
   createDocument,
   escapeXml,
+  focus,
   getNavigationDocument,
   parseDocument,
   presentDocument,
@@ -11,14 +14,18 @@ export type {
   TVMLElement,
   TVMLEvent,
   TVMLNavigationDocument,
+  TVMLNodeList,
 } from "./dom.js";
 export type {
   FocusableAttributes,
   ImageAttributes,
+  LongTextAttributes,
   TemplateAttributes,
+  TextFieldAttributes,
   TVMLAttributes,
   TVMLIntrinsicElements,
 } from "./elements.js";
+export type { RenderError } from "./error-boundary.js";
 export type { TVMLEventHandler, TVMLEventProp } from "./events.js";
 export { getKeyboard } from "./keyboard.js";
 export type { TVMLKeyboard } from "./keyboard.js";
@@ -36,6 +43,12 @@ export type {
   DisplayInfo,
   NetworkStatus,
 } from "./native.js";
+export { MenuBar, MenuBarItem, useMenuBar } from "./menu-bar.js";
+export type {
+  MenuBarDocumentFeature,
+  MenuBarItemProps,
+  MenuBarProps,
+} from "./menu-bar.js";
 export { useNavigation } from "./navigation.js";
 export type { Navigation } from "./navigation.js";
 export {
@@ -56,8 +69,14 @@ export type {
   Restrictions,
   TVMLTraitCollection,
 } from "./platform.js";
-export { usePlayer } from "./player.js";
-export type { MediaItemInput, PlaybackState, PlayerControls } from "./player.js";
+export { PlayerOverlay, usePlayer } from "./player.js";
+export type {
+  MediaItemInput,
+  NativePlayer,
+  PlaybackState,
+  PlayerControls,
+  PlayerOverlayProps,
+} from "./player.js";
 export { createPortal } from "./reconciler.js";
 export { createRoot, launch } from "./root.js";
 export type { LaunchOptions, RootOptions, TVMLRoot } from "./root.js";

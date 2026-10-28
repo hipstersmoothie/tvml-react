@@ -1,6 +1,5 @@
-// TVJS has no `fetch` and no `AbortController`, only XMLHttpRequest. This is
-// the smallest promise-based wrapper that still supports cancellation,
-// timeouts and typed JSON responses.
+// Typed JSON over `fetch` (polyfilled by tvml-react on TVJS), with a timeout
+// and errors worth showing on screen.
 
 export class HttpError extends Error {
   constructor(
@@ -13,87 +12,40 @@ export class HttpError extends Error {
   }
 }
 
-/** A minimal stand-in for AbortSignal (TVJS has no AbortController). */
-export interface CancelSignal {
-  readonly cancelled: boolean;
-  onCancel(listener: () => void): () => void;
-}
-
-export function createCancelToken(): { signal: CancelSignal; cancel(): void } {
-  let cancelled = false;
-  const listeners = new Set<() => void>();
-  return {
-    signal: {
-      get cancelled() {
-        return cancelled;
-      },
-      onCancel(listener) {
-        if (cancelled) {
-          listener();
-          return () => {};
-        }
-        listeners.add(listener);
-        return () => listeners.delete(listener);
-      },
-    },
-    cancel() {
-      if (cancelled) return;
-      cancelled = true;
-      for (const listener of listeners) listener();
-      listeners.clear();
-    },
-  };
-}
-
-export class CancelledError extends Error {
-  constructor() {
-    super("Request cancelled");
-    this.name = "CancelledError";
-  }
+export function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === "AbortError";
 }
 
 export interface RequestOptions {
-  signal?: CancelSignal;
+  signal?: AbortSignal;
   /** Milliseconds. Defaults to 15s. */
   timeout?: number;
 }
 
-export function getJSON<T>(url: string, { signal, timeout = 15_000 }: RequestOptions = {}): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    if (signal?.cancelled) {
-      reject(new CancelledError());
-      return;
+export async function getJSON<T>(url: string, { signal, timeout = 15_000 }: RequestOptions = {}): Promise<T> {
+  const host = new URL(url).host;
+  // Abort on the caller's signal or the timeout, whichever comes first.
+  const controller = new AbortController();
+  const forward = () => controller.abort(signal?.reason);
+  if (signal?.aborted) forward();
+  signal?.addEventListener("abort", forward);
+  const timer = setTimeout(() => controller.abort(new HttpError(`${host} timed out`, 0, url)), timeout);
+
+  try {
+    const response = await fetch(url, { headers: { Accept: "application/json" }, signal: controller.signal });
+    if (!response.ok) throw new HttpError(`HTTP ${response.status} from ${host}`, response.status, url);
+    try {
+      return (await response.json()) as T;
+    } catch {
+      throw new HttpError(`Invalid JSON from ${host}`, response.status, url);
     }
-    const xhr = new XMLHttpRequest();
-    const stop = signal?.onCancel(() => {
-      xhr.abort();
-      reject(new CancelledError());
-    });
-    xhr.open("GET", url);
-    xhr.timeout = timeout;
-    xhr.setRequestHeader("Accept", "application/json");
-    xhr.onload = () => {
-      stop?.();
-      if (xhr.status < 200 || xhr.status >= 300) {
-        reject(new HttpError(`HTTP ${xhr.status} from ${new URL(url).host}`, xhr.status, url));
-        return;
-      }
-      try {
-        resolve(JSON.parse(xhr.responseText) as T);
-      } catch {
-        reject(new HttpError(`Invalid JSON from ${new URL(url).host}`, xhr.status, url));
-      }
-    };
-    xhr.onerror = () => {
-      stop?.();
-      reject(new HttpError(`Couldn't reach ${new URL(url).host}`, 0, url));
-    };
-    xhr.ontimeout = () => {
-      stop?.();
-      reject(new HttpError(`${new URL(url).host} timed out`, 0, url));
-    };
-    xhr.send();
-  });
+  } catch (error) {
+    // fetch rejects with a TypeError when the server can't be reached.
+    throw error instanceof TypeError ? new HttpError(`Couldn't reach ${host}`, 0, url) : error;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", forward);
+  }
 }
 
 /** Map over `items` with at most `limit` promises in flight. */

@@ -2,11 +2,24 @@
 // tree, but it is not the browser DOM, so these are declared separately rather
 // than borrowed from lib.dom.
 
+/** TVJS returns live lists rather than arrays. */
+export interface TVMLNodeList<T = TVMLElement> {
+  readonly length: number;
+  item(index: number): T | null;
+}
+
 export interface TVMLElement {
   readonly ownerDocument: TVMLDocument;
   readonly parentNode: TVMLElement | null;
   readonly firstChild: TVMLElement | null;
+  readonly lastChild?: TVMLElement | null;
+  readonly nextSibling: TVMLElement | null;
+  readonly previousSibling?: TVMLElement | null;
+  readonly childNodes?: TVMLNodeList;
   readonly tagName?: string;
+  readonly nodeName?: string;
+  /** 1 for elements, 3 for text. */
+  readonly nodeType?: number;
   nodeValue: string | null;
   textContent: string | null;
   getAttribute(name: string): string | null;
@@ -15,15 +28,19 @@ export interface TVMLElement {
   appendChild(child: TVMLElement): TVMLElement;
   insertBefore(child: TVMLElement, before: TVMLElement | null): TVMLElement;
   removeChild(child: TVMLElement): TVMLElement;
-  getElementsByTagName?(tag: string): Array<TVMLElement>;
+  hasAttribute?(name: string): boolean;
+  getElementsByTagName?(tag: string): TVMLNodeList;
   getFeature?(name: string): unknown;
   addEventListener(type: string, listener: (event: TVMLEvent) => void): void;
   removeEventListener(type: string, listener: (event: TVMLEvent) => void): void;
+  dispatchEvent?(event: unknown): boolean;
 }
 
 export interface TVMLEvent {
   readonly type: string;
   readonly target: TVMLElement | null;
+  /** Set on some events, e.g. a ratingBadge's `change`. */
+  readonly value?: unknown;
 }
 
 export interface TVMLDocument {
@@ -31,6 +48,7 @@ export interface TVMLDocument {
   createElement(tag: string): TVMLElement;
   createTextNode(text: string): TVMLElement;
   getElementById(id: string): TVMLElement | null;
+  getElementsByTagName?(tag: string): TVMLNodeList;
   addEventListener(type: string, listener: (event: TVMLEvent) => void): void;
   removeEventListener(type: string, listener: (event: TVMLEvent) => void): void;
 }
@@ -76,7 +94,10 @@ export function getNavigationDocument(): TVMLNavigationDocument {
   return requireGlobal("navigationDocument");
 }
 
-/** Parse a TVML XML string into a document. */
+/**
+ * Parse an XML string into a document. Works for any XML (RSS, Atom, …), not
+ * just TVML; namespaced tag names aren't matched by `getElementsByTagName`.
+ */
 export function parseDocument(xml: string): TVMLDocument {
   const Parser = requireGlobal("DOMParser");
   return new Parser().parseFromString(xml, "application/xml");
@@ -123,4 +144,14 @@ export function presentMessage(title: string, description: string): void {
         "</descriptiveAlertTemplate></document>",
     ),
   );
+}
+
+/**
+ * Move focus to an element. TVJS has no focus API; re-setting `autoHighlight`
+ * moves focus in a presented template. Doesn't work in `formTemplate`, where
+ * the keyboard keeps focus.
+ */
+export function focus(element: TVMLElement): void {
+  element.removeAttribute("autoHighlight");
+  element.setAttribute("autoHighlight", "true");
 }

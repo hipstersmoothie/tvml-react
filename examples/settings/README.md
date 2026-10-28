@@ -10,19 +10,17 @@ how to build input-heavy tvOS screens with tvml-react:
   validation shown in the banner. When onboarding finishes, the root screen
   swaps from `alertTemplate` to the settings `listTemplate` in place.
 - **Text input.** `<textField onTextChange>` with `keyboardType="emailAddress"`,
-  and `keyboardType="numberPad"` plus `secure` for the PIN. A small
-  `TextInput` component adds a `placeholder` (TVML takes it from the field's
-  text content) and a `defaultValue` (written to the field's Keyboard
-  feature), so the edit screens open with the current value filled in.
+  and `keyboardType="numberPad"` plus `secure` for the PIN. The field's
+  children are its placeholder, and `defaultValue` fills it in, so the edit
+  screens open with the current value.
 - **Settings without switches.** TVML has no toggle, so toggles are
   `listItemLockup`s whose `decorationLabel` shows On/Off. Single-choice lists
   (Subtitles, Video Quality) mark the current option with a checkmark
   `decorationImage` and use `autoHighlight` so it starts focused. Genres are a
   multi-select list of checkmark rows. A `relatedContent` panel describes
   whichever row has focus.
-- **Rating.** `ratingTemplate` with an interactive `ratingBadge`. Its `change`
-  event isn't delegated by tvml-react, so the screen listens for it through a
-  ref.
+- **Rating.** `ratingTemplate` with an interactive `ratingBadge`, saved from
+  its `onChange`.
 - **Confirmations.** "Reset all settings?", "Sign out?" and "Turn off PIN?"
   are `alertTemplate`s shown with `navigation.presentModal`. Cancel has focus
   by default.
@@ -35,7 +33,6 @@ src/
   main.tsx, App.tsx       launch; root switches Welcome ↔ Settings
   store.ts                useProfile / usePreferences (useLocalStorage), option lists
   validation.ts           name / email / PIN validators
-  components/TextInput    textField with placeholder + defaultValue
   components/FormScreen   one formTemplate step with validation feedback
   components/Rows         ToggleRow, ValueRow, CheckRow (listItemLockup patterns)
   screens/                Onboarding, Settings, OptionPicker, GenrePicker, RateApp, ConfirmAlert
@@ -54,19 +51,18 @@ simulator, pointed at this server:
 xcrun simctl launch <udid> dev.tvml-react.examples -TVMLServerURL http://localhost:9107/
 ```
 
-After a JavaScript change, relaunch the app. You don't need to rebuild in
-Xcode. To see onboarding again, choose **Sign Out** in Settings.
+The app reloads after every change, and its `console` output shows up in the
+terminal. To see onboarding again, choose **Sign Out** in Settings.
 
 ## TVML notes learned here
 
 - A `formTemplate` only shows its **first** `textField`, so a form with
   several fields has to be a sequence of screens.
-- The text inside `<textField>` is its placeholder. The typed text lives on
-  `getKeyboard(el).text`. Setting it fills the field but doesn't fire
-  `onTextChange`.
-- On a presented `listTemplate`, calling `setAttribute("autoHighlight", "true")`
-  moves focus to that element. This works even if the value is already
-  `"true"`. Inside a `formTemplate`, the keyboard keeps focus.
+- The text inside `<textField>` is its placeholder. Setting `defaultValue` (or
+  `value`) fills the field but doesn't fire `onTextChange`, so state that
+  mirrors the field has to start from the same value.
+- On a presented `listTemplate`, `focus(element)` moves focus to that element.
+  Inside a `formTemplate`, the keyboard keeps focus.
 - `ratingTemplate` ignores DOM changes once it's on screen, so this app saves
   the rating and pops the screen instead of showing a "thanks" state.
 - `listTemplate`'s banner `<description>` renders as tiny text in the corner,

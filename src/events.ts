@@ -5,6 +5,7 @@
 // unique ids.
 
 import type { TVMLDocument, TVMLElement, TVMLEvent } from "./dom.js";
+import { runDiscrete } from "./sync.js";
 
 export type TVMLEventHandler = (event: TVMLEvent) => void;
 
@@ -19,6 +20,8 @@ export const EVENT_PROPS = {
   onPlay: "play",
   // A long press on a focusable control.
   onHoldSelect: "holdselect",
+  // A value changed, e.g. a `ratingBadge` in a `ratingTemplate`.
+  onChange: "change",
 } as const;
 
 export type TVMLEventProp = keyof typeof EVENT_PROPS;
@@ -65,7 +68,7 @@ export function attachEventDelegation(doc: TVMLDocument): () => void {
     while (target) {
       const handler = handlers.get(target)?.get(event.type);
       if (handler) {
-        handler(event);
+        runDiscrete(() => handler(event));
         return;
       }
       target = target.parentNode;

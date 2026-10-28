@@ -28,6 +28,8 @@ export interface TVMLAttributes {
   onHighlight?: TVMLEventHandler;
   onPlay?: TVMLEventHandler;
   onHoldSelect?: TVMLEventHandler;
+  /** e.g. a `ratingBadge` in a `ratingTemplate` changing value. */
+  onChange?: TVMLEventHandler;
   /** Arbitrary data attributes are passed straight through. */
   [dataAttribute: `data-${string}`]: string | number | boolean | undefined;
 }
@@ -42,8 +44,13 @@ export interface FocusableAttributes extends TVMLAttributes {
 }
 
 export interface ImageAttributes extends TVMLAttributes {
+  /** An image URL, or `resource://name` / `symbol://sf-symbol-name`. */
   src?: string;
-  srcset?: string;
+  /**
+   * Resolution variants. The object form (`{ "1x": url, "2x": url2x }`) warns
+   * if a URL contains a comma, which TVMLKit can't parse.
+   */
+  srcset?: string | Partial<Record<"1x" | "2x" | "3x", string>>;
   width?: string | number;
   height?: string | number;
   aspectFill?: BooleanAttribute;
@@ -52,11 +59,24 @@ export interface ImageAttributes extends TVMLAttributes {
   alt?: string;
 }
 
+export interface LongTextAttributes extends TVMLAttributes {
+  /**
+   * Truncate long text with a "MORE" affordance and make it selectable;
+   * handle `onSelect` to show the full text (e.g. a descriptiveAlertTemplate).
+   */
+  handlesOverflow?: BooleanAttribute;
+}
+
 export interface ShelfAttributes extends TVMLAttributes {
   centered?: BooleanAttribute;
 }
 
+/** `<textField>` / `<searchField>`. Children are the placeholder text. */
 export interface TextFieldAttributes extends TVMLAttributes {
+  /** Controlled text. Writing it doesn't fire `onTextChange`. */
+  value?: string;
+  /** Text to start with. */
+  defaultValue?: string;
   /** Called with the current text as the user types. */
   onTextChange?: (text: string) => void;
   keyboardType?:
@@ -122,6 +142,7 @@ export interface TVMLIntrinsicElements {
   grid: TVMLAttributes;
   header: TVMLAttributes;
   info: TVMLAttributes;
+  itemBanner: TVMLAttributes;
   infoList: TVMLAttributes;
   infoTable: TVMLAttributes;
   list: TVMLAttributes;
@@ -147,7 +168,7 @@ export interface TVMLIntrinsicElements {
   button: FocusableAttributes;
   decorationImage: ImageAttributes;
   decorationLabel: TVMLAttributes;
-  description: TVMLAttributes & { allowsZooming?: BooleanAttribute };
+  description: LongTextAttributes & { allowsZooming?: BooleanAttribute };
   fullscreenImg: ImageAttributes;
   heroImg: ImageAttributes;
   img: ImageAttributes;
@@ -162,11 +183,12 @@ export interface TVMLIntrinsicElements {
   progressBar: ProgressBarAttributes;
   ratingBadge: RatingBadgeAttributes;
   ratingButton: FocusableAttributes;
+  reviewCard: FocusableAttributes;
   subtitle: TVMLAttributes;
-  text: TVMLAttributes;
+  text: LongTextAttributes;
   textBadge: TVMLAttributes;
   textField: TextFieldAttributes;
   searchField: Omit<TextFieldAttributes, "secure">;
-  title: TVMLAttributes;
+  title: LongTextAttributes;
   video: MediaAttributes;
 }

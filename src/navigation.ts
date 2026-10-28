@@ -11,16 +11,14 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
-  useRef,
   useState,
   type ComponentType,
   type ReactNode,
 } from "react";
 
 import { createDocument, getNavigationDocument, type TVMLDocument } from "./dom.js";
-import { attachEventDelegation } from "./events.js";
-import { createPortal } from "./reconciler.js";
-import { ScreenContext, trackScreen } from "./screen.js";
+import { DocumentPortal } from "./document-portal.js";
+import { ScreenContext, setScreenVisible } from "./screen.js";
 
 export interface Navigation {
   /** Push a screen onto the navigation stack. */
@@ -58,8 +56,23 @@ export function useNavigation(): Navigation {
 
 let nextKey = 0;
 
-// Presents the document once its content has been committed: TVMLKit shows a
-// document that is empty when presented as a blank screen.
+function present(doc: TVMLDocument, mode: PresentMode): void {
+  const navigation = getNavigationDocument();
+  if (mode === "modal") {
+    navigation.presentModal(doc);
+  } else if (mode === "replace") {
+    const top = navigation.documents[navigation.documents.length - 1];
+    if (top) {
+      navigation.replaceDocument(doc, top);
+    } else {
+      navigation.pushDocument(doc);
+    }
+  } else {
+    navigation.pushDocument(doc);
+  }
+  setScreenVisible(doc, true);
+}
+
 function PresentedScreen({
   entry,
   onUnload,
@@ -67,40 +80,17 @@ function PresentedScreen({
   entry: Entry;
   onUnload: (entry: Entry) => void;
 }) {
-  const presented = useRef(false);
-
   useLayoutEffect(() => {
-    const { doc, mode } = entry;
-    const detachEvents = attachEventDelegation(doc);
-    const untrack = trackScreen(doc);
     const handleUnload = () => onUnload(entry);
-    doc.addEventListener("unload", handleUnload);
-
-    if (!presented.current) {
-      presented.current = true;
-      const navigation = getNavigationDocument();
-      if (mode === "modal") {
-        navigation.presentModal(doc);
-      } else if (mode === "replace") {
-        const top = navigation.documents[navigation.documents.length - 1];
-        if (top) {
-          navigation.replaceDocument(doc, top);
-        } else {
-          navigation.pushDocument(doc);
-        }
-      } else {
-        navigation.pushDocument(doc);
-      }
-    }
-
-    return () => {
-      doc.removeEventListener("unload", handleUnload);
-      untrack();
-      detachEvents();
-    };
+    entry.doc.addEventListener("unload", handleUnload);
+    return () => entry.doc.removeEventListener("unload", handleUnload);
   }, [entry, onUnload]);
 
-  return createElement(ScreenContext.Provider, { value: entry.doc }, entry.screen);
+  return createElement(DocumentPortal, {
+    document: entry.doc,
+    onReady: (doc: TVMLDocument) => present(doc, entry.mode),
+    children: entry.screen,
+  });
 }
 
 export interface NavigationHostProps {
@@ -111,10 +101,23 @@ export interface NavigationHostProps {
 
 export function NavigationHost({ children, wrapper: Wrapper = Fragment }: NavigationHostProps) {
   const [entries, setEntries] = useState<Array<Entry>>([]);
+  const rootDoc = useContext(ScreenContext);
+
+  // When `replace` swaps out the root document, stop rendering the root screen
+  // so its effects (timers, requests) don't keep running invisibly.
+  const [rootUnloaded, setRootUnloaded] = useState(false);
+  useLayoutEffect(() => {
+    if (!rootDoc) return;
+    const onUnload = () => setRootUnloaded(true);
+    rootDoc.addEventListener("unload", onUnload);
+    return () => rootDoc.removeEventListener("unload", onUnload);
+  }, [rootDoc]);
 
   const navigation = useMemo<Navigation>(() => {
     const add = (screen: ReactNode, mode: PresentMode) => {
       const entry: Entry = { key: nextKey++, doc: createDocument(), screen, mode };
+      // It's presented as soon as it commits; render it as visible from the start.
+      setScreenVisible(entry.doc, true);
       setEntries((current) => [...current, entry]);
     };
     return {
@@ -139,13 +142,9 @@ export function NavigationHost({ children, wrapper: Wrapper = Fragment }: Naviga
     createElement(
       Wrapper,
       null,
-      children,
+      rootUnloaded ? null : children,
       entries.map((entry) =>
-        createPortal(
-          createElement(PresentedScreen, { entry, onUnload }),
-          entry.doc.documentElement,
-          String(entry.key),
-        ),
+        createElement(PresentedScreen, { key: entry.key, entry, onUnload }),
       ),
     ),
   );

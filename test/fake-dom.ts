@@ -25,6 +25,11 @@ export class FakeElement implements TVMLElement {
     return this.children[0] ?? null;
   }
 
+  get nextSibling(): FakeElement | null {
+    const siblings = this.parentNode?.children ?? [];
+    return siblings[siblings.indexOf(this) + 1] ?? null;
+  }
+
   get textContent(): string | null {
     return this.tagName === undefined
       ? this.nodeValue

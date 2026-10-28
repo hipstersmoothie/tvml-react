@@ -1,40 +1,28 @@
-// Podcast RSS parsing with TVJS's own DOMParser (TVMLKit's XML parser). It
-// handles multi-megabyte feeds quickly, but its DOM is minimal:
+// Podcast RSS parsing with tvml-react's parseDocument, i.e. TVJS's own
+// DOMParser (TVMLKit's XML parser). It handles multi-megabyte feeds quickly,
+// but its DOM is minimal:
 //  - getElementsByTagName("itunes:duration") finds nothing, and there is no
 //    getElementsByTagNameNS, so namespaced tags are found by walking children
 //    and comparing nodeName.
 //  - Malformed XML throws an IKDOMException rather than returning a
 //    <parsererror> document.
 
+import { parseDocument, type TVMLDocument, type TVMLElement } from "tvml-react";
+
 import type { Episode } from "./types";
 import { decodeEntities, parseDuration, stripHtml } from "./format";
 
-interface XmlNode {
-  readonly nodeName: string;
-  readonly nodeType: number;
-  readonly firstChild: XmlNode | null;
-  readonly nextSibling: XmlNode | null;
-  readonly textContent: string | null;
-  getAttribute?(name: string): string | null;
-}
-
-interface XmlDocument {
-  readonly documentElement: XmlNode | null;
-}
-
-interface TVJSDomParser {
-  new (): { parseFromString(source: string, mimeType: string): XmlDocument };
-}
-
 const ELEMENT_NODE = 1;
 
-function* children(node: XmlNode): Generator<XmlNode> {
-  for (let child = node.firstChild; child; child = child.nextSibling) {
+function* children(node: TVMLElement): Generator<TVMLElement> {
+  let child: TVMLElement | null | undefined = node.firstChild;
+  while (child) {
     if (child.nodeType === ELEMENT_NODE) yield child;
+    child = child.nextSibling;
   }
 }
 
-function child(node: XmlNode, ...names: Array<string>): XmlNode | undefined {
+function child(node: TVMLElement, ...names: Array<string>): TVMLElement | undefined {
   for (const name of names) {
     for (const c of children(node)) {
       if (c.nodeName === name) return c;
@@ -43,12 +31,12 @@ function child(node: XmlNode, ...names: Array<string>): XmlNode | undefined {
   return undefined;
 }
 
-function text(node: XmlNode, ...names: Array<string>): string {
+function text(node: TVMLElement, ...names: Array<string>): string {
   return child(node, ...names)?.textContent?.trim() ?? "";
 }
 
-function attr(node: XmlNode | undefined, name: string): string {
-  return node?.getAttribute?.(name) ?? "";
+function attr(node: TVMLElement | undefined, name: string): string {
+  return node?.getAttribute(name) ?? "";
 }
 
 export interface Feed {
@@ -60,10 +48,9 @@ export interface Feed {
 }
 
 export function parseFeed(xml: string, fallbackArtwork: string): Feed {
-  const Parser = (globalThis as unknown as { DOMParser: TVJSDomParser }).DOMParser;
-  let doc: XmlDocument;
+  let doc: TVMLDocument;
   try {
-    doc = new Parser().parseFromString(xml, "application/xml");
+    doc = parseDocument(xml);
   } catch {
     throw new Error("This feed isn't valid XML.");
   }

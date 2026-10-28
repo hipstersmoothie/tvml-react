@@ -1,5 +1,5 @@
-import { createElement, useState, type ReactNode } from "react";
-import { useKeepAwake, useNavigation, usePlayer, type TVMLAttributes } from "tvml-react";
+import { useState, type ReactNode } from "react";
+import { PlayerOverlay, useKeepAwake, useNavigation, usePlayer } from "tvml-react";
 
 import {
   activityName,
@@ -14,17 +14,10 @@ import {
 } from "./api";
 import { ago, oneLine, uptime, viewers } from "./format";
 import { useLiveData, useNow, type Remote } from "./hooks";
-import { attachOverlay, useChatOverlay } from "./playerOverlay";
 import { useProfiles } from "./store";
 
 const STREAM_REFRESH_MS = 15_000;
 const CHAT_REFRESH_MS = 8_000;
-
-// <reviewCard> is a built-in TVML element (product page shelves) that
-// tvml-react's JSX catalog doesn't include yet.
-function ReviewCard(props: TVMLAttributes) {
-  return createElement("reviewCard", props);
-}
 
 export function StreamScreen({ did, initial }: { did: string; initial?: Livestream }) {
   const navigation = useNavigation();
@@ -36,16 +29,9 @@ export function StreamScreen({ did, initial }: { did: string; initial?: Livestre
   const watching = player.state !== "idle" && player.state !== "end";
   useKeepAwake(watching);
 
-  const stream = useLiveData(() => getLivestream(did), STREAM_REFRESH_MS, { keepAlive: watching });
+  const stream = useLiveData((signal) => getLivestream(did, signal), STREAM_REFRESH_MS, { keepAlive: watching });
   const live = stream.status === "ready" ? stream.data : initial;
-  const chat = useLiveData(() => getRecentChat(did), CHAT_REFRESH_MS, { enabled: !!live, keepAlive: watching });
-
-  // Rendered whatever this screen shows, so the overlay never goes blank
-  // under a player that's still up (e.g. when the stream ends mid-watch).
-  const overlay = useChatOverlay(
-    chat.data ?? [],
-    live === null ? "This stream has ended" : `Chat · ${viewers(live?.viewerCount?.count)}`,
-  );
+  const chat = useLiveData((signal) => getRecentChat(did, signal), CHAT_REFRESH_MS, { enabled: !!live, keepAlive: watching });
 
   let content: ReactNode;
   if (live === undefined) {
@@ -82,7 +68,6 @@ export function StreamScreen({ did, initial }: { did: string; initial?: Livestre
         description: activityName(live.record.activity),
         artworkImageURL: thumb,
       });
-      attachOverlay(overlay.doc);
     };
     const cantPlay = (error: Error) => {
       stream.refresh();
@@ -111,11 +96,40 @@ export function StreamScreen({ did, initial }: { did: string; initial?: Livestre
     );
   }
 
+  // Mounted only while the player is up: TVMLKit doesn't draw an overlay
+  // assigned before the player is presented. It sits outside `content`, so it
+  // keeps rendering when the stream ends mid-watch.
   return (
     <>
       {content}
-      {overlay.portal}
+      {watching && (
+        <PlayerOverlay player={player}>
+          <ChatOverlay
+            messages={chat.data ?? []}
+            heading={live === null ? "This stream has ended" : `Chat · ${viewers(live?.viewerCount?.count)}`}
+          />
+        </PlayerOverlay>
+      )}
     </>
+  );
+}
+
+/** The newest chat, drawn over the top right of the video. */
+function ChatOverlay({ messages, heading }: { messages: Array<ChatMessage>; heading: string }) {
+  const recent = messages.slice(0, 5).reverse(); // oldest at the top, like chat
+  return (
+    <divTemplate>
+      <stack style={{ tvPosition: "top-right", width: 640, margin: "60 60 0 0" }}>
+        <text style={{ color: "white", fontSize: 30, fontWeight: "semibold", backgroundColor: "rgba(0, 0, 0, 0.65)", padding: "20 24 8 24", tvAlign: "left" }}>
+          {heading}
+        </text>
+        {recent.map((m) => (
+          <text key={m.uri} style={{ color: "white", fontSize: 26, backgroundColor: "rgba(0, 0, 0, 0.65)", padding: "6 24", tvTextMaxLines: 3, tvAlign: "left" }}>
+            {`@${m.handle}  ${m.text}`}
+          </text>
+        ))}
+      </stack>
+    </divTemplate>
   );
 }
 
@@ -208,11 +222,11 @@ function LiveStream({
         </header>
         <section>
           {messages.map((m) => (
-            <ReviewCard key={m.uri}>
+            <reviewCard key={m.uri}>
               <title>{`@${m.handle}`}</title>
               <description>{m.text}</description>
               <text>{ago(m.createdAt, now)}</text>
-            </ReviewCard>
+            </reviewCard>
           ))}
         </section>
       </shelf>

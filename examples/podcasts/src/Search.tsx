@@ -16,10 +16,10 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 export function Search() {
   const [text, setText] = useState("");
   const query = useDebouncedValue(text.trim(), 400);
-  const [results] = useResource(query ? `search:${query.toLowerCase()}` : null, (token) =>
-    searchPodcasts(query, token),
+  const [results] = useResource(query ? `search:${query.toLowerCase()}` : null, (signal) =>
+    searchPodcasts(query, signal),
   );
-  const [top] = useResource("top:all", (token) => topPodcasts(undefined, token));
+  const [top] = useResource("top:all", (signal) => topPodcasts(undefined, signal));
 
   const typed = text.trim();
   let heading: string;

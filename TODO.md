@@ -12,11 +12,12 @@ Known gaps and missing features, roughly in priority order within each section.
 - [ ] **Typing.** `onTextChange` was verified by setting the keyboard's text
       from JS; real typing on the on-screen keyboard is untested.
 
-- [ ] **Remote interactions in an automated test.** `onSelect`, `onPlay` and
-      `onHoldSelect` are only covered by unit tests against the fake DOM. Add an
-      XCUITest target to `examples/shell` that drives `XCUIRemote` (select,
-      swipe between segments, long press) and asserts the screen changed. Run it in
-      CI on a tvOS simulator.
+- [ ] **Remote interactions in an automated test.** Synthetic events
+      (`tvml-react/testing`) exercise the handlers, but not TVMLKit's own focus
+      and press handling. Add an XCUITest target to `examples/shell` that drives
+      `XCUIRemote` (select, swipe, long press, Menu) and run it in CI. Open
+      questions: does focusing a `menuItem` fire `select`, and what does Menu do
+      from the player and from tabs?
 - [ ] **tvOS 26 sweep of every template and element.** Only `<shelf>`/`<row>`
       were confirmed to hit the `UIScreen.focusedView` crash that
       `TVMLReact.install()` works around. Render each template (`catalogTemplate`,
@@ -26,41 +27,58 @@ Known gaps and missing features, roughly in priority order within each section.
       simulator. Check on an Apple TV, especially layout (`stackTemplate` and
       `divTemplate` have been seen to differ between device and simulator) and
       `FocusBridgeWindow`.
-- [ ] **`<head><style>` and `className`.** Document-level stylesheets are typed
-      and should work, but haven't been tried.
 - [ ] **Older tvOS.** The Swift package declares tvOS 15 and the bundle targets
       Safari 15, but nothing older than tvOS 26 has been run.
 
 ## Features
 
-- [ ] **Live reload.** `tvml-react dev` rebuilds but the app has to be relaunched.
-      Have the bootstrap poll the dev server (or listen to esbuild's change
-      stream) and call `App.reload()`.
-- [ ] **More from the TVJS API.** The tvOS 26 probe also found:
-  - `Player.overlayDocument` / `interactiveOverlayDocument`: custom overlays
-    on the fullscreen player, which could be rendered with React.
-  - The keyboard's `suggestions`: search suggestions.
-  - `userDefaults`: storage shared with a Top Shelf extension.
-  - `App.noteTopShelfDataChanged` / `topShelfImageSizeForShape`: Top Shelf content.
-  - `Slideshow`: a fullscreen photo slideshow.
-  - `MenuBarDocument` on `menuBarTemplate`: tab bars.
-  - `formatDate` / `formatDuration` / `formatNumber`: `Intl` works too.
+- [ ] **Data fetching hook.** Every example app wrote its own query hook. Ship
+      `useQuery(key, fetcher, { staleTime, interval })` with a cache shared
+      across screens, plus `loadMore` for paging. TV-specific needs:
+      - refetch on `appear` and on resume, but only for the visible screen;
+      - pause while the app is backgrounded or offline;
+      - keep the last data when a refresh fails.
+
+      The hacker-news (`lib/query.ts`), dashboard (`useLiveResource`) and
+      streamplace (`useLiveData`) examples each have one.
+- [ ] **Layout helpers.** `divTemplate` is a region flow layout with many
+      no-op styles (see docs/platform-notes.md). Ship `tvml-react/layout`
+      (`Row`, `Cell`, `Columns`, safe-area constants), starting from
+      `examples/dashboard/src/layout.tsx`.
+- [ ] **Native visual elements.** Register through `TVMLReact.install()`:
+  - `Backdrop`: a crossfading background image with a scrim. TVML's
+    `<background>` is frozen once presented.
+  - `Panel`: a blurred, rounded `UIVisualEffectView`.
+  - `measureText()` on the native bridge, for cells sized to their text.
+- [ ] **WebSocket.** TVJS has neither `WebSocket` nor `EventSource`. Provide a
+      native-bridge `WebSocket` (`URLSessionWebSocketTask`) so real-time
+      services work (stream.place chat currently polls third-party indexes).
+- [ ] **Shared player.** `usePlayer` creates one player per call and re-renders
+      every second. Add a `PlayerProvider` and `usePlayerState(selector)`, as in
+      `examples/podcasts`. Also: an `isLive` flag, a `mediaItemWillChange`
+      reason, and an `onStop({ time, duration, reason })` callback.
+- [ ] **`Slideshow` wrapper.** A typed `startSlideshow(images, options)`.
+      Blank in the simulator; needs a hardware check.
+- [ ] **Keyboard suggestions.** Expose the Keyboard feature's `suggestions` on
+      `searchField`.
+- [ ] **Top Shelf.** `userDefaults` (shared with a Top Shelf extension) and
+      `App.noteTopShelfDataChanged`.
 - [ ] **Remote input.** A `useRemote()` hook over the Game Controller
       framework (the Siri Remote appears as a micro gamepad) for swipes and
-      buttons TVML doesn't surface. Check how it interacts with TVML's focus
-      handling.
+      buttons TVML doesn't surface.
 - [ ] **Deep links.** Forward `application(_:open:options:)` from Swift into a
       `useOpenURL()` hook.
 - [ ] **Now Playing.** Publish what's playing to Control Center through
       `MPNowPlayingInfoCenter` (`useNowPlaying()`).
 - [ ] **Current user.** Per-profile data on multi-user Apple TVs.
-- [ ] **More element events.** Only `select`, `highlight`, `play` and
-      `holdselect` are delegated (document lifecycle events have
-      `useScreenEvent`). Consider `change` and per-element `load`.
+- [ ] **Focus helpers.** `useFocusedElement()` built on `highlight`, and a way
+      to focus inside `formTemplate`.
 - [ ] **Suspense.** `maySuspendCommit` is hard-coded to `false`. Image
       preloading or suspending on data would need real support for it in the
       host config.
-- [ ] **Multiple roots into one document / portals.** Not supported.
+- [ ] **Context in pushed screens.** Pushed screens only see providers in
+      `launch`'s `wrapper`, not ones inside `<App>`. Consider capturing context
+      at the `push()` call site, or warning in development.
 
 ## Typings
 
@@ -77,8 +95,8 @@ Known gaps and missing features, roughly in priority order within each section.
 ## Runtime
 
 - [ ] **Polyfills are minimal.** `URL` doesn't resolve relative URLs and has no
-      `origin`/`port`. Check whether TVJS provides `fetch`, `TextEncoder`,
-      `AbortController`, `structuredClone`, and polyfill or document the gaps.
+      `origin`/`port`. The `fetch` polyfill has no streaming or blob bodies.
+      `TextEncoder` and `structuredClone` are missing.
 - [ ] **Scheduler latency.** Without `MessageChannel`, React's scheduler falls
       back to `setTimeout`. Measure whether updates feel sluggish on hardware
       and whether a `queueMicrotask`-based shim is better.
@@ -106,7 +124,7 @@ Known gaps and missing features, roughly in priority order within each section.
 
 - [ ] **Docs site / API reference.** The README is the only documentation.
 - [ ] **More examples.** A kitchen-sink app showing every template (doubles as
-      the tvOS 26 sweep above), plus a data-fetching example.
+      the tvOS 26 sweep above).
 - [ ] **Template generator.** `npm create tvml-react` that scaffolds the JS app
       and an Xcode shell.
 - [ ] **React DevTools.** Not wired up; see whether a standalone DevTools

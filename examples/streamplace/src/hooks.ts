@@ -7,14 +7,14 @@ export type Remote<T> =
   | { status: "error"; data?: undefined; error: Error; updatedAt?: undefined };
 
 /**
- * Load `load()` now, then every `intervalMs` — but only while this screen is
+ * Load `load()` now, then every `intervalMs`, but only while this screen is
  * the one on the TV and the app is in the foreground. Coming back to the
  * screen (popping a pushed screen, closing the player) or resuming the app
  * refreshes immediately. A failed refresh keeps the last good data and
- * reports the error alongside it.
+ * reports the error alongside it. A refresh cancels the one before it.
  */
 export function useLiveData<T>(
-  load: () => Promise<T>,
+  load: (signal: AbortSignal) => Promise<T>,
   intervalMs: number,
   options: {
     enabled?: boolean;
@@ -33,16 +33,17 @@ export function useLiveData<T>(
   const [state, setState] = useState<Remote<T>>({ status: "loading" });
   const loadRef = useRef(load);
   loadRef.current = load;
-  const generation = useRef(0);
+  const inFlight = useRef<AbortController | null>(null);
 
   const refresh = useCallback(() => {
-    const id = ++generation.current;
-    loadRef.current().then(
+    inFlight.current?.abort();
+    const { signal } = (inFlight.current = new AbortController());
+    loadRef.current(signal).then(
       (data) => {
-        if (id === generation.current) setState({ status: "ready", data, updatedAt: Date.now() });
+        if (!signal.aborted) setState({ status: "ready", data, updatedAt: Date.now() });
       },
       (error: unknown) => {
-        if (id !== generation.current) return;
+        if (signal.aborted) return;
         const err = error instanceof Error ? error : new Error(String(error));
         setState((prev) =>
           prev.status === "ready" ? { ...prev, error: err } : { status: "error", error: err },
@@ -57,7 +58,7 @@ export function useLiveData<T>(
     const timer = setInterval(refresh, intervalMs);
     return () => {
       clearInterval(timer);
-      generation.current++; // drop responses that land after we stopped
+      inFlight.current?.abort();
     };
   }, [active, intervalMs, refresh]);
 

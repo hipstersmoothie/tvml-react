@@ -7,12 +7,12 @@ A Hacker News reader for Apple TV, built with tvml-react.
 ## What it shows
 
 - **Tabs with `menuBarTemplate`.** Top, New, Best, Ask and Show live in the
-  system tab bar. Each tab is its own TVML document, handed to the menu bar's
-  `MenuBarDocument` feature (`src/MenuBarTabs.tsx`). tvml-react has no API for
-  this yet, so each tab gets its own `createRoot` the first time it's highlighted.
-- **Data fetching without `fetch`.** TVJS only has `XMLHttpRequest`.
-  `src/lib/http.ts` wraps it in a promise and adds cancellation (there's no
-  `AbortController` either), timeouts and typed JSON. `src/lib/query.ts` is a
+  system tab bar, built with `<MenuBar>` and `<MenuBarItem>` (`src/App.tsx`).
+  Each tab mounts the first time it's selected and stays mounted, so switching
+  back keeps its stories and scroll position.
+- **Data fetching.** TVJS only has `XMLHttpRequest`; tvml-react polyfills
+  `fetch` and `AbortController` on top of it. `src/lib/http.ts` adds a timeout,
+  typed JSON and error messages worth showing on screen. `src/lib/query.ts` is a
   small `useQuery`: results are cached per key and shared between screens,
   duplicate requests are merged, a request is cancelled when its last screen
   unmounts, and stale data is refetched when the screen appears again
@@ -47,4 +47,5 @@ Then launch the examples shell app pointed at it:
 xcrun simctl launch <udid> dev.tvml-react.examples -TVMLServerURL http://localhost:9104/
 ```
 
-After changing JavaScript, relaunch the app. You don't need to rebuild in Xcode.
+The app reloads itself after every successful rebuild, and its `console` output
+shows up in the terminal running `pnpm dev`.

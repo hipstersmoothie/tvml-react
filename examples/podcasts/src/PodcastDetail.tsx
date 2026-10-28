@@ -13,7 +13,7 @@ import { useResource } from "./useResource";
 const PAGE = 40;
 
 export function PodcastDetail({ podcast }: { podcast: Podcast }) {
-  const [feed, reload] = useResource(`feed:${podcast.id}`, (token) => loadFeed(podcast, token));
+  const [feed, reload] = useResource(`feed:${podcast.id}`, (signal) => loadFeed(podcast, signal));
   const [visible, setVisible] = useState(PAGE);
   const { isSubscribed, toggle } = useSubscriptions();
   const { progress } = useProgress();

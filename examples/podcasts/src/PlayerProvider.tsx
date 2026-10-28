@@ -4,8 +4,6 @@
 // Screens get stable actions through context; the once-a-second time updates
 // stay inside this component.
 
-import "./tvjsPlayer";
-
 import {
   createContext,
   useCallback,
@@ -16,11 +14,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { createDocument, createPortal, usePlayer } from "tvml-react";
+import { usePlayer } from "tvml-react";
 
 import { useProgress } from "./library";
 import { NowPlayingOverlay } from "./NowPlayingOverlay";
-import { currentTVJSPlayer } from "./tvjsPlayer";
 import type { Episode, Podcast } from "./types";
 
 interface PlayerActions {
@@ -38,19 +35,19 @@ export function usePodcastPlayer(): PlayerActions {
 
 // Within this many seconds of the end counts as finished.
 const FINISHED_MARGIN = 30;
-// How often (in media seconds) to persist the position while playing.
-const SAVE_EVERY = 5;
+// How often (in media seconds) to persist the position while playing, so a
+// crash or force-quit loses little. Pausing and stopping save right away.
+const SAVE_EVERY = 15;
 const FINISHED = -1;
 
-type NowPlaying = { episode: Episode; podcast: Podcast };
+// `play` counts calls to playEpisode; see the overlay below.
+type NowPlaying = { episode: Episode; podcast: Podcast; play: number };
 
 export function PlayerProvider({ children }: { children?: ReactNode }) {
   const player = usePlayer();
   const { progress, save } = useProgress();
   const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
   const lastSaved = useRef(0);
-  const pendingSeek = useRef(0);
-  const [overlay] = useState(createDocument);
 
   // Read the latest progress without making playEpisode change identity.
   const progressRef = useRef(progress);
@@ -59,14 +56,11 @@ export function PlayerProvider({ children }: { children?: ReactNode }) {
   const playEpisode = useCallback<PlayerActions["playEpisode"]>(
     (episode, podcast, options = {}) => {
       const saved = progressRef.current[episode.id];
-      const resumeAt =
+      const startTime =
         !options.fromStart && saved && !saved.played ? Math.max(0, saved.position - 5) : 0;
-      setNowPlaying({ episode, podcast });
-      lastSaved.current = resumeAt;
-      // MediaItem.resumeTime makes TVMLKit ask "Resume Playback / Start from
-      // Beginning" and wait. Podcasts just resume, so seek once playing.
-      pendingSeek.current = resumeAt;
-      save(episode, podcast, { position: resumeAt, played: false });
+      setNowPlaying((current) => ({ episode, podcast, play: (current?.play ?? 0) + 1 }));
+      lastSaved.current = startTime;
+      save(episode, podcast, { position: startTime, played: false });
       player.play({
         url: episode.url,
         type: episode.mediaType,
@@ -74,31 +68,18 @@ export function PlayerProvider({ children }: { children?: ReactNode }) {
         subtitle: podcast.title,
         description: episode.description.slice(0, 400),
         artworkImageURL: episode.artwork || podcast.artwork,
+        startTime,
       });
-      const tvjsPlayer = currentTVJSPlayer();
-      if (tvjsPlayer && episode.mediaType === "audio") {
-        tvjsPlayer.overlayDocument = overlay;
-      } else if (tvjsPlayer) {
-        tvjsPlayer.overlayDocument = null;
-      }
     },
-    [player.play, save, overlay],
+    [player.play, save],
   );
 
-  const { currentTime, duration, state, currentItem, seek } = player;
+  const { currentTime, duration, state, currentItem } = player;
 
-  useEffect(() => {
-    if (state === "playing" && pendingSeek.current > 0) {
-      seek(pendingSeek.current);
-      pendingSeek.current = 0;
-    }
-  }, [state, seek]);
-
-  // Persist the playback position. TVJS reports time about once a second;
-  // write every few seconds and on every state change (pause, end).
+  // Persist the playback position: every SAVE_EVERY seconds while playing, and
+  // on pause and end (currentTime keeps its last value once playback stops).
   useEffect(() => {
     if (!nowPlaying || currentItem?.url !== nowPlaying.episode.url || currentTime <= 0) return;
-    if (pendingSeek.current > 0) return; // still at 0 before the resume seek
 
     const known =
       Number.isFinite(duration) && duration > 0 ? duration : nowPlaying.episode.duration;
@@ -119,7 +100,12 @@ export function PlayerProvider({ children }: { children?: ReactNode }) {
   return (
     <PlayerContext.Provider value={actions}>
       {children}
-      {createPortal(<NowPlayingOverlay nowPlaying={nowPlaying} />, overlay.documentElement)}
+      {nowPlaying?.episode.mediaType === "audio" ? (
+        <NowPlayingOverlay
+          player={player}
+          artwork={nowPlaying.episode.artwork || nowPlaying.podcast.artwork}
+        />
+      ) : null}
     </PlayerContext.Provider>
   );
 }

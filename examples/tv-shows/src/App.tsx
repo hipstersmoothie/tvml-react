@@ -1,4 +1,4 @@
-import { MenuBar, MenuBarItem } from "./MenuBar";
+import { MenuBar, MenuBarItem } from "tvml-react";
 import { Popular } from "./Popular";
 import { Search } from "./Search";
 import { Tonight } from "./Tonight";

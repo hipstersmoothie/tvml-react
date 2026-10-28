@@ -33,7 +33,7 @@ export function Albums() {
             </lockup>
           ))}
           <lockup onSelect={() => navigation.push(<Search />)}>
-            <img src="resource://button-search" width={250} height={250} />
+            <img src="symbol://magnifyingglass" width={250} height={250} />
             <title style={{ color: "white" }}>Search</title>
           </lockup>
         </section>

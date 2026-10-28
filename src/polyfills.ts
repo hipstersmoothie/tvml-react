@@ -1,3 +1,11 @@
+import {
+  AbortControllerPolyfill,
+  AbortSignalPolyfill,
+  createFetch,
+  HeadersPolyfill,
+  ResponsePolyfill,
+} from "./fetch.js";
+
 // Polyfills required for React + scheduler to run inside the tvOS
 // JavaScriptCore runtime. They must run before `react`/`scheduler` are
 // evaluated: the `tvml-react` CLI/esbuild preset injects this module ahead of
@@ -9,6 +17,12 @@ const globalScope = globalThis as unknown as {
   MessageChannel?: unknown;
   URL?: unknown;
   URLSearchParams?: unknown;
+  fetch?: unknown;
+  Headers?: unknown;
+  Response?: unknown;
+  AbortController?: unknown;
+  AbortSignal?: unknown;
+  XMLHttpRequest?: unknown;
 };
 
 if (
@@ -187,4 +201,19 @@ if (typeof globalScope.URL !== "function") {
   globalScope.URL = PolyfillURL;
 }
 
-export {};
+// tvOS JavaScriptCore has XMLHttpRequest but no fetch / AbortController.
+if (typeof globalScope.AbortController !== "function") {
+  globalScope.AbortController = AbortControllerPolyfill;
+  globalScope.AbortSignal = AbortSignalPolyfill;
+}
+
+if (
+  typeof globalScope.fetch !== "function" &&
+  typeof globalScope.XMLHttpRequest === "function"
+) {
+  globalScope.fetch = createFetch(
+    globalScope.XMLHttpRequest as Parameters<typeof createFetch>[0],
+  );
+  globalScope.Headers = HeadersPolyfill;
+  globalScope.Response = ResponsePolyfill;
+}

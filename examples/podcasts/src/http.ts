@@ -1,69 +1,23 @@
-// TVJS has no fetch or AbortController, so requests are XMLHttpRequest wrapped
-// in a promise, cancelled through a tiny token instead of an AbortSignal.
+// GET helpers over the `fetch` / `AbortController` that tvml-react installs in
+// TVJS (which has neither). Network failures and HTTP errors become messages a
+// screen can show as is.
 
-export interface CancelToken {
-  readonly cancelled: boolean;
-  onCancel(fn: () => void): void;
-}
-
-export function createCancelToken(): CancelToken & { cancel(): void } {
-  let cancelled = false;
-  const listeners: Array<() => void> = [];
-  return {
-    get cancelled() {
-      return cancelled;
-    },
-    onCancel(fn) {
-      if (cancelled) fn();
-      else listeners.push(fn);
-    },
-    cancel() {
-      if (cancelled) return;
-      cancelled = true;
-      for (const fn of listeners) fn();
-    },
-  };
-}
-
-export class HttpError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
-    super(message);
+export async function requestText(url: string, signal?: AbortSignal): Promise<string> {
+  let response: Response;
+  try {
+    response = await fetch(url, { signal });
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    throw new Error(`Couldn't reach ${hostOf(url)}`);
   }
-}
-
-export class CancelledError extends Error {
-  constructor() {
-    super("Request cancelled");
+  if (!response.ok) {
+    throw new Error(`${hostOf(url)} responded ${response.status}`);
   }
+  return response.text();
 }
 
-export function requestText(url: string, token?: CancelToken): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", url);
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(xhr.responseText);
-      } else {
-        reject(new HttpError(`${url} responded ${xhr.status}`, xhr.status));
-      }
-    };
-    xhr.onerror = () => reject(new HttpError(`Couldn't reach ${hostOf(url)}`, 0));
-    xhr.ontimeout = () => reject(new HttpError(`${hostOf(url)} timed out`, 0));
-    xhr.timeout = 20000;
-    token?.onCancel(() => {
-      xhr.abort();
-      reject(new CancelledError());
-    });
-    xhr.send();
-  });
-}
-
-export async function requestJSON<T>(url: string, token?: CancelToken): Promise<T> {
-  return JSON.parse(await requestText(url, token)) as T;
+export async function requestJSON<T>(url: string, signal?: AbortSignal): Promise<T> {
+  return JSON.parse(await requestText(url, signal)) as T;
 }
 
 function hostOf(url: string): string {

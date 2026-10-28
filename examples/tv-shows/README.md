@@ -7,12 +7,10 @@ A TV show catalog for tvml-react, built on the free [TVMaze API](https://www.tvm
 ## What it shows
 
 - **Native tab bar.** `menuBarTemplate` with three tabs (Tonight, Popular and
-  Search). tvml-react doesn't support menu bars yet, so
-  [`src/MenuBar.tsx`](src/MenuBar.tsx) prototypes support for them.
-  Each `<MenuBarItem>` owns a TVML document and renders its children into it
-  with `createPortal`. It attaches that document with the menu bar's
-  `MenuBarDocument` feature when the item is selected. Tabs mount the first
-  time they're shown and then stay mounted, so they keep their state.
+  Search), using tvml-react's `MenuBar`/`MenuBarItem`. Each tab renders into
+  its own TVML document from the app's single React tree. Tabs mount the first
+  time they're shown and then stay mounted, so they keep their state. (This
+  app's prototype became the library component.)
 - **Tonight.** `stackTemplate` shelves of today's US schedule, grouped by time
   slot and starting with "On Now". Your watchlist is shown at the top.
 - **Popular.** A `catalogTemplate` with categories on the left (Most Popular,
@@ -45,12 +43,3 @@ xcrun simctl launch <udid> dev.tvml-react.examples -TVMLServerURL http://localho
 ```
 
 `pnpm build` writes `dist/app.js` and `dist/Application.js`.
-
-## Notes
-
-- Elements inside a tab document only receive `onSelect` because
-  `MenuBar.tsx` calls `createRoot(doc)` on each tab document. That root is
-  never rendered into or unmounted. tvml-react only installs its event
-  delegation on documents it presents itself; see the comment in the file.
-- Screen hooks (`useIsScreenVisible`, `useScreenEvent`) inside a tab report on
-  the menu bar's document, not on the tab's.

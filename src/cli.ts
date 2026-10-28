@@ -18,6 +18,22 @@ function lanAddresses(): Array<string> {
     .map((info) => info!.address);
 }
 
+const LOG_COLORS: Record<string, string> = {
+  error: "\x1b[31m",
+  warn: "\x1b[33m",
+  info: "\x1b[36m",
+  debug: "\x1b[90m",
+};
+
+function printLog({ level, args }: { level: string; args: Array<unknown> }) {
+  const color = LOG_COLORS[level] ?? "";
+  const reset = color ? "\x1b[0m" : "";
+  const text = args
+    .map((arg) => (typeof arg === "string" ? arg : JSON.stringify(arg, null, 2)))
+    .join(" ");
+  console.log(`${color}[tv ${level}]${reset} ${text}`);
+}
+
 async function main() {
   const { positionals, values } = parseArgs({
     allowPositionals: true,
@@ -46,10 +62,11 @@ async function main() {
     outdir: values.outdir,
     port: Number(values.port),
     host: values.host,
+    onLog: printLog,
   });
   const hosts =
     values.host === "0.0.0.0" ? ["localhost", ...lanAddresses()] : [values.host];
-  console.log("\nServing TVML app. Set TVMLServerURL to one of:");
+  console.log("\nServing TVML app (live reload + console relay). Set TVMLServerURL to one of:");
   for (const host of hosts) {
     console.log(`  http://${host}:${port}/`);
   }

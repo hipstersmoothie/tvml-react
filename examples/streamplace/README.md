@@ -6,7 +6,7 @@ A [stream.place](https://stream.place) client: live streams from the AT Protocol
 
 - **Home:** a "Live now" shelf (live thumbnail, LIVE badge, streamer avatar, title, viewers), refreshed every 30 s while the screen is visible and the app is in the foreground. Below it, "Recently live" streamers remembered in `localStorage`. When nobody is live, that shelf becomes "Streamers you might like". Loading and error templates are handled, and a failed refresh keeps the last list.
 - **Stream page:** title, streamer, activity, tags, uptime and live viewer count, plus a shelf of recent chat (`<reviewCard>`s). Offline streamers get a profile page with "Check Again".
-- **Watching:** plays the live HLS (CMAF) playlist with `usePlayer`, keeps the screen awake with `useKeepAwake`, and draws a live chat panel **over the video** through the player's `overlayDocument`, rendered by React through a portal.
+- **Watching:** plays the live HLS (CMAF) playlist with `usePlayer`, keeps the screen awake with `useKeepAwake`, and draws a live chat panel **over the video** with `<PlayerOverlay>`.
 
 ```sh
 pnpm install && pnpm build   # from the repo root
@@ -35,7 +35,7 @@ moderated by stream.place, so hidden or banned messages can still show up.
 
 ## Files
 
-- `api.ts`: an XHR-based client. TVJS fires `error` instead of `load` for HTTP 404s, and the wrapper handles both.
-- `hooks.ts`: `useLiveData`, which polls only while the screen is visible and the app is active, with `keepAlive` for while the player is up.
+- `api.ts`: a `fetch` client. A 404 from `/api/livestream` means the streamer is offline; requests time out after 15 s and take an `AbortSignal`.
+- `hooks.ts`: `useLiveData`, which polls only while the screen is visible and the app is active, and cancels the previous request on each refresh. Presenting the player fires `disappear` on the stream page, so `keepAlive` keeps the chat overlay's data fresh while watching.
 - `store.tsx`: profiles and "recently live" history, provided through `launch`'s `wrapper`.
-- `playerOverlay.tsx`: the chat overlay. `usePlayer` keeps its `Player` private, so this wraps the global `Player` constructor to get at `overlayDocument`.
+- `StreamScreen.tsx`: the stream page and the chat overlay. The `<PlayerOverlay>` is mounted only while the player is up, because TVMLKit doesn't draw an overlay document assigned before the player is presented.

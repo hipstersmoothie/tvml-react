@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { useAppEvent, useIsScreenVisible, useScreenEvent } from "tvml-react";
 
-import { CancelledError, createCancelToken, type CancelSignal } from "./http";
+import { isAbortError } from "./http";
 
 export type QueryStatus = "loading" | "error" | "success";
 
@@ -20,12 +20,12 @@ export interface QueryState<T> {
   updatedAt: number;
 }
 
-type Fetcher<T> = (signal: CancelSignal) => Promise<T>;
+type Fetcher<T> = (signal: AbortSignal) => Promise<T>;
 
 interface Entry<T> {
   state: QueryState<T>;
   listeners: Set<() => void>;
-  inFlight?: { promise: Promise<void>; cancel(): void };
+  inFlight?: { promise: Promise<void>; controller: AbortController };
 }
 
 const cache = new Map<string, Entry<unknown>>();
@@ -71,8 +71,8 @@ export function fetchQuery<T>(key: string, fetcher: Fetcher<T>): Promise<void> {
   const entry = entryFor<T>(key);
   if (entry.inFlight) return entry.inFlight.promise;
 
-  const token = createCancelToken();
-  const promise = fetcher(token.signal).then(
+  const controller = new AbortController();
+  const promise = fetcher(controller.signal).then(
     (data) => {
       entry.inFlight = undefined;
       update<T>(key, {
@@ -85,7 +85,7 @@ export function fetchQuery<T>(key: string, fetcher: Fetcher<T>): Promise<void> {
     },
     (error: unknown) => {
       entry.inFlight = undefined;
-      if (error instanceof CancelledError) {
+      if (isAbortError(error)) {
         update<T>(key, { isFetching: false });
         return;
       }
@@ -97,7 +97,7 @@ export function fetchQuery<T>(key: string, fetcher: Fetcher<T>): Promise<void> {
       });
     },
   );
-  entry.inFlight = { promise, cancel: token.cancel };
+  entry.inFlight = { promise, controller };
   update<T>(key, { isFetching: true, ...(entry.state.status === "error" ? { status: "loading" } : {}) });
   return promise;
 }
@@ -135,7 +135,7 @@ export function useQuery<T>(
         return () => {
           entry.listeners.delete(onChange);
           // Nobody is waiting for this any more.
-          if (entry.listeners.size === 0) entry.inFlight?.cancel();
+          if (entry.listeners.size === 0) entry.inFlight?.controller.abort();
         };
       },
       [key],

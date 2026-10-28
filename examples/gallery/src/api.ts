@@ -1,6 +1,5 @@
-// Art Institute of Chicago public API (no key). TVJS has no fetch or
-// AbortController, so requests go through XMLHttpRequest and are cancelled
-// with xhr.abort().
+// Art Institute of Chicago public API (no key). Requests use the fetch and
+// AbortController that tvml-react installs over TVJS's XMLHttpRequest.
 
 const API = "https://api.artic.edu/api/v1";
 const IIIF = "https://www.artic.edu/iiif/2";
@@ -86,10 +85,6 @@ export const DEPARTMENTS: Array<Department> = [
 // ---------------------------------------------------------------------------
 // Transport
 
-export interface Request<T> extends Promise<T> {
-  abort(): void;
-}
-
 export class HttpError extends Error {
   constructor(
     readonly status: number,
@@ -99,32 +94,30 @@ export class HttpError extends Error {
   }
 }
 
-export function getJSON<T>(url: string, timeoutMs = 15000): Request<T> {
-  const xhr = new XMLHttpRequest();
-  const promise = new Promise<T>((resolve, reject) => {
-    xhr.open("GET", url);
-    xhr.timeout = timeoutMs;
-    xhr.setRequestHeader("Accept", "application/json");
-    xhr.onload = () => {
-      if (xhr.status < 200 || xhr.status >= 300) {
-        reject(new HttpError(xhr.status, url));
-        return;
-      }
-      try {
-        resolve(JSON.parse(xhr.responseText) as T);
-      } catch (error) {
-        reject(error);
-      }
-    };
-    xhr.onerror = () => reject(new HttpError(0, url));
-    xhr.ontimeout = () => reject(new Error("The request timed out"));
-    xhr.send();
-  });
-  return Object.assign(promise, { abort: () => xhr.abort() });
-}
+const TIMEOUT_MS = 15000;
 
-function mapRequest<A, B>(request: Request<A>, fn: (value: A) => B): Request<B> {
-  return Object.assign(request.then(fn), { abort: request.abort });
+/** GET JSON. Rejects with an AbortError if `signal` aborts. */
+export async function getJSON<T>(url: string, signal?: AbortSignal): Promise<T> {
+  // fetch has no timeout, so abort our own controller after TIMEOUT_MS, or
+  // as soon as the caller's signal aborts.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(new Error("The request timed out")), TIMEOUT_MS);
+  const cancel = () => controller.abort(signal?.reason);
+  signal?.addEventListener("abort", cancel);
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new HttpError(response.status, url);
+    return (await response.json()) as T;
+  } catch (error) {
+    // fetch rejects with a TypeError when the server can't be reached.
+    throw error instanceof TypeError ? new HttpError(0, url) : error;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", cancel);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -209,39 +202,39 @@ function searchUrl(query: ArtworkQuery, page: number, limit: number): string {
 }
 
 /** One page of artworks with images, most popular first. Pages start at 1. */
-export function searchArtworks(
+export async function searchArtworks(
   query: ArtworkQuery,
   page = 1,
-  limit = PAGE_SIZE,
-): Request<Page> {
-  return mapRequest(getJSON<RawList>(searchUrl(query, page, limit)), (raw) => ({
+  signal?: AbortSignal,
+): Promise<Page> {
+  const raw = await getJSON<RawList>(searchUrl(query, page, PAGE_SIZE), signal);
+  return {
     items: raw.data.map(toArtwork).filter((a): a is Artwork => a !== null),
     total: raw.pagination.total,
     totalPages: raw.pagination.total_pages,
-  }));
+  };
 }
 
-export function getArtwork(id: number): Request<ArtworkDetail> {
-  return mapRequest(
-    getJSON<{ data: RawArtwork }>(`${API}/artworks/${id}?fields=${DETAIL_FIELDS}`),
-    ({ data }) => {
-      const base = toArtwork(data);
-      if (!base) throw new Error("This artwork has no image");
-      return {
-        ...base,
-        artistDisplay: data.artist_display ?? base.artist,
-        medium: orUndefined(data.medium_display),
-        dimensions: orUndefined(firstLine(data.dimensions)),
-        creditLine: orUndefined(data.credit_line),
-        placeOfOrigin: orUndefined(data.place_of_origin),
-        type: orUndefined(data.artwork_type_title),
-        style: orUndefined(data.style_title),
-        artistId: data.artist_id ?? undefined,
-        departmentId: data.department_id ?? undefined,
-        description: data.description ? stripHtml(data.description) : undefined,
-      };
-    },
+export async function getArtwork(id: number, signal?: AbortSignal): Promise<ArtworkDetail> {
+  const { data } = await getJSON<{ data: RawArtwork }>(
+    `${API}/artworks/${id}?fields=${DETAIL_FIELDS}`,
+    signal,
   );
+  const base = toArtwork(data);
+  if (!base) throw new Error("This artwork has no image");
+  return {
+    ...base,
+    artistDisplay: data.artist_display ?? base.artist,
+    medium: orUndefined(data.medium_display),
+    dimensions: orUndefined(firstLine(data.dimensions)),
+    creditLine: orUndefined(data.credit_line),
+    placeOfOrigin: orUndefined(data.place_of_origin),
+    type: orUndefined(data.artwork_type_title),
+    style: orUndefined(data.style_title),
+    artistId: data.artist_id ?? undefined,
+    departmentId: data.department_id ?? undefined,
+    description: data.description ? stripHtml(data.description) : undefined,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -256,7 +249,8 @@ export type Fit = "contain" | "cover";
  *
  * Sizes are given as a percentage (`pct:4.36`) rather than the usual `!w,h`:
  * TVMLKit splits `srcset` on every comma, so a URL containing one breaks the
- * whole attribute (and `src` is not used as a fallback).
+ * whole attribute (and `src` is not used as a fallback). That needs the
+ * original size; see `hasKnownSize`.
  */
 export function imageUrl(
   artwork: Pick<Artwork, "imageId" | "width" | "height">,
@@ -265,8 +259,8 @@ export function imageUrl(
   fit: Fit = "contain",
 ): string {
   const { imageId } = artwork;
-  if (artwork.width <= 1 || artwork.height <= 1) {
-    // Unknown original size; fine for `src`, not for `srcset`.
+  if (!hasKnownSize(artwork)) {
+    // Contains a comma: fine for `src`, not for `srcset`.
     return `${IIIF}/${imageId}/full/!${Math.round(width)},${Math.round(height)}/0/default.jpg`;
   }
   const sx = width / artwork.width;
@@ -277,6 +271,10 @@ export function imageUrl(
   const pct = Math.min(Math.ceil(scale * 10000) / 100, 99);
   return `${IIIF}/${imageId}/full/pct:${pct}/0/default.jpg`;
 }
+
+/** Whether `imageUrl` can size this artwork without a comma in the URL. */
+export const hasKnownSize = (artwork: Pick<Artwork, "width" | "height">) =>
+  artwork.width > 1 && artwork.height > 1;
 
 /** The public web page for an artwork. */
 export const webUrl = (id: number) => `https://www.artic.edu/artworks/${id}`;

@@ -2,7 +2,7 @@
 // request for the ids, then one per story). A story's whole comment tree
 // comes from Algolia in a single request.
 
-import { getJSON, mapLimit, type CancelSignal } from "./lib/http";
+import { getJSON, mapLimit } from "./lib/http";
 import { decodeHtml } from "./text";
 
 const FIREBASE = "https://hacker-news.firebaseio.com/v0";
@@ -47,13 +47,13 @@ interface RawItem {
   dead?: boolean;
 }
 
-export function fetchFeedIds(feed: FeedId, signal?: CancelSignal): Promise<Array<number>> {
+export function fetchFeedIds(feed: FeedId, signal?: AbortSignal): Promise<Array<number>> {
   return getJSON<Array<number>>(`${FIREBASE}/${feed}stories.json`, { signal });
 }
 
 const itemCache = new Map<number, { story: Story | null; at: number }>();
 
-async function fetchStory(id: number, maxAge: number, signal?: CancelSignal): Promise<Story | null> {
+async function fetchStory(id: number, maxAge: number, signal?: AbortSignal): Promise<Story | null> {
   const cached = itemCache.get(id);
   if (cached && Date.now() - cached.at < maxAge) return cached.story;
   const raw = await getJSON<RawItem | null>(`${FIREBASE}/item/${id}.json`, { signal });
@@ -78,7 +78,7 @@ async function fetchStory(id: number, maxAge: number, signal?: CancelSignal): Pr
 /** Fetch stories for `ids`, 10 requests at a time, dropping deleted ones. */
 export async function fetchStories(
   ids: ReadonlyArray<number>,
-  { maxAge = 60_000, signal }: { maxAge?: number; signal?: CancelSignal } = {},
+  { maxAge = 60_000, signal }: { maxAge?: number; signal?: AbortSignal } = {},
 ): Promise<Array<Story>> {
   const stories = await mapLimit(ids, 10, (id) => fetchStory(id, maxAge, signal));
   return stories.filter((s): s is Story => s !== null);
@@ -112,7 +112,7 @@ interface AlgoliaItem {
 }
 
 /** A story and its whole comment tree, flattened depth-first. */
-export async function fetchThread(id: number, signal?: CancelSignal): Promise<Thread> {
+export async function fetchThread(id: number, signal?: AbortSignal): Promise<Thread> {
   const root = await getJSON<AlgoliaItem>(`${ALGOLIA}/items/${id}`, { signal });
   const comments: Array<Comment> = [];
 

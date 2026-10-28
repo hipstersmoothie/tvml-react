@@ -20,20 +20,38 @@ export const ScreenContext = createContext<TVMLDocument | null>(null);
 const visible = new WeakMap<TVMLDocument, boolean>();
 const visibilityListeners = new WeakMap<TVMLDocument, Set<() => void>>();
 
+/**
+ * Mark a document visible or hidden. tvml-react calls this when it presents a
+ * screen (TVMLKit's own `appear` comes a little later) and when menu bar tabs
+ * switch, where TVMLKit's appear/disappear events aren't reliable.
+ */
+export function setScreenVisible(doc: TVMLDocument, value: boolean): void {
+  if (visible.get(doc) === value) {
+    return;
+  }
+  visible.set(doc, value);
+  for (const listener of visibilityListeners.get(doc) ?? []) {
+    listener();
+  }
+}
+
+const tracked = new Set<TVMLDocument>();
+
+/** Screen documents currently marked visible (root, tabs, pushed screens, modals). */
+export function visibleScreens(): Array<TVMLDocument> {
+  return [...tracked].filter((doc) => visible.get(doc));
+}
+
 /** Start tracking a document's visibility. Returns a function to stop. */
 export function trackScreen(doc: TVMLDocument): () => void {
-  const set = (value: boolean) => () => {
-    visible.set(doc, value);
-    for (const listener of visibilityListeners.get(doc) ?? []) {
-      listener();
-    }
-  };
-  const onAppear = set(true);
-  const onDisappear = set(false);
+  tracked.add(doc);
+  const onAppear = () => setScreenVisible(doc, true);
+  const onDisappear = () => setScreenVisible(doc, false);
   doc.addEventListener("appear", onAppear);
   doc.addEventListener("disappear", onDisappear);
   doc.addEventListener("unload", onDisappear);
   return () => {
+    tracked.delete(doc);
     doc.removeEventListener("appear", onAppear);
     doc.removeEventListener("disappear", onDisappear);
     doc.removeEventListener("unload", onDisappear);

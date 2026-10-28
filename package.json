@@ -47,6 +47,10 @@
       "types": "./dist/simplified-list.d.ts",
       "default": "./dist/simplified-list.js"
     },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
+    },
     "./build": {
       "types": "./dist/build.d.ts",
       "default": "./dist/build.js"

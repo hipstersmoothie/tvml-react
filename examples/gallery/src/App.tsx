@@ -1,6 +1,5 @@
-import { useNavigation } from "tvml-react";
+import { MenuBar, MenuBarItem, useNavigation } from "tvml-react";
 
-import { MenuBar, type Tab } from "./components/MenuBar";
 import { useFavorites } from "./hooks";
 import { AmbientScreen } from "./screens/AmbientScreen";
 import { BrowseScreen } from "./screens/BrowseScreen";
@@ -35,13 +34,23 @@ function HighlightsActions() {
   );
 }
 
-const TABS: Array<Tab> = [
-  { id: "highlights", title: "Highlights", render: () => <HighlightsScreen /> },
-  { id: "collections", title: "Collections", render: () => <CollectionsScreen /> },
-  { id: "favorites", title: "Favorites", render: () => <FavoritesScreen /> },
-  { id: "search", title: "Search", render: () => <SearchScreen /> },
-];
-
 export function App() {
-  return <MenuBar tabs={TABS} />;
+  return (
+    <menuBarTemplate theme="dark">
+      <MenuBar>
+        <MenuBarItem id="highlights" title="Highlights">
+          <HighlightsScreen />
+        </MenuBarItem>
+        <MenuBarItem id="collections" title="Collections">
+          <CollectionsScreen />
+        </MenuBarItem>
+        <MenuBarItem id="favorites" title="Favorites">
+          <FavoritesScreen />
+        </MenuBarItem>
+        <MenuBarItem id="search" title="Search">
+          <SearchScreen />
+        </MenuBarItem>
+      </MenuBar>
+    </menuBarTemplate>
+  );
 }

@@ -1,5 +1,4 @@
-// stream.place (and friends) over plain HTTP. TVJS has no fetch, so this is a
-// small promise wrapper around XMLHttpRequest.
+// stream.place (and friends) over plain HTTP, with tvml-react's fetch.
 
 export const STREAMPLACE = "https://stream.place";
 const BSKY_APPVIEW = "https://public.api.bsky.app";
@@ -8,6 +7,7 @@ const BSKY_APPVIEW = "https://public.api.bsky.app";
 // make stream.place chat readable without its WebSocket.
 const CONSTELLATION = "https://constellation.microcosm.blue";
 const SLINGSHOT = "https://slingshot.microcosm.blue";
+const TIMEOUT_MS = 15_000;
 
 export class HttpError extends Error {
   constructor(
@@ -18,34 +18,28 @@ export class HttpError extends Error {
   }
 }
 
-export interface Request<T> {
-  promise: Promise<T>;
-  abort(): void;
-}
-
-function request(url: string, timeoutMs = 15000): Request<string> {
-  const xhr = new XMLHttpRequest();
-  const promise = new Promise<string>((resolve, reject) => {
-    xhr.open("GET", url);
-    xhr.timeout = timeoutMs;
-    // TVJS fires `error` (not `load`) for HTTP error statuses like 404, with
-    // the status and body intact, so both paths settle the same way.
-    const settle = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(xhr.responseText);
-      } else if (xhr.status > 0) {
-        reject(new HttpError(xhr.status, errorMessage(xhr.status, xhr.responseText)));
-      } else {
-        reject(new HttpError(0, "Network error"));
-      }
-    };
-    xhr.onload = settle;
-    xhr.onerror = settle;
-    xhr.ontimeout = () => reject(new HttpError(0, "The request timed out"));
-    xhr.onabort = () => reject(new HttpError(0, "aborted"));
-    xhr.send();
-  });
-  return { promise, abort: () => xhr.abort() };
+/** GET `url`; rejects with an HttpError for HTTP errors, timeouts and network failures. */
+async function request(url: string, signal?: AbortSignal): Promise<Response> {
+  // One controller for both the caller's cancellation and our timeout.
+  const controller = new AbortController();
+  const cancel = () => controller.abort(signal?.reason);
+  signal?.addEventListener("abort", cancel);
+  const timer = setTimeout(
+    () => controller.abort(new HttpError(0, "The request timed out")),
+    TIMEOUT_MS,
+  );
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) {
+      throw new HttpError(response.status, errorMessage(response.status, await response.text()));
+    }
+    return response;
+  } catch (error) {
+    throw error instanceof TypeError ? new HttpError(0, "Network error") : error;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", cancel);
+  }
 }
 
 function errorMessage(status: number, body: string): string {
@@ -57,8 +51,8 @@ function errorMessage(status: number, body: string): string {
   }
 }
 
-export async function getJSON<T>(url: string): Promise<T> {
-  return JSON.parse(await request(url).promise) as T;
+export async function getJSON<T>(url: string, signal?: AbortSignal): Promise<T> {
+  return (await (await request(url, signal)).json()) as T;
 }
 
 const query = (params: Record<string, string | number | Array<string>>) => {
@@ -93,20 +87,21 @@ export interface Livestream {
   viewerCount?: { count: number };
 }
 
-export async function getLiveStreams(): Promise<Array<Livestream>> {
+export async function getLiveStreams(signal?: AbortSignal): Promise<Array<Livestream>> {
   const { streams } = await getJSON<{ streams: Array<Livestream> }>(
     `${STREAMPLACE}/xrpc/place.stream.live.getLiveUsers?limit=50`,
+    signal,
   );
   return streams.sort((a, b) => (b.viewerCount?.count ?? 0) - (a.viewerCount?.count ?? 0));
 }
 
 /** The current livestream for one streamer, or null if they're offline. */
-export async function getLivestream(did: string): Promise<Livestream | null> {
+export async function getLivestream(did: string, signal?: AbortSignal): Promise<Livestream | null> {
   try {
     // This endpoint's view has no viewer count; that comes from its own endpoint.
     const [stream, count] = await Promise.all([
-      getJSON<Livestream>(`${STREAMPLACE}/api/livestream/${did}`),
-      getViewerCount(did).catch(() => undefined),
+      getJSON<Livestream>(`${STREAMPLACE}/api/livestream/${did}`, signal),
+      getViewerCount(did, signal).catch(() => undefined),
     ]);
     return count === undefined ? stream : { ...stream, viewerCount: { count } };
   } catch (error) {
@@ -115,8 +110,8 @@ export async function getLivestream(did: string): Promise<Livestream | null> {
   }
 }
 
-export async function getViewerCount(did: string): Promise<number> {
-  const { count } = await getJSON<{ count: number }>(`${STREAMPLACE}/api/view-count/${did}`);
+export async function getViewerCount(did: string, signal?: AbortSignal): Promise<number> {
+  const { count } = await getJSON<{ count: number }>(`${STREAMPLACE}/api/view-count/${did}`, signal);
   return count;
 }
 
@@ -127,7 +122,7 @@ export const playlistUrl = (did: string) =>
 /** Resolves if the stream is playable right now, rejects with a readable error otherwise. */
 export async function checkPlayable(did: string): Promise<void> {
   try {
-    await request(playlistUrl(did)).promise;
+    await request(playlistUrl(did));
   } catch (error) {
     if (error instanceof HttpError && error.status === 404) {
       throw new Error("This stream just ended.");
@@ -245,7 +240,11 @@ function getMessage({ did, collection, rkey }: Backlink): Promise<ChatMessage | 
 }
 
 /** The newest chat messages for a streamer, newest first. */
-export async function getRecentChat(streamerDid: string, limit = 12): Promise<Array<ChatMessage>> {
+export async function getRecentChat(
+  streamerDid: string,
+  signal?: AbortSignal,
+  limit = 12,
+): Promise<Array<ChatMessage>> {
   const { linking_records } = await getJSON<{ linking_records: Array<Backlink> }>(
     `${CONSTELLATION}/links?${query({
       target: streamerDid,
@@ -253,7 +252,9 @@ export async function getRecentChat(streamerDid: string, limit = 12): Promise<Ar
       path: ".streamer",
       limit,
     })}`,
+    signal,
   );
+  // Not cancelled with `signal`: records are cached and shared between polls.
   const messages = await Promise.all(linking_records.map(getMessage));
   return messages
     .filter((m): m is ChatMessage => m !== null && m.text.trim() !== "")

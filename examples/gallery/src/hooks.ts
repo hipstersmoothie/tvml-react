@@ -3,13 +3,13 @@ import { useDisplay, useLocalStorage } from "tvml-react";
 
 import {
   getArtwork,
+  hasKnownSize,
   imageUrl,
   searchArtworks,
   type Artwork,
   type ArtworkDetail,
   type ArtworkQuery,
   type Fit,
-  type Request,
 } from "./api";
 
 // ---------------------------------------------------------------------------
@@ -46,7 +46,7 @@ export function usePagedArtworks(query: ArtworkQuery, { enabled = true } = {}): 
     status: Status;
     error?: string;
   }>({ key, items: [], page: 0, total: 0, totalPages: 1, status: "loading" });
-  const inFlight = useRef<Request<unknown> | null>(null);
+  const inFlight = useRef<AbortController | null>(null);
 
   // A new query starts over.
   if (state.key !== key) {
@@ -56,11 +56,13 @@ export function usePagedArtworks(query: ArtworkQuery, { enabled = true } = {}): 
   const fetchPage = useCallback(
     (page: number) => {
       if (inFlight.current) return;
-      const request = searchArtworks(JSON.parse(key) as ArtworkQuery, page);
-      inFlight.current = request;
+      const controller = new AbortController();
+      inFlight.current = controller;
       setState((s) => (s.status === "loading" ? s : { ...s, status: "loading" }));
-      request.then(
+      searchArtworks(JSON.parse(key) as ArtworkQuery, page, controller.signal).then(
         (result) => {
+          // Aborted: the query changed or the screen went away.
+          if (controller.signal.aborted) return;
           inFlight.current = null;
           setState((s) => {
             if (s.key !== key) return s;
@@ -78,6 +80,7 @@ export function usePagedArtworks(query: ArtworkQuery, { enabled = true } = {}): 
           });
         },
         (error: unknown) => {
+          if (controller.signal.aborted) return;
           inFlight.current = null;
           setState((s) => (s.key === key ? { ...s, status: "error", error: message(error) } : s));
         },
@@ -119,12 +122,12 @@ export function useArtwork(id: number): {
 } {
   const [state, setState] = useState<{ id: number; artwork?: ArtworkDetail; error?: string }>({ id });
   useEffect(() => {
-    const request = getArtwork(id);
-    request.then(
-      (artwork) => setState({ id, artwork }),
-      (error: unknown) => setState({ id, error: message(error) }),
+    const controller = new AbortController();
+    getArtwork(id, controller.signal).then(
+      (artwork) => controller.signal.aborted || setState({ id, artwork }),
+      (error: unknown) => controller.signal.aborted || setState({ id, error: message(error) }),
     );
-    return () => request.abort();
+    return () => controller.abort();
   }, [id]);
 
   const current = state.id === id ? state : { id };
@@ -164,17 +167,21 @@ export function useFavorites() {
 /**
  * `src` and `srcset` for an artwork drawn in a `width`×`height` point box.
  * TVMLKit picks the `2x` candidate on a 4K display; `src` is the fallback
- * and uses the display scale from the native bridge.
+ * and uses the display scale from the native bridge. Artworks of unknown size
+ * only get a `src` (their URLs contain a comma, which `srcset` can't hold).
  */
 export function useArtworkImage(
   artwork: Pick<Artwork, "imageId" | "width" | "height">,
   width: number,
   height: number,
   fit: Fit = "contain",
-): { src: string; srcset: string } {
+): { src: string; srcset?: { "1x": string; "2x": string } } {
   const scale = useScreenScale();
   const at = (s: number) => imageUrl(artwork, width * s, height * s, fit);
-  return { src: at(scale), srcset: `${at(1)} 1x, ${at(2)} 2x` };
+  return {
+    src: at(scale),
+    srcset: hasKnownSize(artwork) ? { "1x": at(1), "2x": at(2) } : undefined,
+  };
 }
 
 /** Pixel scale to request full-screen images at (1 on 1080p, 2 on 4K). */

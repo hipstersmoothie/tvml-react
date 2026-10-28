@@ -94,7 +94,7 @@ function ContinueListening() {
 }
 
 function ChartShelf({ title, genreId }: { title: string; genreId?: number }) {
-  const [chart] = useResource(`top:${genreId ?? "all"}`, (token) => topPodcasts(genreId, token));
+  const [chart] = useResource(`top:${genreId ?? "all"}`, (signal) => topPodcasts(genreId, signal));
   if (chart.status !== "done" || chart.data.length === 0) return null;
 
   return (

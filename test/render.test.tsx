@@ -271,7 +271,7 @@ describe("launch", () => {
     }
   });
 
-  it("presents an alert when the first render throws", () => {
+  it("shows an alert in place of a screen that throws", () => {
     const globals = installTVJSGlobals();
     const onError = vi.fn();
     try {
@@ -280,13 +280,13 @@ describe("launch", () => {
       }
 
       const root = launch(<Broken />, { errorTitle: "Oops", onError });
+      if (root) roots.push(root);
 
-      expect(root).toBeUndefined();
       expect(onError).toHaveBeenCalled();
-      expect(globals.navigation.documents).toHaveLength(1);
-      const alert = globals.parsed.at(-1) ?? "";
-      expect(alert).toContain("<title>Oops</title>");
-      expect(alert).toContain("kaboom");
+      expect(globals.navigation.documents).toEqual([root?.document]);
+      const xml = (root?.document as FakeDocument).toXML();
+      expect(xml).toContain("<alertTemplate><title>Oops</title>");
+      expect(xml).toContain("kaboom");
     } finally {
       globals.restore();
     }

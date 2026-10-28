@@ -5,9 +5,9 @@ public-domain collection. The API needs no key.
 
 <img src="screenshot.jpg" width="640" alt="Highlights grid under the menu bar" />
 
-- **Menu bar.** A `menuBarTemplate` with four tabs. tvml-react has no menu-bar
-  API yet, so [`MenuBar`](src/components/MenuBar.tsx) gives each tab its own
-  `createRoot()` and registers it through the `MenuBarDocument` feature.
+- **Menu bar.** A `menuBarTemplate` with four tabs, built with tvml-react's
+  `MenuBar` and `MenuBarItem` (see [`App.tsx`](src/App.tsx)). Each tab mounts
+  the first time it's selected and stays mounted.
 - **Highlights.** An endless `<grid>` in a `stackTemplate`. The next page loads
   when focus gets within 15 cells of the end. Cells are memoized, so appending
   a page only creates the new lockups.
@@ -28,10 +28,13 @@ public-domain collection. The API needs no key.
   Favorites are saved with `useLocalStorage` and stay in sync across every tab.
 - **Search.** A `searchTemplate` that searches the full collection as you
   type, with a debounce.
-- **Image sizing.** Every image has a `srcset` with `1x` and `2x` candidates
-  from the museum's IIIF server. TVMLKit picks `2x` on a 4K Apple TV. Sizes are
-  given as IIIF `pct:` values, because TVMLKit's `srcset` parser splits on
-  commas and the usual `!w,h` sizes contain one.
+- **Image sizing.** Every image has a `srcset={{ "1x": …, "2x": … }}` with
+  candidates from the museum's IIIF server. TVMLKit picks `2x` on a 4K Apple
+  TV. Sizes are given as IIIF `pct:` values, because TVMLKit's `srcset` parser
+  splits on commas and the usual `!w,h` sizes contain one.
+- **Requests.** [`api.ts`](src/api.ts) uses the `fetch` and `AbortController`
+  that tvml-react provides in TVJS. Leaving a screen or changing a search
+  aborts its request.
 
 ```sh
 pnpm install && pnpm build   # from the repo root

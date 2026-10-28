@@ -4,6 +4,10 @@
 // a spinner, downloads app.js from the same folder, evaluates it and calls the
 // bundle's exported `start({ baseUrl, launchOptions })`.
 //
+// Under `tvml-react dev` it also forwards console output to the terminal and
+// reloads the app after each rebuild. It detects the dev server by its
+// `__tvml-react/dev` endpoint, so production hosting is unaffected.
+//
 // Launch options read here (set them on TVApplicationControllerContext):
 //   BASEURL  folder this file was served from (defaults to "/")
 //   BUNDLE   bundle filename relative to BASEURL (defaults to "app.js")
@@ -48,6 +52,91 @@ function loadScript(url, callback) {
   xhr.send();
 }
 
+var DEV_ENDPOINT = "__tvml-react/dev";
+var LOG_ENDPOINT = "__tvml-react/log";
+
+function request(method, url, body, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open(method, url);
+  // TVJS fires onerror (not onload) for HTTP errors; status tells them apart.
+  xhr.onload = xhr.onerror = function () {
+    if (callback) callback(xhr.status, xhr.responseText);
+  };
+  xhr.send(body || null);
+}
+
+function serializeArg(arg) {
+  if (arg instanceof Error) {
+    return arg.message + (arg.stack ? "\n" + arg.stack : "");
+  }
+  if (typeof arg === "string") {
+    return arg;
+  }
+  try {
+    return JSON.parse(JSON.stringify(arg));
+  } catch (error) {
+    return String(arg);
+  }
+}
+
+function forwardConsole(baseUrl) {
+  // One request at a time, so lines reach the terminal in order.
+  var queue = [];
+  var sending = false;
+  function flush() {
+    if (sending || queue.length === 0) return;
+    sending = true;
+    request("POST", baseUrl + LOG_ENDPOINT, queue.shift(), function () {
+      sending = false;
+      flush();
+    });
+  }
+
+  ["log", "info", "warn", "error", "debug"].forEach(function (level) {
+    var original = console[level];
+    console[level] = function () {
+      var args = Array.prototype.slice.call(arguments);
+      if (original) original.apply(console, args);
+      queue.push(JSON.stringify({ level: level, args: args.map(serializeArg) }));
+      flush();
+    };
+  });
+}
+
+function watchForRebuilds(baseUrl, build) {
+  setTimeout(function poll() {
+    request("GET", baseUrl + DEV_ENDPOINT, null, function (status, text) {
+      var next = build;
+      try {
+        next = JSON.parse(text).build;
+      } catch (error) {
+        // Server restarting; keep polling.
+      }
+      if (status === 200 && next !== build) {
+        App.reload({ when: "now" });
+        return;
+      }
+      setTimeout(poll, 1000);
+    });
+  }, 1000);
+}
+
+// Calls back with the dev server's current build, or null when not under
+// `tvml-react dev`.
+function detectDevServer(baseUrl, callback) {
+  request("GET", baseUrl + DEV_ENDPOINT, null, function (status, text) {
+    if (status !== 200) {
+      callback(null);
+      return;
+    }
+    try {
+      callback(JSON.parse(text).build);
+    } catch (error) {
+      callback(null);
+    }
+  });
+}
+
 App.onLaunch = function (options) {
   var baseUrl = options.BASEURL || options.baseURL || "/";
   if (baseUrl.charAt(baseUrl.length - 1) !== "/") {
@@ -56,6 +145,16 @@ App.onLaunch = function (options) {
 
   showBootScreen();
 
+  detectDevServer(baseUrl, function (build) {
+    if (build !== null) {
+      forwardConsole(baseUrl);
+      watchForRebuilds(baseUrl, build);
+    }
+    start(baseUrl, options);
+  });
+};
+
+function start(baseUrl, options) {
   loadScript(baseUrl + (options.BUNDLE || "app.js"), function (error) {
     if (error) {
       showBootScreen(error.message || String(error));
@@ -76,4 +175,4 @@ App.onLaunch = function (options) {
       showBootScreen(startError.message || "start() failed");
     }
   });
-};
+}

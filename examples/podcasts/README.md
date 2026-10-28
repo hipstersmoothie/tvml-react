@@ -18,15 +18,17 @@ search the iTunes directory, read show feeds, subscribe, and listen with resume.
 - **Episode actions**: long press (`onHoldSelect`) opens a modal with
   *Play from Beginning*, *Mark as Played/Unplayed* and *Go to Show*.
 - **Playback**: one `usePlayer()` in a `PlayerProvider` passed as `launch`'s
-  `wrapper`, so every screen shares one player. Audio items get a React-rendered
-  artwork overlay (`Player.overlayDocument`), and playback resumes where you
-  left off. Pressing play/pause on a focused episode (`onPlay`) starts it.
+  `wrapper`, so every screen shares one player. Audio items get an artwork
+  overlay rendered with `<PlayerOverlay>`, and playback resumes where you left
+  off (`startTime`). Pressing play/pause on a focused episode (`onPlay`) starts
+  it.
 - **Persistence** with `useLocalStorage`: subscriptions, plus each episode's
-  position and played state. The position is saved every 5 s of playback and
-  on pause or end.
-- **Data**: iTunes Search/Lookup and the `toppodcasts` RSS-JSON charts. Show
-  feeds are fetched with `XMLHttpRequest` and parsed with TVJS's own
-  `DOMParser`. Dates use `Intl.DateTimeFormat`/`RelativeTimeFormat`.
+  position and played state. The position is saved every 15 s of playback and
+  on pause or stop.
+- **Data**: iTunes Search/Lookup and the `toppodcasts` RSS-JSON charts, loaded
+  with `fetch` (cancelled through `AbortController`, with a 20 s timeout). Show
+  feeds are parsed with `parseDocument` (TVJS's own `DOMParser`). Dates use
+  `Intl.DateTimeFormat`/`RelativeTimeFormat`.
 
 ## Run it
 
@@ -40,8 +42,8 @@ Then launch the [shell app](../shell) pointed at it:
 xcrun simctl launch booted dev.tvml-react.examples -TVMLServerURL http://localhost:9102/
 ```
 
-After changing JavaScript, relaunch the app; you don't need to rebuild in
-Xcode.
+The app reloads on every rebuild and its `console` output shows up in the
+terminal; you don't need to rebuild in Xcode.
 
 ## Notes
 
@@ -50,12 +52,9 @@ Xcode.
   some gaps, though. `getElementsByTagName("itunes:duration")` matches nothing,
   and there's no `getElementsByTagNameNS`, so `src/rss.ts` walks child nodes
   and compares `nodeName` instead. Malformed XML throws an `IKDOMException`.
-- **Resuming.** Setting `MediaItem.resumeTime` makes TVMLKit show its own
-  *Resume Playback / Start from Beginning* prompt and wait for an answer. This
-  app skips that prompt by seeking once playback reaches `"playing"`.
-- **Audio artwork.** On their own, audio items play over a black screen.
-  `usePlayer()` doesn't expose the TVJS `Player`, so `src/tvjsPlayer.ts`
-  captures it in order to set `overlayDocument`. The overlay document is
-  rendered with `createPortal`.
+- **Resuming.** `startTime` starts where you left off without TVMLKit's
+  *Resume Playback / Start from Beginning* prompt (which `resumeTime` shows).
+- **Audio artwork.** On their own, audio items play over a black screen, so
+  `PlayerProvider` renders the artwork with `<PlayerOverlay>`.
 - **Icons.** There's no `resource://button-search` image, so the Search button
   uses `symbol://magnifyingglass`.

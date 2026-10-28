@@ -8,10 +8,16 @@ import {
   type TVMLDocument,
   type TVMLElement,
 } from "./dom.js";
+import {
+  defaultRenderError,
+  RenderErrorContext,
+  ScreenErrorBoundary,
+  type RenderError,
+} from "./error-boundary.js";
 import { attachEventDelegation } from "./events.js";
 import { NavigationHost } from "./navigation.js";
 import { reconciler } from "./reconciler.js";
-import { ScreenContext, trackScreen } from "./screen.js";
+import { ScreenContext, setScreenVisible, trackScreen } from "./screen.js";
 
 export interface RootOptions {
   /** Called for every error React reports. Defaults to `console.error`. */
@@ -25,6 +31,12 @@ export interface RootOptions {
    * tree. Put context providers here so pushed screens can see them.
    */
   wrapper?: ComponentType<{ children?: ReactNode }>;
+  /**
+   * What a screen shows when it throws while rendering. Each screen (root,
+   * pushed screen, modal, tab) has its own boundary. Defaults to an alert with
+   * the message and a Try Again button.
+   */
+  renderError?: RenderError;
 }
 
 export interface TVMLRoot {
@@ -82,9 +94,17 @@ export function createRoot(
     render(children) {
       renderSync(
         createElement(
-          ScreenContext.Provider,
-          { value: doc },
-          createElement(NavigationHost, { wrapper: options.wrapper }, children),
+          RenderErrorContext.Provider,
+          { value: options.renderError ?? defaultRenderError },
+          createElement(
+            ScreenContext.Provider,
+            { value: doc },
+            createElement(
+              NavigationHost,
+              { wrapper: options.wrapper },
+              createElement(ScreenErrorBoundary, null, children),
+            ),
+          ),
         ),
       );
     },
@@ -97,47 +117,33 @@ export function createRoot(
 }
 
 export interface LaunchOptions extends RootOptions {
-  /** Title of the alert shown if the first render throws. */
+  /** Title of the default error alert. */
   errorTitle?: string;
 }
 
 /**
- * Render `children` into a fresh document and present it. If the first render
- * throws, an alert with the error is shown instead of a blank screen.
+ * Render `children` into a fresh document and present it. If a screen throws
+ * while rendering, it shows an alert with the error instead of going blank.
  */
 export function launch(
   children: ReactNode,
   options: LaunchOptions = {},
 ): TVMLRoot | undefined {
-  const onError = options.onError ?? defaultOnError;
-  // React reports render errors through onUncaughtError (and unmounts the
-  // tree) instead of throwing, so capture the first one to present it.
-  let mounting = true;
-  let renderError: { error: unknown } | undefined;
+  const { errorTitle } = options;
+  const renderError: RenderError =
+    options.renderError ??
+    ((error, retry) => defaultRenderError(error, retry, errorTitle));
 
   try {
-    const root = createRoot(undefined, {
-      ...options,
-      onUncaughtError(error) {
-        if (mounting && !renderError) {
-          renderError = { error };
-        }
-        (options.onUncaughtError ?? onError)(error);
-      },
-    });
+    // Render errors are caught by the root's error boundary, which shows
+    // `renderError` in place of the app.
+    const root = createRoot(undefined, { ...options, renderError });
     root.render(children);
-    mounting = false;
-
-    if (renderError) {
-      root.unmount();
-      presentError(options, renderError.error);
-      return undefined;
-    }
-
     presentDocument(root.document);
+    setScreenVisible(root.document, true);
     return root;
   } catch (error) {
-    onError(error);
+    (options.onError ?? defaultOnError)(error);
     presentError(options, error);
     return undefined;
   }

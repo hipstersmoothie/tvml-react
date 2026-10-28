@@ -1,8 +1,7 @@
 import { useState, type ReactNode } from "react";
-import type { TVMLIntrinsicElements } from "tvml-react";
+import type { TextFieldAttributes } from "tvml-react";
 
 import type { Validator } from "../validation";
-import { TextInput } from "./TextInput";
 
 export interface FormScreenProps {
   title: string;
@@ -10,7 +9,7 @@ export interface FormScreenProps {
   hint: string;
   placeholder: string;
   initialValue?: string;
-  keyboardType?: TVMLIntrinsicElements["textField"]["keyboardType"];
+  keyboardType?: TextFieldAttributes["keyboardType"];
   secure?: boolean;
   validate: Validator;
   /** Shown under the title once the input is valid. */
@@ -70,13 +69,16 @@ export function FormScreen({
         <title>{title}</title>
         <description style={{ color }}>{feedback}</description>
       </banner>
-      <TextInput
-        placeholder={placeholder}
+      {/* The field keeps its own text; `value` state only mirrors it for
+          validation. Children are the placeholder. */}
+      <textField
         defaultValue={initialValue}
         keyboardType={keyboardType}
         secure={secure}
-        onChangeText={change}
-      />
+        onTextChange={change}
+      >
+        {placeholder}
+      </textField>
       <footer>
         <button onSelect={submit}>
           <text>{submitLabel}</text>
