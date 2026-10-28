@@ -96,8 +96,6 @@ Known gaps and missing features, roughly in priority order within each section.
 ## Developer experience
 
 - [ ] **Docs site / API reference.** The README is the only documentation.
-- [ ] **More examples.** A kitchen-sink app showing every template (doubles as
-      the tvOS 26 sweep above).
 - [ ] **Template generator.** `npm create tvml-react` that scaffolds the JS app
       and an Xcode shell.
 - [ ] **React DevTools.** Not wired up; see whether a standalone DevTools
@@ -108,7 +106,3 @@ Known gaps and missing features, roughly in priority order within each section.
 
 - [ ] **Publish to npm.** Not published yet. Add a changelog (changesets), a
       release workflow, and a `0.x` stability note in the README.
-- [ ] **Move vinyl-scrobbler onto the package.** It still has its own copy of
-      the renderer and its Swift extras, so fixes made here (cleared handlers,
-      `"true"` booleans, render-error alert, tvOS 26 compatibility) don't reach
-      it.
