@@ -53,7 +53,7 @@ and requests wait while the Apple TV is offline.
 Screens use `useScreenQuery`, which pauses while a screen is covered: the home
 screen stops polling while a stream page is pushed and refetches when it's
 popped. Presenting the player covers the stream page too, so while
-watching, the stream and chat queries pass `subscribed: true` to keep the chat
+watching, the stream and chat queries pass `refreshWhileHidden: true` to keep the chat
 overlay and viewer count updating.
 
 A failed refresh keeps the last data (TanStack's `isRefetchError`) and the

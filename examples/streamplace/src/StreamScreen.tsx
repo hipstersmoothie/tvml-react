@@ -19,19 +19,17 @@ import { chatQuery, livestreamQuery, profileQuery, STREAM_REFRESH_MS } from "./q
 export function StreamScreen({ did }: { did: string }) {
   const navigation = useNavigation();
   const player = usePlayer();
-  (globalThis as any).__player = player; // TEMP-DRIVER
   const { data: profile } = useQuery(profileQuery(did));
 
   // The fullscreen player covers this screen, which pauses screen queries, but
   // the chat overlay drawn over the video still needs fresh chat and viewer
   // counts: keep them refreshing while watching.
   const watching = player.state !== "idle" && player.state !== "end";
-  const subscribed = watching || undefined; // undefined: follow screen visibility
   useKeepAwake(watching);
 
-  const stream = useScreenQuery({ ...livestreamQuery(did), subscribed });
+  const stream = useScreenQuery({ ...livestreamQuery(did), refreshWhileHidden: watching });
   const live = stream.data;
-  const chat = useScreenQuery({ ...chatQuery(did), enabled: !!live, subscribed });
+  const chat = useScreenQuery({ ...chatQuery(did), enabled: !!live, refreshWhileHidden: watching });
 
   let content: ReactNode;
   if (live === undefined) {

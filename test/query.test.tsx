@@ -164,4 +164,26 @@ describe("tvml-react/query", () => {
     await wait(80);
     expect(calls).toBe(covered);
   });
+
+  it("keeps refreshWhileHidden queries polling under a covering screen", async () => {
+    let calls = 0;
+    let navigation!: Navigation;
+    function Home() {
+      navigation = useNavigation();
+      useScreenQuery({
+        queryKey: ["live-chat"],
+        queryFn: async () => ++calls,
+        refetchInterval: 20,
+        refreshWhileHidden: true,
+      });
+      return <stackTemplate />;
+    }
+    mount(<Home />, new QueryClient());
+    await wait(30);
+    navigation.push(<alertTemplate />);
+    await wait(30);
+    const covered = calls;
+    await wait(80);
+    expect(calls).toBeGreaterThan(covered);
+  });
 });

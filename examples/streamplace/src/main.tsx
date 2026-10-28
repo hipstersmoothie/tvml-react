@@ -13,5 +13,4 @@ const Providers = ({ children }: { children?: ReactNode }) => (
 
 export function start(_options: StartOptions) {
   launch(<App />, { wrapper: Providers, errorTitle: "stream.place crashed" });
-  void import("./driver").then((d) => d.runDriver()); // TEMP-DRIVER
 }

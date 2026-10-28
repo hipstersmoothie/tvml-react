@@ -427,9 +427,10 @@ function LiveNow() {
 `useInfiniteQuery` that pause while their screen is hidden. A hidden tab or a
 covered screen stops polling and skips focus and reconnect refetches, but its
 data stays cached and in-flight requests aren't cancelled. When the screen
-reappears, stale data refetches. Use plain `useQuery`, or pass
-`subscribed: true`, for data that should keep refreshing while hidden, such as
-a live chat overlay drawn over the fullscreen player.
+reappears, stale data refetches. Pass `refreshWhileHidden: true`, or use plain
+`useQuery`, for data that should keep refreshing while hidden, such as a live
+chat overlay drawn over the fullscreen player. The player covers the screen
+that opened it, so overlay data needs this.
 
 Put the provider in `launch`'s `wrapper` so tabs and pushed screens share one
 cache. `wrapper` also takes a list, outermost first:
