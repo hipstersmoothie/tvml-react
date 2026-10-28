@@ -481,8 +481,29 @@ are built on top of it. They cover JSON and text bodies (no streaming or blobs).
 TVJS's `XMLHttpRequest` fires `error` instead of `load` for HTTP errors such as
 404; the polyfill resolves those as ordinary responses with `ok: false`. For
 timeouts, use `AbortSignal.timeout(ms)`, combined with other signals via
-`AbortSignal.any([...])`, or pass the non-standard `timeout` option. TVJS has
-no `WebSocket` or `EventSource`.
+`AbortSignal.any([...])`, or pass the non-standard `timeout` option.
+
+## WebSockets
+
+TVJS has no `WebSocket`. When the app is started with `TVMLReact.launch`, the
+polyfills install a standard one backed by the native bridge's
+`URLSessionWebSocketTask`, so WebSocket libraries work unchanged:
+
+```ts
+const ws = new WebSocket(
+  "wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=app.bsky.feed.post",
+);
+ws.onmessage = (event) => handle(JSON.parse(event.data as string));
+```
+
+It covers text and binary messages, subprotocols, `close(code, reason)`, and
+the `on*` handlers as well as `addEventListener`. Differences from the browser:
+- Binary messages arrive as `ArrayBuffer`. TVJS has no `Blob`, so `binaryType`
+  is always `"arraybuffer"`.
+- `bufferedAmount` is always 0.
+
+Sockets can be dropped while the app is in the background, so reconnect on
+`useAppEvent("resume")` if you need to. There's still no `EventSource`.
 
 ## Testing on the device
 

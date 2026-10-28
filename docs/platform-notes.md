@@ -9,7 +9,8 @@ tvml-react bugs, but you'll run into them.
 - **Missing globals.** No `fetch`, `AbortController`, `TextEncoder`,
   `structuredClone`, `requestAnimationFrame`, `WebSocket` or `EventSource`.
   tvml-react polyfills `fetch`/`AbortController`, `URL`/`URLSearchParams`,
-  `queueMicrotask` and `performance.now`.
+  `queueMicrotask` and `performance.now`, and provides `WebSocket` through the
+  native bridge.
 - **What is there.** `XMLHttpRequest`, `Promise`, `Intl` (including
   `RelativeTimeFormat`), timers, `localStorage`/`sessionStorage`,
   `atob`/`btoa`, `Event` and `dispatchEvent`, and `DOMParser` (which parses

@@ -41,9 +41,6 @@ Known gaps and missing features, roughly in priority order within each section.
     `<background>` is frozen once presented.
   - `Panel`: a blurred, rounded `UIVisualEffectView`.
   - `measureText()` on the native bridge, for cells sized to their text.
-- [ ] **WebSocket.** TVJS has neither `WebSocket` nor `EventSource`. Provide a
-      native-bridge `WebSocket` (`URLSessionWebSocketTask`) so real-time
-      services work (stream.place chat currently polls third-party indexes).
 - [ ] **`Slideshow` wrapper.** A typed `startSlideshow(images, options)`.
       Blank in the simulator; needs a hardware check.
 - [ ] **Keyboard suggestions.** Expose the Keyboard feature's `suggestions` on
