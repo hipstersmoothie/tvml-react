@@ -53,4 +53,18 @@ describe("measureText", () => {
     expect(size.width).toBeGreaterThan(200);
     expect(size.height).toBe(120);
   });
+
+  it("place themselves with position", () => {
+    const doc = new FakeDocument();
+    const root = createRoot(doc);
+    root.render(
+      <divTemplate>
+        <QRCode value="x" position="bottom" style={{ width: 200, height: 200 }} />
+      </divTemplate>,
+    );
+    expect(doc.toXML()).toContain(
+      '<qrCode value="x" style="tv-position: bottom; tv-align: center; width: 200; height: 200;"/>',
+    );
+    root.unmount();
+  });
 });

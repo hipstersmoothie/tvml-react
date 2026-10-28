@@ -40,6 +40,11 @@ tvml-react bugs, but you'll run into them.
   screen. Plain TVJS reproduces it within a few pushes. tvml-react writes
   text-only children (`Track {n}`) as one text node and warns when adjacent
   text sits next to elements; join those into one string.
+- **Native elements and rows.** Elements rendered by a registered UIKit view
+  (tvml-react's `QRCode`, `Avatar`, `Card`, `SimplifiedList`, or your own)
+  don't render inside a `<row>`. Put them directly in the `divTemplate`, with
+  `tv-position` and the matching `tv-align` (their `position` prop sets both),
+  or inside an `<organizer>`, such as a layout `Stack`.
 - **Custom tag names.** Give natively registered elements names that aren't
   in the TVML catalog, since `TVElementFactory` is keyed by tag name. `card`,
   for one, is a built-in element, which is why tvml-react's native `Card`

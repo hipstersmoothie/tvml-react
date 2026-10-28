@@ -6,18 +6,12 @@ order: 5
 abstract: "Horizontal space in a row."
 symbols: [Spacer, SpacerProps]
 ---
-
+import Example from "../../../components/Example.astro";
 
 ## Overview
 
-A blank cell of a fixed width, for pushing a group of cells to the far side of a row:
+A blank cell of a fixed width, for pushing a group of cells to the far side of a row, like a title on the left and a clock on the right:
 
-```tsx
-<Row>
-  <Cell width={600}>Title</Cell>
-  <Spacer width={CONTENT_WIDTH - 600 - 300} />
-  <Cell width={300} align="right">12:41</Cell>
-</Row>
-```
+<Example name="spacer-split" />
 
 For a single group, `Row`'s `align` does this for you.

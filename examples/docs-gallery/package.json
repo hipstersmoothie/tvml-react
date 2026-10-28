@@ -1,0 +1,20 @@
+{
+  "name": "tvml-react-example-docs-gallery",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "gen": "node scripts/gen.mjs",
+    "dev": "node scripts/gen.mjs && tvml-react dev src/main.tsx --port 9110",
+    "build": "node scripts/gen.mjs && tvml-react build src/main.tsx",
+    "typecheck": "node scripts/gen.mjs && tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "tvml-react": "link:../.."
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "esbuild": "^0.28.0",
+    "typescript": "^6.0.2"
+  }
+}

@@ -6,26 +6,19 @@ order: 5
 abstract: "A natively scrolling list of rows, inside a divTemplate."
 symbols: [SimplifiedList, SimplifiedListRow, SimplifiedListProps, SimplifiedListRowProps]
 ---
+import Example from "../../../components/Example.astro";
 
 ## Overview
 
 A `UITableView` for long lists in a free-form screen, where TVML's own lists don't fit:
 
-```tsx
-import { SimplifiedList, SimplifiedListRow } from "tvml-react/native";
-
-<SimplifiedList summary="History" style={{ width: 900, height: 700 }}>
-  {tracks.map((track) => (
-    <SimplifiedListRow
-      key={track.id}
-      title={track.title}
-      subtitle={track.artist}
-      accessory={track.time}
-      image={track.artwork}
-      onSelect={() => open(track)}
-    />
-  ))}
-</SimplifiedList>
-```
+<Example name="simplified-list-history" />
 
 Rows take `onSelect` and `onHighlight` like TVML elements. Needs an app launched with `TVMLReact.launch`, which registers it.
+
+## Placing it
+
+Give it a size with `style` and a place with `position` (`center`, `bottom-right`, …), which sets
+`tv-position` and the matching `tv-align`. Native elements don't render inside a `<row>`: put
+them directly in the `divTemplate`, or in a layout [`Stack`](/reference/stack/) or
+[`Box`](/reference/box/), as the Avatar example does.

@@ -6,7 +6,7 @@ order: 2
 abstract: "A native tab bar whose items each show their own screen."
 symbols: [MenuBar, MenuBarItem, useMenuBar, MenuBarProps, MenuBarItemProps, MenuBarDocumentFeature]
 ---
-
+import Example from "../../../components/Example.astro";
 
 ## Overview
 
@@ -15,16 +15,7 @@ children into that document, so tabs stay in your app's React tree and share its
 context. A tab mounts the first time it's selected and stays mounted, so switching back keeps
 its scroll position and data.
 
-```tsx
-import { MenuBar, MenuBarItem } from "tvml-react";
-
-<menuBarTemplate>
-  <MenuBar onChange={(id) => console.log(id)}>
-    <MenuBarItem id="home" title="Home"><Home /></MenuBarItem>
-    <MenuBarItem id="search" title="Search"><Search /></MenuBarItem>
-  </MenuBar>
-</menuBarTemplate>
-```
+<Example name="menu-bar-tabs" />
 
 Focusing a menu item switches tabs; no select press is needed. `useMenuBar().select(id)`
 switches from code.

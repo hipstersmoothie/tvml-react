@@ -7,7 +7,8 @@
 #   ./ui-tests.sh -only-testing:TVMLExamplesUITests/KitchenSinkTests
 #
 # Extra arguments go to xcodebuild. Starts each example's dev server (hello on
-# 9100, kitchen-sink on 9108, photos on 9109) unless one is already running.
+# 9100, kitchen-sink on 9108, photos on 9109, docs-gallery
+# on 9110) unless one is already running.
 set -eu
 cd "$(dirname "$0")"
 
@@ -37,6 +38,7 @@ trap cleanup EXIT INT TERM
 serve hello 9100
 serve kitchen-sink 9108
 serve photos 9109
+serve docs-gallery 9110
 
 xcrun simctl boot "$SIMULATOR_ID" 2>/dev/null || true
 xcrun simctl bootstatus "$SIMULATOR_ID" -b > /dev/null

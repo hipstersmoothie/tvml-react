@@ -59,6 +59,25 @@ importers:
         specifier: ^6.0.2
         version: 6.0.3
 
+  examples/docs-gallery:
+    dependencies:
+      react:
+        specifier: ^19.2.0
+        version: 19.3.1
+      tvml-react:
+        specifier: link:../..
+        version: link:../..
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.3.0
+      esbuild:
+        specifier: ^0.28.0
+        version: 0.28.2
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+
   examples/gallery:
     dependencies:
       '@tanstack/react-query':

@@ -1,6 +1,8 @@
 import { Cell, Row, Screen } from "tvml-react/layout";
 
-export default function Ambient({ photo }: { photo: string }) {
+const photo = "https://picsum.photos/seed/tvml-ambient/1920/1080";
+
+export default function Ambient() {
   return (
     <Screen theme="dark" background={photo}>
       <Row region="header" align="center" marginTop={40}>

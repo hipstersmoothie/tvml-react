@@ -39,7 +39,10 @@ import {
 } from "react";
 
 import { warnOnce as warn } from "./dev.js";
+import { placement, type Position } from "./placement.js";
 import { measureText } from "./native.js";
+
+export type { Position } from "./placement.js";
 
 /** The screen's width in points. */
 export const SCREEN_WIDTH = 1920;
@@ -54,17 +57,6 @@ export const CONTENT_WIDTH = SCREEN_WIDTH - 2 * SAFE_X;
 /** Where a row goes. `header` and `footer` sit outside the top and bottom regions. */
 export type Region = "header" | "top" | "center" | "bottom" | "footer";
 export type Align = "left" | "center" | "right";
-/** Where a child goes inside a <Box>. */
-export type Position =
-  | "top-left"
-  | "top"
-  | "top-right"
-  | "left"
-  | "center"
-  | "right"
-  | "bottom-left"
-  | "bottom"
-  | "bottom-right";
 export type FontWeight =
   | "ultralight"
   | "thin"
@@ -89,15 +81,6 @@ interface ScreenContextValue {
 }
 
 const LayoutContext = createContext<ScreenContextValue>({ color: "white" });
-
-// tv-position alone doesn't center a child horizontally in an organizer
-// (it sits at the left of its region), so the horizontal part of a position
-// is also given as tv-align.
-function placement(position: Position | undefined) {
-  if (!position) return {};
-  const tvAlign = position.endsWith("left") ? "left" : position.endsWith("right") ? "right" : "center";
-  return { tvPosition: position, tvAlign };
-}
 
 // Cells in a Stack default to its width and alignment, which is how a stack
 // aligns its text (tv-align inside an organizer isn't reliable).

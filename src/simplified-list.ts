@@ -4,8 +4,15 @@
 import { createElement } from "react";
 
 import type { TVMLAttributes } from "./elements.js";
+import { withPlacement, type Position } from "./placement.js";
 
 export interface SimplifiedListProps extends TVMLAttributes {
+  /**
+   * Where it goes in its divTemplate, Box or Stack: sets `tv-position` and the
+   * matching `tv-align`. Native elements don't render inside a `<row>`.
+   */
+  position?: Position;
+
   /** Non-focusable header text shown above the rows. */
   summary?: string;
 }
@@ -25,8 +32,8 @@ export interface SimplifiedListRowProps extends TVMLAttributes {
  * A natively scrolling list (a UITableView) for use inside a `divTemplate`.
  * Size it with `style={{ width, height }}`.
  */
-export function SimplifiedList(props: SimplifiedListProps) {
-  return createElement("simplifiedList", props);
+export function SimplifiedList({ position, style, ...props }: SimplifiedListProps) {
+  return createElement("simplifiedList", { ...props, style: withPlacement(style, position) });
 }
 
 /** A row of a {@link SimplifiedList}. */

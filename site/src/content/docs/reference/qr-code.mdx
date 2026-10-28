@@ -6,13 +6,17 @@ order: 2
 abstract: "A QR code, for signing in or opening a link on a phone."
 symbols: [QRCode, QRCodeProps]
 ---
+import Example from "../../../components/Example.astro";
 
 ## Overview
 
-```tsx
-import { QRCode } from "tvml-react/native";
-
-<QRCode value={signInUrl} style={{ width: 300, height: 300 }} />
-```
+<Example name="qr-code-signin" />
 
 Size it with `style`. `foreground` and `background` take `#rrggbb` or `#rrggbbaa` colors. Needs an app launched with `TVMLReact.launch`, which registers it.
+
+## Placing it
+
+Give it a size with `style` and a place with `position` (`center`, `bottom-right`, …), which sets
+`tv-position` and the matching `tv-align`. Native elements don't render inside a `<row>`: put
+them directly in the `divTemplate`, or in a layout [`Stack`](/reference/stack/) or
+[`Box`](/reference/box/), as the Avatar example does.

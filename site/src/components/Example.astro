@@ -2,6 +2,9 @@
 // An example from src/examples, run through tvml-react at build time: the
 // React source and the TVML it renders, under a simulator capture if there
 // is one.
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+
 import { Code } from "astro:components";
 
 import { runExample } from "../lib/render-tvml";
@@ -15,14 +18,20 @@ const sources = import.meta.glob("../examples/*.tsx", {
 interface Props {
   /** File name in src/examples, without .tsx. */
   name: string;
-  /** Image in public/, e.g. /screens/layout.jpg. */
+  /**
+   * Image in public/. Defaults to the example's own capture,
+   * public/captures/<name>.jpg, made by scripts/capture.sh.
+   */
   capture?: string;
   caption?: string;
   /** Props for the example's default export. */
   props?: Record<string, unknown>;
 }
 
-const { name, capture, caption = "Captured on the tvOS 26.5 simulator", props = {} } = Astro.props;
+const { name, caption = "This example, captured on the tvOS 26.5 simulator", props = {} } = Astro.props;
+const ownCapture = `/captures/${name}.jpg`;
+const capture =
+  Astro.props.capture ?? (existsSync(join(process.cwd(), "public", ownCapture)) ? ownCapture : undefined);
 const source = sources[`../examples/${name}.tsx`];
 if (!source) throw new Error(`No example named ${name} in src/examples`);
 const tvml = await runExample(source, props);

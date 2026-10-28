@@ -1,6 +1,8 @@
 import { Cell, Image, Row, Screen, Stack } from "tvml-react/layout";
 
-export default function NowPlaying({ artwork }: { artwork: string }) {
+const artwork = "https://picsum.photos/seed/tvml-album/320/320";
+
+export default function NowPlaying() {
   return (
     <Screen>
       <Row region="top" gap={40}>

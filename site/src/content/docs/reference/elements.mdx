@@ -6,6 +6,8 @@ order: 4
 abstract: "Every TVML element as a typed JSX tag, and the attributes they take."
 symbols: [TVMLIntrinsicElements, TVMLAttributes, TemplateAttributes, FocusableAttributes, ImageAttributes, LongTextAttributes, TextFieldAttributes]
 ---
+import TemplateGallery from "../../../components/TemplateGallery.astro";
+
 
 ## Overview
 
@@ -19,6 +21,14 @@ misspelled tag won't compile.
   <title>{movie.title}</title>
 </lockup>
 ```
+
+## Templates
+
+Every screen starts with a template. Here's each one on tvOS:
+
+<TemplateGallery />
+
+## Using the elements
 
 To use them, set your `tsconfig.json`'s `jsxImportSource` to `tvml-react`. The
 [Templates and elements](/learn/templates-and-elements/) guide covers what each is for, and the

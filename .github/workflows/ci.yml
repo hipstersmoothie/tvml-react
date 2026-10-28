@@ -21,7 +21,7 @@ jobs:
       - run: pnpm build
       - name: Build examples
         run: |
-          for example in hello kitchen-sink photos; do
+          for example in hello kitchen-sink photos docs-gallery; do
             (cd examples/$example && pnpm typecheck && pnpm build)
           done
       - name: Docs site

@@ -1,6 +1,8 @@
 import { Cell, CONTENT_WIDTH, Image, Row, Screen } from "tvml-react/layout";
 
-export default function Caption({ artwork }: { artwork: string }) {
+const artwork = "https://picsum.photos/seed/tvml-album/240/240";
+
+export default function Caption() {
   return (
     <Screen>
       <Row region="bottom" gap={24} marginBottom={60}>

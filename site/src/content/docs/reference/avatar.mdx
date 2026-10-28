@@ -6,14 +6,18 @@ order: 3
 abstract: "A round image of a person, with their initials as the fallback."
 symbols: [Avatar, AvatarProps]
 ---
+import Example from "../../../components/Example.astro";
 
 ## Overview
 
-```tsx
-import { Avatar } from "tvml-react/native";
-
-<Avatar src={user.photo} name={user.name} style={{ width: 120, height: 120 }} />
-```
+<Example name="avatar-people" />
 
 TVML's own images can't have rounded corners; `Avatar` draws a circle, or rounds by `radius`. The
 initials show while the image loads, or if there isn't one. Needs an app launched with `TVMLReact.launch`, which registers it.
+
+## Placing it
+
+Give it a size with `style` and a place with `position` (`center`, `bottom-right`, …), which sets
+`tv-position` and the matching `tv-align`. Native elements don't render inside a `<row>`: put
+them directly in the `divTemplate`, or in a layout [`Stack`](/reference/stack/) or
+[`Box`](/reference/box/), as the Avatar example does.

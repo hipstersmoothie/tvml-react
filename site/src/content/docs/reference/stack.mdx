@@ -16,12 +16,7 @@ A `<stack>` inside a `divTemplate` `<row>` never renders, so content that needs 
 line, like a title and subtitle beside artwork, can't be built from TVML's stack. `Stack`
 renders an `<organizer>` instead, which TVMLKit lays out as a column inside a row.
 
-<Example
-  name="stack-artwork"
-  props={{ artwork: "https://example.com/art.jpg" }}
-  capture="/screens/stacks-and-boxes.jpg"
-  caption="The kitchen-sink Stacks and boxes screen, which includes this example"
-/>
+<Example name="stack-artwork" />
 
 Cells in a stack take its width and alignment, so text lines up on the left, center or right.
 Without a width, the stack is as wide as its widest child. Stacks are vertically centered in

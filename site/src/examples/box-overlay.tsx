@@ -1,6 +1,8 @@
 import { Box, Cell, Image, Row, Screen } from "tvml-react/layout";
 
-export default function LiveTile({ still }: { still: string }) {
+const still = "https://picsum.photos/seed/tvml-box/1280/720";
+
+export default function LiveTile() {
   return (
     <Screen>
       <Row region="bottom" align="center" marginBottom={60}>

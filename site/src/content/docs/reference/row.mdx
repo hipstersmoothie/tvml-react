@@ -17,11 +17,7 @@ A `divTemplate` places children in regions, and the children of a region stack v
 block: `Row` renders one, adds up its children's widths, and fills the rest of the safe area
 with a spacer to align them.
 
-<Example
-  name="row-alignment"
-  capture="/screens/layout.jpg"
-  caption="The kitchen-sink Layout screen, which includes this example"
-/>
+<Example name="row-alignment" />
 
 `Row` can measure `Cell`, `Spacer`, `Image`, `Stack` and `Box` children. With anything else,
 it centers its content instead (and warns in development). A row wider than the safe area

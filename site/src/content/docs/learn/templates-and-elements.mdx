@@ -8,6 +8,7 @@ abstract: The building blocks of every screen, and how to pick the right templat
 
 import Note from "../../../components/Note.astro";
 import Screenshot from "../../../components/Screenshot.astro";
+import TemplateGallery from "../../../components/TemplateGallery.astro";
 
 Every screen in a tvml-react app is a **template**: a whole-screen layout tvOS knows how to draw,
 like a product page or a search screen. Inside it go **elements**: shelves and grids of lockups,
@@ -50,9 +51,9 @@ native: spacing, focus behavior, scrolling and animation come from tvOS.
 | A single text field | `formTemplate` |
 | Anything free-form | `divTemplate` (see [Custom layouts](/learn/custom-layouts/)) |
 
-The [Examples](/examples/) page shows each of these running on tvOS.
+Here they are on tvOS:
 
-<Screenshot src="/screens/productTemplate.jpg" alt="A productTemplate" caption="A productTemplate: info, a description, buttons and related items." />
+<TemplateGallery />
 
 ## Lockups
 

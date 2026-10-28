@@ -6,20 +6,18 @@ order: 4
 abstract: "A blurred, rounded panel with an image, title and text."
 symbols: [Card, CardProps]
 ---
+import Example from "../../../components/Example.astro";
 
 ## Overview
 
-```tsx
-import { Card } from "tvml-react/native";
-
-<Card
-  title="Up next"
-  subtitle="Episode 4"
-  body={episode.summary}
-  image={episode.thumbnail}
-  style={{ width: 640, height: 200 }}
-/>
-```
+<Example name="card-up-next" />
 
 Native elements can't contain TVML, so the content comes from props. It renders as
 `<materialCard>`, since `card` is a built-in TVML element. Needs an app launched with `TVMLReact.launch`, which registers it.
+
+## Placing it
+
+Give it a size with `style` and a place with `position` (`center`, `bottom-right`, …), which sets
+`tv-position` and the matching `tv-align`. Native elements don't render inside a `<row>`: put
+them directly in the `divTemplate`, or in a layout [`Stack`](/reference/stack/) or
+[`Box`](/reference/box/), as the Avatar example does.

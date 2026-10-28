@@ -6,20 +6,14 @@ order: 1
 abstract: "A full-screen background image that can change, with a cross-fade and a dim."
 symbols: [Backdrop, BackdropProps]
 ---
+import Example from "../../../components/Example.astro";
 
 ## Overview
 
 TVML's `<background>` can't change once a screen is up. `Backdrop` can: change `src` and it
 cross-fades to the new image.
 
-```tsx
-import { Backdrop } from "tvml-react/native";
-
-<divTemplate>
-  <Backdrop src={highlighted.artwork} dim={0.5} />
-  {/* … */}
-</divTemplate>
-```
+<Example name="backdrop-dim" />
 
 Render it first in a `divTemplate`; it covers the whole screen behind everything else and takes
 no layout space. Needs an app launched with `TVMLReact.launch`, which registers it.

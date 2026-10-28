@@ -12,6 +12,7 @@
 		6206361F7F7F5B144310FBAE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B5B8F954158513C738EBC1DF /* LaunchScreen.storyboard */; };
 		69A9489C8DBB7ADF3FFB2C84 /* PhotosTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530DDE65EF5C100DDE368955 /* PhotosTests.swift */; };
 		81D6AB0488DDA69769AE1A48 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA13BB141EBB8F8C80A54A68 /* AppDelegate.swift */; };
+		A9B92CBB316F10A366D08CD9 /* DocsGalleryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4595DC578CD96A2448C5E29 /* DocsGalleryTests.swift */; };
 		B35D82525913BF1272F89970 /* KitchenSinkTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F18CC565F9CF5DAF965DA32 /* KitchenSinkTestCase.swift */; };
 		D000BAFA6490FD8715F2ED3E /* TVMLReactExtras in Frameworks */ = {isa = PBXBuildFile; productRef = 74497E6A50BB09FF99EA7F67 /* TVMLReactExtras */; };
 		F5132DDCF9840C738E9E5146 /* TVMLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7741B5EF6CC235BA752D965E /* TVMLKit.framework */; };
@@ -41,6 +42,7 @@
 		B5B8F954158513C738EBC1DF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D991DD16A225EF7C9F7F5BA1 /* tvml-react */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "tvml-react"; path = ../..; sourceTree = SOURCE_ROOT; };
 		DA13BB141EBB8F8C80A54A68 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		E4595DC578CD96A2448C5E29 /* DocsGalleryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocsGalleryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +80,7 @@
 		31A47D4C85831DC41DE0A00E /* TVMLExamplesUITests */ = {
 			isa = PBXGroup;
 			children = (
+				E4595DC578CD96A2448C5E29 /* DocsGalleryTests.swift */,
 				6636F50E06BF62EA5EF1177E /* HelloTests.swift */,
 				4FE4B35CF4221D04ECD4E998 /* InteractionTests.swift */,
 				6F18CC565F9CF5DAF965DA32 /* KitchenSinkTestCase.swift */,
@@ -208,6 +211,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A9B92CBB316F10A366D08CD9 /* DocsGalleryTests.swift in Sources */,
 				4FE062C3F5C783E8D6AA5D1E /* HelloTests.swift in Sources */,
 				34CFCCA672A573FAAB5AE0F5 /* InteractionTests.swift in Sources */,
 				B35D82525913BF1272F89970 /* KitchenSinkTestCase.swift in Sources */,

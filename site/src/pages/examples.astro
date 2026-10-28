@@ -1,96 +1,203 @@
 ---
-// Every TVML template, as rendered by the kitchen-sink example on the tvOS
-// simulator (captured by KitchenSinkTests).
+// The example apps, and every TVML template on tvOS.
+import TemplateGallery from "../components/TemplateGallery.astro";
 import Site from "../layouts/Site.astro";
+import { apps } from "../lib/apps";
 
-const SOURCE = "https://github.com/hipstersmoothie/tvml-react/tree/main/examples/kitchen-sink/src";
-
-const screens = [
-  ["alertTemplate", "A message with buttons."],
-  ["catalogTemplate", "Categories beside a grid."],
-  ["compilationTemplate", "An album or season."],
-  ["descriptiveAlertTemplate", "Long text with buttons."],
-  ["divTemplate", "Free-form nine-region layout."],
-  ["formTemplate", "A single text field."],
-  ["listTemplate", "A list with a preview panel."],
-  ["loadingTemplate", "A spinner."],
-  ["menuBarTemplate", "Tabs, each its own document."],
-  ["oneupTemplate", "Fullscreen images, one at a time."],
-  ["paradeTemplate", "A list beside an image deck."],
-  ["productBundleTemplate", "A bundle of items."],
-  ["productTemplate", "A single item's page."],
-  ["ratingTemplate", "Rate an item."],
-  ["searchTemplate", "A search field and results."],
-  ["showcaseTemplate", "A carousel of images."],
-  ["stackTemplate", "Carousel, shelf and grid."],
-  ["Lockups", "Overlays, badges, monograms, cards."],
-  ["layout", "tvml-react/layout rows and cells."],
-  ["stacks-and-boxes", "tvml-react/layout organizers."],
-];
+const REPO = "https://github.com/hipstersmoothie/tvml-react/tree/main/examples";
 ---
 
-<Site title="Examples" description="Every TVML template, rendered with tvml-react on tvOS." active="examples">
-  <main class="gallery">
-    <p class="eyebrow">Examples</p>
-    <h1>Every template, on tvOS.</h1>
-    <p class="abstract">
-      Each of these is a screen in the <a href={SOURCE}>kitchen-sink example</a>, captured on the
-      tvOS 26.5 simulator by its UI tests, which open every one with the remote.
-    </p>
-    <div class="grid">
-      {
-        screens.map(([name, description]) => (
-          <a class="shot" href={`${SOURCE}`}>
-            <img src={`/screens/${name}.jpg`} alt={name} loading="lazy" />
-            <b>{name}</b>
-            <span>{description}</span>
+<Site title="Examples" description="Example Apple TV apps built with tvml-react, with their source." active="examples">
+  <main class="examples">
+    <header class="intro">
+      <p class="eyebrow">Examples</p>
+      <h1>Real apps, with the source.</h1>
+      <p class="abstract">
+        Ten Apple TV apps built with tvml-react, from a live-streaming client to a podcast player.
+        Each runs in the tvOS simulator from the repo in a couple of commands.
+      </p>
+    </header>
+
+    {
+      apps.map((app, index) => (
+        <section class:list={["app", { flip: index % 2 === 1 }]} id={app.slug}>
+          <a class="tv" href={`${REPO}/${app.slug}`}>
+            <img src={`/apps/${app.image}`} alt={`${app.name} on tvOS`} loading={index < 2 ? "eager" : "lazy"} />
           </a>
-        ))
-      }
-    </div>
+          <div class="text">
+            <h2>{app.name}</h2>
+            <p class="pitch">{app.pitch}</p>
+            <ul>
+              {app.highlights.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+            <div class="apis">
+              {app.apis.map(([label, href]) => (
+                <a href={href}>
+                  <code>{label}</code>
+                </a>
+              ))}
+            </div>
+            <div class="links">
+              <a href={`${REPO}/${app.slug}`}>Source →</a>
+              <code class="run">cd examples/{app.slug} && pnpm dev</code>
+            </div>
+          </div>
+        </section>
+      ))
+    }
+
+    <section class="run-them">
+      <h2>Running an example</h2>
+      <ol>
+        <li>
+          Clone the repo and build tvml-react:
+          <code>git clone https://github.com/hipstersmoothie/tvml-react && cd tvml-react && pnpm install && pnpm build</code>
+        </li>
+        <li>
+          Start an example's dev server: <code>cd examples/podcasts && pnpm dev</code>
+        </li>
+        <li>
+          Open <code>examples/shell/TVMLExamples.xcodeproj</code>, which runs every example, and run it on an Apple
+          TV simulator with the example's URL as a launch argument:
+          <code>-TVMLServerURL http://localhost:9102/</code>
+        </li>
+      </ol>
+      <p>Each example's README has its port, and more about how it's built.</p>
+    </section>
+
+    <section class="templates" id="templates">
+      <h2>Every template</h2>
+      <p>
+        The <a href={`${REPO}/kitchen-sink`}>Kitchen Sink</a> has a screen for each TVML template. Its UI tests open
+        every one with the remote on the tvOS simulator, and these are the captures.
+      </p>
+      <TemplateGallery />
+    </section>
   </main>
 </Site>
 
 <style>
-  .gallery {
-    max-width: 1320px;
+  .examples {
+    max-width: 1240px;
     margin: 0 auto;
-    padding: 40px 28px 120px;
+    padding: 40px 28px 140px;
   }
-  .grid {
+  .intro {
+    max-width: 760px;
+  }
+  .app {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 28px;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 56px;
+    align-items: center;
+    margin-top: 96px;
   }
-  .shot {
-    display: grid;
-    gap: 6px;
-    color: var(--text);
-    transition: transform 0.18s;
+  .app.flip {
+    grid-template-columns: 0.8fr 1.2fr;
   }
-  .shot:hover,
-  .shot:focus-visible {
-    transform: scale(1.04);
-    text-decoration: none;
-    outline: none;
+  .app.flip .tv {
+    order: 2;
   }
-  .shot img {
+  .tv {
+    display: block;
+    padding: 8px;
+    background: #000;
+    border-radius: 18px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55);
+    transition: transform 0.2s;
+  }
+  .tv:hover {
+    transform: scale(1.02);
+  }
+  .tv img {
+    display: block;
     width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-    border-radius: 14px;
+    border-radius: 10px;
+  }
+  h2 {
+    margin: 0 0 8px;
+    font-size: 40px;
+    letter-spacing: -0.01em;
+  }
+  .pitch {
+    margin: 0 0 16px;
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--body);
+  }
+  ul {
+    margin: 0 0 18px;
+    padding-left: 20px;
+    color: var(--secondary);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .apis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .apis a {
+    padding: 5px 12px;
     border: 1px solid var(--line);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
-    margin-bottom: 6px;
+    border-radius: 999px;
+    background: var(--glass);
   }
-  .shot:hover img {
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+  .apis a:hover {
+    background: var(--focus);
+    text-decoration: none;
   }
-  .shot b {
-    font: 600 15px var(--mono);
+  .apis a:hover code {
+    color: #000;
   }
-  .shot span {
-    font-size: 14px;
+  .apis code {
+    font: 13px var(--mono);
+    color: var(--text);
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    font-weight: 600;
+  }
+  .run {
+    font: 12px var(--mono);
+    color: var(--tertiary);
+  }
+  .run-them,
+  .templates {
+    margin-top: 120px;
+  }
+  .run-them {
+    padding: 36px 40px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+  }
+  .run-them ol {
+    padding-left: 20px;
+    line-height: 1.7;
+    color: var(--body);
+  }
+  .run-them li {
+    margin: 10px 0;
+  }
+  .run-them code {
+    display: block;
+    margin-top: 6px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 10px;
+    font: 13px var(--mono);
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+  .run-them p,
+  .templates p {
     color: var(--secondary);
   }
 </style>

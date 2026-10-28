@@ -44,11 +44,7 @@ A screen is made of **rows**, and rows are made of **cells**:
 Everything stays inside the **TV-safe area**, the part of the screen every TV shows (90 points in
 from the sides). Rows align their cells within it, `left` by default:
 
-<Example
-  name="row-alignment"
-  capture="/screens/layout.jpg"
-  caption="On tvOS: the kitchen-sink Layout screen, which includes this example"
-/>
+<Example name="row-alignment" />
 
 A cell can have a `background`, a fixed `height`, `lines` for wrapping, and `align` for its text.
 
@@ -68,12 +64,7 @@ A cell can have a `background`, a fixed `height`, `lines` for wrapping, and `ali
 A row is one line. For a cell with several lines, like a title and an artist beside artwork, use a
 **`Stack`**: a column that sits in a row.
 
-<Example
-  name="stack-artwork"
-  props={{ artwork: "https://example.com/art.jpg" }}
-  capture="/screens/stacks-and-boxes.jpg"
-  caption="On tvOS: the kitchen-sink Stacks and boxes screen"
-/>
+<Example name="stack-artwork" />
 
 Cells in a stack line up with its `align`, and `gap` spaces them. Stacks side by side make columns,
 like a weekly forecast.
