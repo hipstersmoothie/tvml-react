@@ -4,6 +4,8 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 
+import { onAppStateChange } from "./platform.js";
+
 export type ColorScheme = "light" | "dark";
 
 export interface AccessibilitySettings {
@@ -188,10 +190,12 @@ export function useNetworkStatus(): NetworkStatus {
 
 // Reference-counted so any mounted component can keep the screen awake.
 let keepAwakeCount = 0;
+let stopReapplying: (() => void) | undefined;
 
 /**
  * Keep the screensaver from starting while the calling component is mounted
- * (and `enabled` is true). Requires the native bridge.
+ * (and `enabled` is true). Re-applied when the app resumes, since tvOS can
+ * reset the idle timer in the background. Requires the native bridge.
  */
 export function useKeepAwake(enabled = true): void {
   useEffect(() => {
@@ -202,10 +206,15 @@ export function useKeepAwake(enabled = true): void {
     keepAwakeCount += 1;
     if (keepAwakeCount === 1) {
       native.setIdleTimerDisabled(true);
+      stopReapplying = onAppStateChange((state) => {
+        if (state === "active" && keepAwakeCount > 0) native.setIdleTimerDisabled(true);
+      });
     }
     return () => {
       keepAwakeCount -= 1;
       if (keepAwakeCount === 0) {
+        stopReapplying?.();
+        stopReapplying = undefined;
         native.setIdleTimerDisabled(false);
       }
     };

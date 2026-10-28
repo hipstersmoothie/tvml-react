@@ -377,6 +377,22 @@ describe("native bridge hooks", () => {
 
 // --- Player ---------------------------------------------------------------------------
 
+describe("useKeepAwake on resume", () => {
+  it("re-applies after the app comes back from the background", async () => {
+    nativeBridge.setIdleTimerDisabled.mockClear();
+    function Awake() {
+      useKeepAwake();
+      return <stackTemplate />;
+    }
+    mount(<Awake />);
+    await flush();
+    expect(nativeBridge.setIdleTimerDisabled.mock.calls).toEqual([[true]]);
+    app.onSuspend?.();
+    app.onResume?.();
+    expect(nativeBridge.setIdleTimerDisabled.mock.calls).toEqual([[true], [true]]);
+  });
+});
+
 describe("usePlayer", () => {
   it("presents a playlist and mirrors player events into state", async () => {
     let player!: PlayerControls;
