@@ -1,0 +1,228 @@
+:root {
+    --text: #1d1d1f;
+    --secondary: #6e6e73;
+    --link: #0066cc;
+    --fill: #f5f5f7;
+    --hairline: #d2d2d7;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    margin: 0;
+  }
+  a {
+    color: var(--link);
+    cursor: pointer;
+  }
+  .globalnav {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    height: 44px;
+    padding: 0 22px;
+    background: #161617;
+    color: #f5f5f7;
+    font-size: 13px;
+  }
+  .globalnav nav {
+    display: flex;
+    gap: 24px;
+  }
+  .globalnav a {
+    color: #d2d2d7;
+  }
+  .logo {
+    font-weight: 600;
+  }
+  .localnav {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    height: 52px;
+    padding: 0 22px;
+    border-bottom: 1px solid var(--hairline);
+    font-size: 14px;
+    color: var(--secondary);
+  }
+  .localnav b {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .shell {
+    display: grid;
+    grid-template-columns: 290px 1fr;
+  }
+  .sidebar {
+    border-right: 1px solid var(--hairline);
+    padding: 20px 16px;
+    font-size: 14px;
+    min-height: calc(100vh - 96px);
+  }
+  .filter {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 10px;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font: inherit;
+  }
+  .sidebar h4 {
+    margin: 18px 0 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--secondary);
+  }
+  .sidebar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .sidebar li {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .sidebar li.current {
+    background: var(--fill);
+    font-weight: 600;
+  }
+  .badge {
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    font: 600 11px/1 "SF Mono", ui-monospace, monospace;
+    color: white;
+    flex: none;
+  }
+  .badge.component {
+    background: #8a3ffc;
+  }
+  .badge.hook {
+    background: #0a84ff;
+  }
+  .badge.function {
+    background: #1e8e3e;
+  }
+  .badge.type {
+    background: #d4740b;
+  }
+  .badge.constant {
+    background: #6e6e73;
+  }
+  .badge.article {
+    background: transparent;
+    border: 1.5px solid var(--secondary);
+    width: 13px;
+    height: 16px;
+    border-radius: 2px;
+  }
+  main {
+    max-width: 820px;
+    padding: 0 56px 80px;
+  }
+  .hero {
+    padding: 40px 0 28px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .eyebrow {
+    font-size: 17px;
+    color: var(--secondary);
+  }
+  h1 {
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 4px 0 12px;
+  }
+  .abstract {
+    font-size: 21px;
+    line-height: 1.4;
+    margin: 0;
+  }
+  .availability {
+    display: flex;
+    gap: 8px;
+    margin: 18px 0 0;
+  }
+  .availability dd {
+    margin: 0;
+    padding: 2px 10px;
+    border: 1px solid var(--hairline);
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--secondary);
+  }
+  h2 {
+    font-size: 32px;
+    font-weight: 600;
+    margin: 44px 0 16px;
+  }
+  h3 {
+    font-size: 21px;
+    font-weight: 600;
+    margin: 24px 0 12px;
+  }
+  p {
+    font-size: 17px;
+    line-height: 1.53;
+  }
+  .declaration {
+    background: var(--fill);
+    border-radius: 12px;
+    padding: 18px 20px;
+    font: 15px/1.5 "SF Mono", ui-monospace, monospace;
+    margin: 0;
+  }
+  .kw {
+    color: #ad3da4;
+  }
+  pre.astro-code {
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 18px 20px;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  figure {
+    margin: 24px 0;
+  }
+  figure img {
+    width: 100%;
+    border-radius: 12px;
+  }
+  .note {
+    background: #fff6e5;
+    border-left: 4px solid #e8a000;
+    border-radius: 8px;
+    padding: 4px 18px;
+  }
+  .note b {
+    display: block;
+    margin-top: 14px;
+    font-size: 15px;
+  }
+  .note p {
+    margin: 4px 0 14px;
+  }
+  .topic {
+    padding: 10px 0;
+    border-bottom: 1px solid #ececf0;
+  }
+  .topic p {
+    margin: 4px 0 0 0;
+    font-size: 15px;
+    color: var(--secondary);
+  }
+  .symbol {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font: 15px "SF Mono", ui-monospace, monospace;
+  }

@@ -1,0 +1,501 @@
+---
+// Direction C: tvOS-flavoured, dark, with an example that runs in the browser.
+import { kindBadge, nav, page } from "../../lib/stack-doc";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Stack | tvml-react</title>
+  </head>
+  <body>
+    <header>
+      <span class="logo">tvml-react</span>
+      <nav class="segments">
+        <a>Learn</a><a class="on">Reference</a><a>Examples</a><a>Platform notes</a>
+      </nav>
+      <span class="search">⌘K</span>
+    </header>
+    <div class="shell">
+      <aside>
+        {
+          nav.map((group) => (
+            <section>
+              <h4>{group.title}</h4>
+              {group.items.map((item) => (
+                <a class:list={[{ current: item.current }]}>
+                  <i class:list={["dot", item.kind]} />
+                  {item.title}
+                </a>
+              ))}
+            </section>
+          ))
+        }
+      </aside>
+      <main>
+        <p class="eyebrow">{page.module}</p>
+        <h1>{page.title}</h1>
+        <p class="abstract">{page.abstract}</p>
+
+        <div class="stage">
+          <div class="tv">
+            <div class="screen" id="screen">
+              <div class="live" id="live">
+                <div class="safe" title="TV-safe area"></div>
+                <div class="art"></div>
+                <div class="stack" id="stack">
+                  <div class="title">Stacks and boxes</div>
+                  <div class="gap" id="gap1"></div>
+                  <div class="sub">A Stack is a column that can sit in a row</div>
+                </div>
+                <div class="stack right" id="right">
+                  <div class="small">right-aligned</div>
+                  <div class="smaller">3:42 of 5:10</div>
+                </div>
+              </div>
+              <img class="capture" id="capture" src="/screens/stacks-and-boxes.png" alt="Simulator capture" />
+            </div>
+          </div>
+          <div class="controls">
+            <div class="control">
+              <span>align</span>
+              <div class="pills" id="align">
+                <button data-v="left" class="on">left</button><button data-v="center">center</button><button
+                  data-v="right">right</button
+                >
+              </div>
+            </div>
+            <label class="control">
+              <span>gap <output id="gapOut">10</output></span>
+              <input type="range" id="gapIn" min="0" max="60" value="10" />
+            </label>
+            <label class="control">
+              <span>width <output id="widthOut">1000</output></span>
+              <input type="range" id="widthIn" min="400" max="1040" step="20" value="1000" />
+            </label>
+            <div class="control">
+              <span>view</span>
+              <div class="pills" id="view">
+                <button data-v="live" class="on">Live in browser</button><button data-v="capture"
+                  >Simulator capture</button
+                >
+              </div>
+            </div>
+          </div>
+          <pre class="code" id="code"></pre>
+        </div>
+
+        <h2>Overview</h2>
+        {page.overview.map((p) => <p>{p}</p>)}
+        <h2>Properties</h2>
+        <div class="props">
+          {
+            page.props.map((prop) => (
+              <div class="prop">
+                <code>{prop.name}</code>
+                <span class="type">{prop.type}</span>
+                <p>{prop.summary}</p>
+              </div>
+            ))
+          }
+        </div>
+        <h2>See also</h2>
+        <div class="tiles">
+          {
+            page.seeAlso.map((item) => (
+              <a class="tile" tabindex="0">
+                <b>{item.title}</b>
+                <span>{item.summary}</span>
+                <em>{kindBadge[item.kind].label}</em>
+              </a>
+            ))
+          }
+        </div>
+      </main>
+    </div>
+
+    <script is:inline>
+      const state = { align: "left", gap: 10, width: 1000, view: "live" };
+      const $ = (id) => document.getElementById(id);
+      function fit() {
+        const screen = $("screen");
+        $("live").style.transform = `scale(${screen.clientWidth / 1920})`;
+      }
+      function render() {
+        const stack = $("stack");
+        stack.style.width = state.width + "px";
+        stack.style.textAlign = state.align;
+        // Like the real row: the next stack follows, 40pt after this one.
+        $("right").style.left = 290 + state.width + 40 + "px";
+        $("gap1").style.height = state.gap + "px";
+        $("gapOut").textContent = state.gap;
+        $("widthOut").textContent = state.width;
+        $("live").style.visibility = state.view === "live" ? "visible" : "hidden";
+        $("capture").style.display = state.view === "capture" ? "block" : "none";
+        const align = state.align === "left" ? "" : ` align="${state.align}"`;
+        $("code").innerHTML =
+          `<span class="t">&lt;Stack</span> <span class="a">gap</span>={<span class="n">${state.gap}</span>} ` +
+          `<span class="a">width</span>={<span class="n">${state.width}</span>}${align.replace(/align="(\w+)"/, '<span class="a">align</span>=<span class="s">"$1"</span>')}<span class="t">&gt;</span>\n` +
+          `  <span class="t">&lt;Cell</span> <span class="a">size</span>={<span class="n">56</span>} <span class="a">weight</span>=<span class="s">"semibold"</span><span class="t">&gt;</span>Stacks and boxes<span class="t">&lt;/Cell&gt;</span>\n` +
+          `  <span class="t">&lt;Cell</span> <span class="a">size</span>={<span class="n">34</span>} <span class="a">color</span>=<span class="s">"#999"</span><span class="t">&gt;</span>A Stack is a column…<span class="t">&lt;/Cell&gt;</span>\n` +
+          `<span class="t">&lt;/Stack&gt;</span>`;
+      }
+      function pills(id, key) {
+        $(id).addEventListener("click", (e) => {
+          const v = e.target.dataset?.v;
+          if (!v) return;
+          state[key] = v;
+          for (const b of $(id).children) b.classList.toggle("on", b.dataset.v === v);
+          render();
+        });
+      }
+      pills("align", "align");
+      pills("view", "view");
+      $("gapIn").addEventListener("input", (e) => ((state.gap = +e.target.value), render()));
+      $("widthIn").addEventListener("input", (e) => ((state.width = +e.target.value), render()));
+      window.addEventListener("resize", fit);
+      fit();
+      render();
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: dark;
+    --text: #f5f5f7;
+    --secondary: rgba(235, 235, 245, 0.6);
+    --glass: rgba(255, 255, 255, 0.06);
+    --line: rgba(255, 255, 255, 0.1);
+    --accent: #64d2ff;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    color: var(--text);
+    min-height: 100%;
+    background: radial-gradient(1200px 600px at 70% -10%, #1d2b3a, transparent) fixed, #0a0a0b;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    margin: 0;
+  }
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 18px 28px;
+  }
+  .logo {
+    font-weight: 700;
+    font-size: 17px;
+  }
+  .segments {
+    display: flex;
+    padding: 4px;
+    gap: 2px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    backdrop-filter: blur(20px);
+  }
+  .segments a {
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    color: var(--secondary);
+  }
+  .segments a.on {
+    background: #f5f5f7;
+    color: #000;
+    font-weight: 600;
+  }
+  .search {
+    justify-self: end;
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: var(--glass);
+    color: var(--secondary);
+    font-size: 13px;
+  }
+  .shell {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    padding: 8px 28px 80px;
+  }
+  aside {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+    padding: 14px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    font-size: 14px;
+  }
+  aside h4 {
+    margin: 14px 8px 6px;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--secondary);
+  }
+  aside section:first-child h4 {
+    margin-top: 2px;
+  }
+  aside a {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 10px;
+    color: var(--text);
+  }
+  aside a.current {
+    background: #f5f5f7;
+    color: #000;
+    font-weight: 600;
+    transform: scale(1.03);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #888;
+  }
+  .dot.component {
+    background: #bf5af2;
+  }
+  .dot.hook {
+    background: #64d2ff;
+  }
+  .dot.function {
+    background: #30d158;
+  }
+  .dot.type {
+    background: #ff9f0a;
+  }
+  main {
+    max-width: 980px;
+  }
+  .eyebrow {
+    margin: 22px 0 0;
+    font: 14px "SF Mono", ui-monospace, monospace;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 6px 0 10px;
+    font-size: 64px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .abstract {
+    font-size: 24px;
+    color: var(--secondary);
+    margin: 0 0 28px;
+  }
+  .stage {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 18px;
+    padding: 18px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+  }
+  .tv {
+    padding: 10px;
+    background: #000;
+    border-radius: 18px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+  }
+  .screen {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #1c1c1e;
+  }
+  .capture {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    display: none;
+  }
+  .live {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1920px;
+    height: 1080px;
+    transform-origin: 0 0;
+    color: #fff;
+    font-family: -apple-system, sans-serif;
+  }
+  .safe {
+    position: absolute;
+    inset: 60px 90px;
+    outline: 2px dashed rgba(100, 210, 255, 0.35);
+  }
+  .art {
+    position: absolute;
+    left: 90px;
+    top: 50px;
+    width: 160px;
+    height: 160px;
+    background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+  }
+  .stack {
+    position: absolute;
+    left: 290px;
+    top: 130px;
+    transform: translateY(-50%);
+    outline: 1px solid rgba(255, 159, 10, 0.5);
+  }
+  .stack.right {
+    left: 1330px;
+    width: 500px;
+    text-align: right;
+    outline: none;
+  }
+  .title {
+    font-size: 56px;
+    font-weight: 600;
+  }
+  .sub {
+    font-size: 34px;
+    color: #999;
+  }
+  .small {
+    font-size: 30px;
+  }
+  .smaller {
+    font-size: 26px;
+    color: #999;
+  }
+  .controls {
+    display: grid;
+    align-content: start;
+    gap: 18px;
+  }
+  .control {
+    display: grid;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--secondary);
+  }
+  .control output {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .pills button {
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+  }
+  .pills button.on {
+    background: #f5f5f7;
+    color: #000;
+    font-weight: 600;
+  }
+  input[type="range"] {
+    accent-color: var(--accent);
+  }
+  .code {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 18px 20px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    font: 14px/1.6 "SF Mono", ui-monospace, monospace;
+    overflow: auto;
+  }
+  .code .t {
+    color: #ff7ab2;
+  }
+  .code .a {
+    color: #b281eb;
+  }
+  .code .n {
+    color: #d9c97c;
+  }
+  .code .s {
+    color: #fc6a5d;
+  }
+  h2 {
+    margin: 44px 0 12px;
+    font-size: 30px;
+  }
+  main > p {
+    font-size: 18px;
+    line-height: 1.6;
+    color: rgba(245, 245, 247, 0.85);
+  }
+  .props {
+    display: grid;
+    gap: 10px;
+  }
+  .prop {
+    padding: 14px 18px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+  }
+  .prop code {
+    font: 600 16px "SF Mono", ui-monospace, monospace;
+  }
+  .prop .type {
+    margin-left: 10px;
+    font: 13px "SF Mono", ui-monospace, monospace;
+    color: var(--accent);
+  }
+  .prop p {
+    margin: 6px 0 0;
+    color: var(--secondary);
+    font-size: 15px;
+  }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .tile {
+    display: grid;
+    gap: 8px;
+    padding: 20px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    color: var(--text);
+    transition:
+      transform 0.18s,
+      box-shadow 0.18s,
+      background 0.18s;
+  }
+  .tile:hover,
+  .tile:focus {
+    transform: scale(1.06);
+    background: #f5f5f7;
+    color: #000;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    outline: none;
+  }
+  .tile span {
+    font-size: 14px;
+    opacity: 0.75;
+  }
+  .tile em {
+    font-style: normal;
+    font-size: 12px;
+    opacity: 0.5;
+  }
+</style>

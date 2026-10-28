@@ -1,0 +1,108 @@
+---
+// A code example beside what it renders: tabs for the React source and the
+// TVML tvml-react produced from it at build time, and a capture from the
+// tvOS simulator in a TV frame.
+import { Code } from "astro:components";
+
+interface Props {
+  id: string;
+  source: string;
+  tvml: string;
+  screenshot: string;
+  caption: string;
+}
+const { id, source, tvml, screenshot, caption } = Astro.props;
+---
+
+<div class="playground">
+  <div class="code">
+    <div class="tabs" role="tablist">
+      <input type="radio" name={id} id={`${id}-react`} checked />
+      <label for={`${id}-react`}>React</label>
+      <input type="radio" name={id} id={`${id}-tvml`} />
+      <label for={`${id}-tvml`}>Rendered TVML</label>
+      <span class="run">▶ Run in Simulator</span>
+      <div class="panel react"><Code code={source} lang="tsx" theme="github-light" /></div>
+      <div class="panel tvml"><Code code={tvml} lang="xml" theme="github-light" /></div>
+    </div>
+  </div>
+  <figure class="tv">
+    <div class="bezel"><img src={screenshot} alt={caption} /></div>
+    <figcaption>{caption}</figcaption>
+  </figure>
+</div>
+
+<style>
+  .playground {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    margin: 24px 0;
+    padding: 18px;
+    background: var(--fill);
+    border-radius: 18px;
+  }
+  .tabs {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    align-items: center;
+  }
+  .tabs input {
+    display: none;
+  }
+  .tabs label {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--secondary);
+    cursor: pointer;
+  }
+  .tabs input:checked + label {
+    background: white;
+    color: var(--text);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+  .run {
+    grid-column: 4;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--link);
+  }
+  .panel {
+    display: none;
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+  .panel :global(pre) {
+    margin: 0;
+    max-height: 360px;
+    overflow: auto;
+    border: 0 !important;
+    background: white !important;
+  }
+  .tabs input:nth-of-type(1):checked ~ .react,
+  .tabs input:nth-of-type(2):checked ~ .tvml {
+    display: block;
+  }
+  .tv {
+    margin: 0;
+  }
+  .bezel {
+    padding: 10px;
+    background: #111;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  }
+  .bezel img {
+    display: block;
+    width: 100%;
+    border-radius: 6px;
+  }
+  figcaption {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--secondary);
+    text-align: center;
+  }
+</style>

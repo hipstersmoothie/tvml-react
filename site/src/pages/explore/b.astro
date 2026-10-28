@@ -1,0 +1,146 @@
+---
+// Direction B: Apple's documentation, plus examples you can see run.
+import AppleChrome from "../../components/AppleChrome.astro";
+import Playground from "../../components/Playground.astro";
+import source from "../../examples/stack-artwork.tsx?raw";
+import { displaySource, runExample } from "../../lib/render-tvml";
+import { kindBadge, page } from "../../lib/stack-doc";
+
+const tvml = await runExample(source, { artwork: "https://example.com/art.jpg" });
+---
+
+<AppleChrome title={page.title}>
+  <main class="wide">
+    <div class="hero">
+      <div class="eyebrow">{page.kind} · <code>{page.module}</code></div>
+      <h1>{page.title}</h1>
+      <p class="abstract">{page.abstract}</p>
+      <dl class="availability">{page.availability.map((a) => <dd>{a}</dd>)}</dl>
+    </div>
+    <section>
+      <h2>Declaration</h2>
+      <pre class="declaration"><code><span class="kw">function</span> <b>Stack</b>(props: <a>StackProps</a>): <a>JSX.Element</a></code></pre>
+    </section>
+    <section>
+      <h2>Overview</h2>
+      <p>{page.overview[0]}</p>
+      <Playground
+        id="stack"
+        source={displaySource(source)}
+        tvml={tvml}
+        screenshot="/screens/stacks-and-boxes.png"
+        caption="Captured on the tvOS 26.5 simulator by the docs build"
+      />
+      <p>{page.overview[1]}</p>
+      {
+        page.notes.map((note) => (
+          <aside class="callout important">
+            <b>{note.kind}</b>
+            <p>{note.text}</p>
+          </aside>
+        ))
+      }
+    </section>
+    <section>
+      <h2>Parameters</h2>
+      <dl class="params">
+        {
+          page.props.map((prop) => (
+            <>
+              <dt>
+                <code>{prop.name}</code>
+                <span class="type">{prop.type}</span>
+              </dt>
+              <dd>{prop.summary}</dd>
+            </>
+          ))
+        }
+      </dl>
+    </section>
+    <section>
+      <h2>See Also</h2>
+      <div class="cards">
+        {
+          page.seeAlso.map((item) => (
+            <a class="card">
+              <span class:list={["badge", item.kind]}>{kindBadge[item.kind].letter}</span>
+              <b>{item.title}</b>
+              <span>{item.summary}</span>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+  </main>
+</AppleChrome>
+
+<style>
+  main.wide {
+    max-width: 960px;
+  }
+  .eyebrow code {
+    font-size: 15px;
+  }
+  .callout {
+    border-radius: 12px;
+    padding: 4px 18px;
+    background: #fff6e5;
+    border: 1px solid #f5d491;
+  }
+  .callout b {
+    display: block;
+    margin-top: 14px;
+    font-size: 15px;
+  }
+  .callout p {
+    margin: 4px 0 14px;
+  }
+  .params {
+    display: grid;
+    grid-template-columns: 1fr;
+    margin: 0;
+  }
+  .params dt {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding-top: 14px;
+    border-top: 1px solid #ececf0;
+  }
+  .params dt code {
+    font: 600 16px "SF Mono", ui-monospace, monospace;
+  }
+  .type {
+    font: 13px "SF Mono", ui-monospace, monospace;
+    color: #ad3da4;
+    background: #f7eef7;
+    padding: 1px 8px;
+    border-radius: 6px;
+  }
+  .params dd {
+    margin: 6px 0 14px;
+    font-size: 15px;
+    color: var(--secondary);
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .card {
+    display: grid;
+    gap: 6px;
+    padding: 16px;
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .card b {
+    color: var(--link);
+  }
+  .card span:last-child {
+    font-size: 14px;
+    color: var(--secondary);
+  }
+</style>

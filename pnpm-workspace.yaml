@@ -1,5 +1,6 @@
 packages:
   - "."
   - "examples/*"
+  - "site"
 onlyBuiltDependencies:
   - esbuild

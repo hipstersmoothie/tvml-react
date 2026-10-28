@@ -1,0 +1,72 @@
+---
+// Direction A: faithful to Apple's developer documentation.
+import { Code } from "astro:components";
+
+import AppleChrome from "../../components/AppleChrome.astro";
+import source from "../../examples/stack-artwork.tsx?raw";
+import { displaySource } from "../../lib/render-tvml";
+import { kindBadge, page } from "../../lib/stack-doc";
+---
+
+<AppleChrome title={page.title}>
+      <main>
+        <div class="hero">
+          <div class="eyebrow">{page.kind}</div>
+          <h1>{page.title}</h1>
+          <p class="abstract">{page.abstract}</p>
+          <dl class="availability">
+            {page.availability.map((a) => <dd>{a}</dd>)}
+          </dl>
+        </div>
+        <section>
+          <h2>Declaration</h2>
+          <pre class="declaration"><code><span class="kw">function</span> <b>Stack</b>(props: <a>StackProps</a>): <a>JSX.Element</a></code></pre>
+        </section>
+        <section>
+          <h2>Overview</h2>
+          {page.overview.map((p) => <p>{p}</p>)}
+          <p>This lays out artwork beside a title and subtitle, with right-aligned details:</p>
+          <Code code={displaySource(source)} lang="tsx" theme="github-light" />
+          <figure>
+            <img src="/screens/stacks-and-boxes.png" alt="The example rendered on tvOS" />
+          </figure>
+          {
+            page.notes.map((note) => (
+              <aside class="note">
+                <b>{note.kind}</b>
+                <p>{note.text}</p>
+              </aside>
+            ))
+          }
+        </section>
+        <section>
+          <h2>Topics</h2>
+          <h3>Properties</h3>
+          {
+            page.props.map((prop) => (
+              <div class="topic">
+                <code class="symbol">
+                  <a>{prop.name}</a>: {prop.type}
+                </code>
+                <p>{prop.summary}</p>
+              </div>
+            ))
+          }
+        </section>
+        <section>
+          <h2>See Also</h2>
+          <h3>Layout</h3>
+          {
+            page.seeAlso.map((item) => (
+              <div class="topic">
+                <code class="symbol">
+                  <span class:list={["badge", item.kind]}>{kindBadge[item.kind].letter}</span>
+                  <a>{item.title}</a>
+                </code>
+                <p>{item.summary}</p>
+              </div>
+            ))
+          }
+        </section>
+      </main>
+</AppleChrome>

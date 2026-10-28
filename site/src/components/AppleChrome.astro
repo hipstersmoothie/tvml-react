@@ -1,0 +1,50 @@
+---
+// Apple-style page chrome: global nav, breadcrumbs and the symbol sidebar.
+import "../styles/apple.css";
+
+import { kindBadge, nav } from "../lib/stack-doc";
+
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title} | tvml-react</title>
+  </head>
+  <body>
+    <header class="globalnav">
+      <span class="logo"> tvml-react</span>
+      <nav><a>Documentation</a><a>Examples</a><a>Platform notes</a><a>GitHub</a></nav>
+    </header>
+    <header class="localnav">
+      <span>Documentation</span><span class="sep">›</span><span>tvml-react/layout</span><span class="sep">›</span><b>Stack</b>
+    </header>
+    <div class="shell">
+      <aside class="sidebar">
+        <input class="filter" placeholder="Filter" />
+        {
+          nav.map((group) => (
+            <section>
+              <h4>{group.title}</h4>
+              <ul>
+                {group.items.map((item) => (
+                  <li class:list={[{ current: item.current }]}>
+                    <span class:list={["badge", item.kind]}>{kindBadge[item.kind].letter}</span>
+                    {item.title}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))
+        }
+      </aside>
+      <slot />
+
+    </div>
+  </body>
+</html>
